@@ -50,6 +50,10 @@ export function GetPort() {
   return window['go']['config']['Config']['GetPort']();
 }
 
+export function GetRouting() {
+  return window['go']['config']['Config']['GetRouting']();
+}
+
 export function GetRules() {
   return window['go']['config']['Config']['GetRules']();
 }
@@ -92,6 +96,10 @@ export function SetLocale(arg1) {
 
 export function SetPort(arg1) {
   return window['go']['config']['Config']['SetPort'](arg1);
+}
+
+export function SetRouting(arg1) {
+  return window['go']['config']['Config']['SetRouting'](arg1);
 }
 
 export function SetRules(arg1) {

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	goruntime "runtime"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/config"
 	"github.com/irbis-sh/zen-desktop/internal/constants"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
+	"github.com/irbis-sh/zen-desktop/internal/routing"
 	"github.com/irbis-sh/zen-desktop/internal/selfupdate"
 	"github.com/irbis-sh/zen-desktop/internal/sysproxy"
 	"github.com/irbis-sh/zen-desktop/internal/systray"
@@ -216,7 +218,9 @@ func (a *App) StartProxy() (err error) {
 	}
 	a.whitelistSrv = whitelistSrv
 
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort())
+	routingPolicy := routing.NewPolicy(a.config.GetRouting())
+
+	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy)
 	if err != nil {
 		return fmt.Errorf("create proxy: %v", err)
 	}
@@ -230,7 +234,7 @@ func (a *App) StartProxy() (err error) {
 		return fmt.Errorf("start proxy: %v", err)
 	}
 
-	if err := a.systemProxyManager.Set(port, a.config.GetIgnoredHosts()); err != nil {
+	if err := a.systemProxyManager.Set(port, a.config.GetIgnoredHosts(), routingPolicy.ShouldProxy); err != nil {
 		if errors.Is(err, sysproxy.ErrUnsupportedDesktopEnvironment) {
 			a.frontendEvents.OnUnsupportedDE(err)
 		} else {
@@ -324,6 +328,33 @@ func (a *App) OpenLogsDirectory() error {
 	}
 
 	return nil
+}
+
+func (a *App) SelectAppForRouting() (string, error) {
+	<-a.startupDone
+
+	const dialogTitle = "Select app"
+
+	switch goruntime.GOOS {
+	case "darwin":
+		return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+			Title:                      dialogTitle,
+			DefaultDirectory:           "/Applications",
+			Filters:                    []runtime.FileFilter{{DisplayName: "Applications", Pattern: "*.app"}},
+			TreatPackagesAsDirectories: true,
+		})
+	case "windows":
+		return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title:   dialogTitle,
+			Filters: []runtime.FileFilter{{DisplayName: "Applications", Pattern: "*.exe"}},
+		})
+	case "linux":
+		return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title: dialogTitle,
+		})
+	default:
+		return "", fmt.Errorf("unsupported platform")
+	}
 }
 
 // ExportCustomFilterListsToFile exports the custom filter lists to a file.

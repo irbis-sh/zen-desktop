@@ -16,6 +16,17 @@
       "updateAvailable": "A new version of Zen is available."
     }
   },
+  "appRoutingSettings": {
+    "addApp": "Add app",
+    "allowlistMode": "Proxy only selected apps",
+    "blocklistMode": "Proxy all apps except selected",
+    "description": "Choose which apps should use Zen's proxy.",
+    "emptyAllowlistWarning": "No apps are selected. All traffic will bypass Zen.",
+    "label": "App routing",
+    "removeApp": "Remove app",
+    "saveError": "Failed to save app routing settings: {{error}}",
+    "selectError": "Failed to select app: {{error}}"
+  },
   "assetPortInput": {
     "description": "The port used by the internal asset server for injecting scripts and styles.",
     "helper": "Using a port below 1024 may require elevated privileges.",

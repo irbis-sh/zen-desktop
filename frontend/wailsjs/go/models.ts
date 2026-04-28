@@ -5,6 +5,10 @@ export namespace config {
 	    PROMPT = "prompt",
 	    DISABLED = "disabled",
 	}
+	export enum RoutingMode {
+	    BLOCKLIST = "blocklist",
+	    ALLOWLIST = "allowlist",
+	}
 	export class FilterList {
 	    name: string;
 	    type: string;
@@ -25,6 +29,20 @@ export namespace config {
 	        this.enabled = source["enabled"];
 	        this.trusted = source["trusted"];
 	        this.locales = source["locales"];
+	    }
+	}
+	export class RoutingConfig {
+	    mode: RoutingMode;
+	    appPaths: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new RoutingConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mode = source["mode"];
+	        this.appPaths = source["appPaths"];
 	    }
 	}
 

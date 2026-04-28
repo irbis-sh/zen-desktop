@@ -26,6 +26,8 @@ export function GetPACPort():Promise<number>;
 
 export function GetPort():Promise<number>;
 
+export function GetRouting():Promise<config.RoutingConfig>;
+
 export function GetRules():Promise<Array<string>>;
 
 export function GetTargetTypeFilterLists(arg1:config.FilterListType):Promise<Array<config.FilterList>>;
@@ -47,6 +49,8 @@ export function SetIgnoredHosts(arg1:Array<string>):Promise<void>;
 export function SetLocale(arg1:string):Promise<void>;
 
 export function SetPort(arg1:number):Promise<void>;
+
+export function SetRouting(arg1:config.RoutingConfig):Promise<void>;
 
 export function SetRules(arg1:Array<string>):Promise<void>;
 

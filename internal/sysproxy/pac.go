@@ -17,6 +17,7 @@ var (
 	}
 	return "PROXY 127.0.0.1:{{.ProxyPort}}; DIRECT";
 }`))
+	transparentPAC = []byte(`function FindProxyForURL(url, host) { return "DIRECT"; }`)
 
 	//go:embed exclusions/common.txt
 	commonExcludedHosts []byte

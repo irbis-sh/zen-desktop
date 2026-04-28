@@ -26,6 +26,10 @@ export function RestartApplication() {
   return window['go']['app']['App']['RestartApplication']();
 }
 
+export function SelectAppForRouting() {
+  return window['go']['app']['App']['SelectAppForRouting']();
+}
+
 export function StartProxy() {
   return window['go']['app']['App']['StartProxy']();
 }

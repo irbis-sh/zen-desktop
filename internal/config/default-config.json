@@ -388,7 +388,11 @@
     "caInstalled": false
   },
   "proxy": {
-    "port": 0
+    "port": 0,
+    "routing": {
+      "mode": "blocklist",
+      "appPaths": []
+    }
   },
   "updatePolicy": "automatic"
 }

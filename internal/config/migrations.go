@@ -329,6 +329,10 @@ var migrations = []migration{
 					c.Filter.FilterLists[i].URL = strings.Replace(fl.URL, "https://cdn.jsdelivr.net/gh/ZenPrivacy", "https://cdn.jsdelivr.net/gh/irbis-sh", 1)
 				}
 			}
+			c.Proxy.Routing = RoutingConfig{
+				Mode:     RoutingModeBlocklist,
+				AppPaths: []string{},
+			}
 			return nil
 		})
 	}},

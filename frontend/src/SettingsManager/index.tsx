@@ -10,6 +10,7 @@ import { IsNoSelfUpdate } from 'wails/go/app/App';
 import { GetVersion } from 'wails/go/config/Config';
 import { BrowserOpenURL } from 'wails/runtime';
 
+import { AppRoutingSettings } from './AppRoutingSettings';
 import { AssetPortInput } from './AssetPortInput';
 import { AutostartSwitch } from './AutostartSwitch';
 import { AutoupdateSwitch } from './AutoupdateSwitch';
@@ -73,6 +74,7 @@ export function SettingsManager() {
           <PortInput />
           <AssetPortInput />
           <IgnoredHostsInput />
+          <AppRoutingSettings />
           <UninstallCADialog proxyState={proxyState} />
         </div>
       </div>

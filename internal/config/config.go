@@ -43,6 +43,26 @@ var UpdatePolicyEnum = []struct {
 	{UpdatePolicyDisabled, "DISABLED"},
 }
 
+type RoutingMode string
+
+const (
+	RoutingModeBlocklist RoutingMode = "blocklist"
+	RoutingModeAllowlist RoutingMode = "allowlist"
+)
+
+var RoutingModeEnum = []struct {
+	Value  RoutingMode
+	TSName string
+}{
+	{RoutingModeBlocklist, "BLOCKLIST"},
+	{RoutingModeAllowlist, "ALLOWLIST"},
+}
+
+type RoutingConfig struct {
+	Mode     RoutingMode `json:"mode"`
+	AppPaths []string    `json:"appPaths"`
+}
+
 type FilterListType string
 
 const (
@@ -81,9 +101,10 @@ type Config struct {
 		CAInstalled bool `json:"caInstalled"`
 	} `json:"certmanager"`
 	Proxy struct {
-		Port         int      `json:"port"`
-		IgnoredHosts []string `json:"ignoredHosts"`
-		PACPort      int      `json:"pacPort"`
+		Port         int           `json:"port"`
+		IgnoredHosts []string      `json:"ignoredHosts"`
+		PACPort      int           `json:"pacPort"`
+		Routing      RoutingConfig `json:"routing"`
 	} `json:"proxy"`
 	UpdatePolicy UpdatePolicyType `json:"updatePolicy"`
 
@@ -345,6 +366,35 @@ func (c *Config) GetIgnoredHosts() []string {
 func (c *Config) SetIgnoredHosts(hosts []string) error {
 	return c.update(func() error {
 		c.Proxy.IgnoredHosts = hosts
+		return nil
+	})
+}
+
+func (c *Config) GetRouting() RoutingConfig {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.Proxy.Routing
+}
+
+func (c *Config) SetRouting(routing RoutingConfig) error {
+	dedupedPaths := make([]string, 0, len(routing.AppPaths))
+	seen := make(map[string]struct{}, len(routing.AppPaths))
+	for _, path := range routing.AppPaths {
+		path = strings.TrimSpace(path)
+		if path == "" {
+			continue
+		}
+		if _, ok := seen[path]; ok {
+			continue
+		}
+		seen[path] = struct{}{}
+		dedupedPaths = append(dedupedPaths, path)
+	}
+	routing.AppPaths = dedupedPaths
+
+	return c.update(func() error {
+		c.Proxy.Routing = routing
 		return nil
 	})
 }

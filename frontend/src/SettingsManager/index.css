@@ -34,6 +34,51 @@
   width: 100%;
 }
 
+.settings-manager__app-routing {
+  width: 100%;
+}
+
+.settings-manager__app-routing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.settings-manager__app-routing-warning {
+  margin-bottom: 8px;
+}
+
+.settings-manager__app-routing-app {
+  align-items: center;
+  border: var(--bp-surface-border-width) solid var(--bp-surface-border-color-strong);
+  border-radius: var(--bp-surface-border-radius);
+  display: grid;
+  gap: 2px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 6px 8px;
+}
+
+.settings-manager__app-routing-app-name,
+.settings-manager__app-routing-app-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-manager__app-routing-app-name {
+  font-weight: 600;
+}
+
+.settings-manager__app-routing-app-path {
+  font-size: 0.75rem;
+}
+
+.settings-manager__app-routing-app .bp6-button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
 .settings-manager__section-body {
   padding: 10px 10px 0 10px;
 }

@@ -17,9 +17,13 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/irbis-sh/process"
 )
 
 var ErrUnsupportedDesktopEnvironment = errors.New("system proxy configuration is currently only supported on GNOME and KDE")
+
+type ShouldProxyFunc func(processPath string) bool
 
 type Manager struct {
 	pacPort int
@@ -36,10 +40,14 @@ func NewManager(pacPort int) *Manager {
 }
 
 // Set configures the system proxy to use the proxy server listening on the given port.
-func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string) error {
+func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string, shouldProxy ShouldProxyFunc) error {
+	if shouldProxy == nil {
+		return fmt.Errorf("shouldProxy is nil")
+	}
+
 	pac := renderPac(proxyPort, userConfiguredExcludedHosts)
 
-	actualPort, err := m.makeServer(pac)
+	actualPort, err := m.makeServer(pac, shouldProxy)
 	if err != nil {
 		return fmt.Errorf("make server: %v", err)
 	}
@@ -72,12 +80,17 @@ func (m *Manager) Clear() error {
 
 // makeServer starts an HTTP server that serves the PAC file.
 // It returns the actual port the server is listening on, which may be different from the requested port if the latter is 0.
-func (m *Manager) makeServer(pac []byte) (int, error) {
+func (m *Manager) makeServer(pac []byte, shouldProxy ShouldProxyFunc) (int, error) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/proxy.pac", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/proxy.pac", func(w http.ResponseWriter, r *http.Request) {
+		responsePAC := pac
+		if !shouldProxy(processPathForRequest(r)) {
+			responsePAC = transparentPAC
+		}
+
 		w.Header().Set("Content-Type", "application/x-ns-proxy-autoconfig")
 		w.WriteHeader(http.StatusOK)
-		w.Write(pac)
+		w.Write(responsePAC)
 	})
 
 	m.server = &http.Server{
@@ -99,4 +112,19 @@ func (m *Manager) makeServer(pac []byte) (int, error) {
 	}()
 
 	return actualPort, nil
+}
+
+func processPathForRequest(r *http.Request) string {
+	pid, err := process.FindPIDByRequest(r)
+	if err != nil {
+		log.Printf("error finding PAC request process: %v", err)
+		return ""
+	}
+
+	path, err := pid.ExecutablePath()
+	if err != nil {
+		log.Printf("error finding PAC request process path: %v", err)
+		return ""
+	}
+	return path
 }

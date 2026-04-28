@@ -14,6 +14,8 @@ export function OpenLogsDirectory():Promise<void>;
 
 export function RestartApplication():Promise<void>;
 
+export function SelectAppForRouting():Promise<string>;
+
 export function StartProxy():Promise<void>;
 
 export function StopProxy():Promise<void>;
