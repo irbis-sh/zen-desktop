@@ -56,6 +56,7 @@ jusan.kz
 onlinebank.kz
 freedompay.kz
 wlp-acs.com
+homebank.kz
 
 # Payment processors
 paypal.com
@@ -110,14 +111,18 @@ workos.com
 zitadel.com
 stytch.com
 bunny.net
+dash.irbis.sh
 
 # OpenAI from here: https://help.openai.com/en/articles/9247338-network-recommendations-for-chatgpt-errors-on-web-and-apps
 ios.chat.openai.com
 ab.chatgpt.com
 oaiusercontent.com
+ws.chatgpt.com
 
 # Issues
 # https://github.com/ZenPrivacy/zen-desktop/pull/223
 account.booking.com
 # https://github.com/ZenPrivacy/zen-desktop/issues/407
 updates.ghub.logitechg.com
+# https://github.com/ZenPrivacy/zen-https-exclusions/issues/3
+steamserver.net
