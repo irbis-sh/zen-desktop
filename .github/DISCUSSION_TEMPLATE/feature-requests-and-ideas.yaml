@@ -1,0 +1,16 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to suggest a feature in Zen.
+        Before submitting the discussion, please [refer to the project roadmap](https://github.com/irbis-sh/zen-desktop/discussions/99) and [search existing issues](https://github.com/irbis-sh/zen-desktop/issues) to see if it is already being worked on.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Describe the feature you would like to see in Zen. Include a detailed description of why it is needed.
+        Attach screenshots or videos if it helps explain the feature. Point to comparable features in other apps if relevant.
+    validations:
+      required: true
