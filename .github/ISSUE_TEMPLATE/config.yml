@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Bug reports, feature requests and suggestions, questions.
-    url: https://github.com/irbis-sh/zen-desktop/discussions/new/choose
-    about: Please start with GitHub Discussions so the community can triage issues, refine ideas, and answer questions before opening an issue.
+  - name: Issue triage
+    url: https://github.com/irbis-sh/zen-desktop/discussions/new?category=issue-triage
+    about: Suspected bugs, regressions, and other issues that need confirmation.
+  - name: Feature requests and ideas
+    url: https://github.com/irbis-sh/zen-desktop/discussions/new?category=feature-requests-and-ideas
+    about: Feature requests, improvements, and ideas for Zen.
+  - name: User Q&A
+    url: https://github.com/irbis-sh/zen-desktop/discussions/new?category=user-q-a
+    about: Usage questions, setup help, and general troubleshooting.
