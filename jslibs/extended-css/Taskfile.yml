@@ -1,0 +1,34 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Builds the bundle and copies it to the extendedcss directory.
+    dir: jslibs/extended-css
+    cmds:
+      - npm run build
+      - cp dist/bundle.js ../../internal/asset/extendedcss
+      - du -sh ../../internal/asset/extendedcss/bundle.js
+
+  lint:
+    desc: Lints the code.
+    dir: jslibs/extended-css
+    cmds:
+      - npm run lint
+
+  test:
+    desc: Tests the code.
+    dir: jslibs/extended-css
+    cmds:
+      - npm run test
+
+  install:
+    desc: Installs the complete set of dependencies.
+    dir: jslibs/extended-css
+    cmds:
+      - npm ci
+
+  install-prod:
+    desc: Installs the dependencies required to build the bundle.
+    dir: jslibs/extended-css
+    cmds:
+      - npm ci --only=prod

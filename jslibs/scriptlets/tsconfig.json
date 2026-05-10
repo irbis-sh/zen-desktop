@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 20",
+  "_version": "20.1.0",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "target": "ES2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Bundler",
+    "module": "Preserve",
+    "outDir": "./build",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"]
+}

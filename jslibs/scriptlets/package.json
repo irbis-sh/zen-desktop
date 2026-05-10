@@ -1,0 +1,40 @@
+{
+  "name": "scriptlets",
+  "private": true,
+  "engines": {
+    "node": ">=20.17.0"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint \"src/**/*.ts\"",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@babel/preset-env": "^7.25.4",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@tsconfig/node20": "^20.1.4",
+    "core-js": "^3.41.0",
+    "regenerator-runtime": "^0.14.1",
+    "rollup": "^4.24.2",
+    "typescript": "^5.6.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5"
+  }
+}
