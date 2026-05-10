@@ -29,7 +29,7 @@ export default {
           {
             targets: '> 0.2%, not dead',
             useBuiltIns: 'usage',
-            corejs: '3.41',
+            corejs: '3.49',
           },
         ],
       ],

@@ -2,43 +2,45 @@
   "name": "extended-css",
   "private": true,
   "engines": {
-    "node": ">=20.17.0"
+    "node": ">=24.15.0 <25"
   },
   "type": "module",
   "scripts": {
     "test": "jest",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "fmt": "prettier . --check",
+    "fmt:fix": "prettier . --write",
     "build": "rollup -c"
   },
   "dependencies": {
-    "@babel/preset-env": "7.28.5",
-    "@rollup/plugin-babel": "6.1.0",
-    "@rollup/plugin-commonjs": "29.0.0",
+    "@babel/core": "7.29.0",
+    "@babel/preset-env": "7.29.3",
+    "@rollup/plugin-babel": "7.0.0",
+    "@rollup/plugin-commonjs": "29.0.2",
     "@rollup/plugin-node-resolve": "16.0.3",
-    "@rollup/plugin-terser": "0.4.4",
+    "@rollup/plugin-terser": "1.0.0",
     "@rollup/plugin-typescript": "12.3.0",
-    "@tsconfig/node20": "20.1.8",
-    "core-js": "3.47.0",
-    "css-tree": "3.1.0",
-    "regenerator-runtime": "0.14.1",
-    "rollup": "4.54.0",
-    "tslib": "2.8.1",
-    "typescript": "5.9.3"
+    "@tsconfig/node24": "24.0.4",
+    "core-js": "3.49.0",
+    "css-tree": "3.2.1",
+    "rollup": "4.60.2",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@jest/globals": "29.7.0",
+    "@eslint/js": "9.39.4",
+    "@jest/globals": "30.3.0",
     "@types/css-tree": "2.3.11",
-    "@types/jest": "29.5.14",
-    "@typescript-eslint/eslint-plugin": "8.50.1",
-    "@typescript-eslint/parser": "8.50.1",
-    "eslint": "8.57.1",
-    "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-prettier": "5.5.4",
-    "jest": "29.7.0",
-    "jest-environment-jsdom": "29.7.0",
-    "jest-util": "29.7.0",
-    "prettier": "3.7.4",
-    "ts-jest": "29.4.6"
+    "@types/jest": "30.0.0",
+    "@types/node": "24.12.2",
+    "eslint": "9.39.4",
+    "eslint-import-resolver-typescript": "4.4.4",
+    "eslint-plugin-import-x": "4.16.2",
+    "globals": "17.6.0",
+    "jest": "30.3.0",
+    "jest-environment-jsdom": "30.3.0",
+    "prettier": "3.8.3",
+    "ts-jest": "29.4.9",
+    "typescript-eslint": "8.59.1"
   }
 }
