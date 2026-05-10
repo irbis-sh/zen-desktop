@@ -3,6 +3,8 @@ version: '3'
 includes:
   build: tasks/build/Taskfile-{{OS}}.yml
   frontend: frontend/Taskfile.yml
+  scriptlets: jslibs/scriptlets/Taskfile.yml
+  extended-css: jslibs/extended-css/Taskfile.yml
 
 tasks:
   default:
@@ -26,16 +28,20 @@ tasks:
       - go test -cover -race ./...
 
   test:
-    desc: Run Go tests.
+    desc: Run Go, scriptlets, and extended-css tests.
     cmds:
+      - task: scriptlets:test
+      - task: extended-css:test
       - task: test-go
       - cmd: echo "Tests passed"
         silent: true
 
   lint:
-    desc: Run frontend and Go linters.
+    desc: Run frontend, scriptlets, extended-css, and Go linters.
     cmds:
       - task: frontend:lint
+      - task: scriptlets:lint
+      - task: extended-css:lint
       - task: lint-go
       - cmd: echo "Checks passed"
         silent: true
@@ -54,14 +60,3 @@ tasks:
     desc: Pull the updates from the zen-https-exclusions repository.
     cmds:
       - git subtree pull --prefix=internal/sysproxy/exclusions https://github.com/irbis-sh/zen-https-exclusions master --squash
-
-  link-core:
-    desc: Add local replace directive for zen-core in go.mod.
-    cmds:
-      - go mod edit -replace=github.com/irbis-sh/zen-core=../core
-
-  unlink-core:
-    desc: Remove local replace directive for zen-core from go.mod.
-    cmds:
-      - go mod edit -dropreplace=github.com/irbis-sh/zen-core
-
