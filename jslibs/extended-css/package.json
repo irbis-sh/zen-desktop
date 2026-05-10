@@ -24,7 +24,7 @@
     "@tsconfig/node24": "24.0.4",
     "core-js": "3.49.0",
     "css-tree": "3.2.1",
-    "rollup": "4.60.2",
+    "rollup": "4.60.3",
     "typescript": "6.0.3"
   },
   "devDependencies": {
