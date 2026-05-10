@@ -25,6 +25,9 @@ linters:
     - errcheck
   settings:
     gosec:
+      # G706 (log injection): too many false positives.
+      excludes:
+        - G706
       config:
         G302: "0644"
         G306: "0644"
@@ -35,6 +38,8 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    paths:
+      - (^|/)node_modules/
     rules:
       - linters:
           # These give false positives for Windows API-related identifier names.
