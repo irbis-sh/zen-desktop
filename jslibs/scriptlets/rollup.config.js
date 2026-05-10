@@ -9,13 +9,13 @@ export default {
   output: {
     file: 'dist/bundle.js',
     format: 'iife',
-    name: 'scriptlet'
+    name: 'scriptlet',
   },
   plugins: [
     resolve(),
     commonjs(),
     typescript({
-      exclude: ['**/test/*.ts', '**/*.test.ts']
+      exclude: ['**/test/*.ts', '**/*.test.ts'],
     }),
     babel({
       babelHelpers: 'bundled',
@@ -25,13 +25,13 @@ export default {
           {
             targets: '> 0.2%, not dead',
             useBuiltIns: 'usage',
-            corejs: '3.41'
-          }
-        ]
+            corejs: '3.41',
+          },
+        ],
       ],
       exclude: 'node_modules/**',
       extensions: ['.js', '.ts'],
     }),
-    terser()
-  ]
+    terser(),
+  ],
 };

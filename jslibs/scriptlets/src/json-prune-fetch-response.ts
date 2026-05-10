@@ -44,7 +44,7 @@ export function jsonPruneFetchResponse(
       let json: any;
       try {
         json = await response.json();
-      } catch (ex) {
+      } catch {
         return cloned;
       }
 
