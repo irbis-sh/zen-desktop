@@ -144,7 +144,7 @@ function hasOnlyStandardArgs(node: CSSTree.PseudoClassSelector): boolean {
  * Raw query token.
  */
 export class RawToken {
-  public kind: 'raw' = 'raw';
+  public kind = 'raw' as const;
   constructor(public literal: string) {}
   toString() {
     return `RawTok(${this.literal})`;
@@ -155,7 +155,7 @@ export class RawToken {
  * Combinator token.
  */
 export class CombToken {
-  public kind: 'comb' = 'comb';
+  public kind = 'comb' as const;
   constructor(public literal: string) {}
   toString() {
     return `CombTok(${this.literal})`;
@@ -166,7 +166,7 @@ export class CombToken {
  * Extended pseudo class token.
  */
 export class ExtToken {
-  public kind: 'ext' = 'ext';
+  public kind = 'ext' as const;
   constructor(
     public name: keyof typeof extPseudoClasses,
     public args: string,

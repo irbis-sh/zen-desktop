@@ -3,19 +3,15 @@ import { describe, test, beforeAll, afterAll } from '@jest/globals';
 import { MatchesPath } from './matchesPath';
 
 describe('MatchesPath', () => {
-  let originalLocation: Location;
+  let originalURL: string;
 
   beforeAll(() => {
-    originalLocation = window.location;
-    // @ts-ignore
-    delete window.location;
-    // @ts-ignore
-    window.location = { pathname: '/foo/bar/baz' };
+    originalURL = window.location.href;
+    window.history.pushState({}, '', '/foo/bar/baz');
   });
 
   afterAll(() => {
-    // @ts-ignore
-    window.location = originalLocation;
+    window.history.pushState({}, '', originalURL);
   });
 
   test('returns input if pathname includes the search string', () => {

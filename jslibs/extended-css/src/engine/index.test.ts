@@ -608,7 +608,7 @@ describe.each([
       const el = document.querySelector('.box')!;
       const style = getComputedStyle(el);
       expect(style.visibility).toBe('hidden');
-      expect(style.color).toBe('blue');
+      expect(style.color).toBe('rgb(0, 0, 255)');
     });
 
     test('updates styles when rule match swaps', async () => {
