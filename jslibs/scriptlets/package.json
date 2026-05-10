@@ -14,30 +14,31 @@
     "build": "rollup -c"
   },
   "dependencies": {
-    "@babel/preset-env": "^7.25.4",
-    "@rollup/plugin-babel": "^6.0.4",
-    "@rollup/plugin-commonjs": "^26.0.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
-    "@tsconfig/node20": "^20.1.4",
-    "core-js": "^3.41.0",
-    "regenerator-runtime": "^0.14.1",
-    "rollup": "^4.24.2",
-    "typescript": "^5.6.2"
+    "@babel/core": "7.29.0",
+    "@babel/preset-env": "7.29.3",
+    "@rollup/plugin-babel": "7.0.0",
+    "@rollup/plugin-commonjs": "29.0.2",
+    "@rollup/plugin-node-resolve": "16.0.3",
+    "@rollup/plugin-terser": "1.0.0",
+    "@rollup/plugin-typescript": "12.3.0",
+    "@tsconfig/node24": "24.0.4",
+    "core-js": "3.49.0",
+    "rollup": "4.60.2",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
-    "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.5.12",
+    "@jest/globals": "30.3.0",
+    "@types/jest": "30.0.0",
+    "@types/node": "24.12.2",
     "eslint": "9.39.4",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import-x": "4.16.2",
     "globals": "17.6.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "prettier": "^3.3.3",
-    "ts-jest": "^29.2.5",
+    "jest": "30.3.0",
+    "jest-environment-jsdom": "30.3.0",
+    "prettier": "3.8.3",
+    "ts-jest": "29.4.9",
     "typescript-eslint": "8.59.1"
   }
 }
