@@ -65,3 +65,43 @@ jobs:
         run: task frontend:fmt
       - name: Run frontend linter
         run: task frontend:lint
+
+  lint-extended-css:
+    name: Lint jslibs/extended-css
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: jslibs/extended-css/package.json
+          cache: 'npm'
+          cache-dependency-path: jslibs/extended-css/package-lock.json
+      - name: Run node --version
+        run: node --version
+      - name: Install dependencies
+        run: npm ci
+        working-directory: jslibs/extended-css
+      - name: Run linter
+        run: npm run lint
+        working-directory: jslibs/extended-css
+
+  lint-scriptlets:
+    name: Lint jslibs/scriptlets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: jslibs/scriptlets/package.json
+          cache: 'npm'
+          cache-dependency-path: jslibs/scriptlets/package-lock.json
+      - name: Run node --version
+        run: node --version
+      - name: Install dependencies
+        run: npm ci
+        working-directory: jslibs/scriptlets
+      - name: Run linter
+        run: npm run lint
+        working-directory: jslibs/scriptlets
