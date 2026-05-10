@@ -3,23 +3,23 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=20.15.1"
+    "node": ">=24.15.0 <25"
   },
   "scripts": {
-    "build": "tsc",
-    "upload-manifest": "node build/upload-manifest.js"
+    "typecheck": "tsc --noEmit",
+    "upload-manifest": "node src/upload-manifest.ts"
   },
   "devDependencies": {
-    "@types/html-to-text": "^9.0.4",
-    "@types/node": "^20.14.10",
-    "@types/semver": "^7.5.8",
-    "typescript": "^5.5.3"
+    "@types/html-to-text": "9.0.4",
+    "@types/node": "24.12.2",
+    "@types/semver": "7.7.1",
+    "typescript": "6.0.3"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.627.0",
-    "@octokit/rest": "^21.0.0",
-    "html-to-text": "^9.0.5",
-    "marked": "^13.0.2",
-    "semver": "^7.6.2"
+    "@aws-sdk/client-s3": "3.1041.0",
+    "@octokit/rest": "22.0.1",
+    "html-to-text": "10.0.0",
+    "marked": "18.0.3",
+    "semver": "7.7.4"
   }
 }
