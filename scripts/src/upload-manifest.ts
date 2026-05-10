@@ -39,8 +39,6 @@ const S3_API_ENDPOINT = process.env.S3_API_ENDPOINT;
 const S3_API_REGION = process.env.S3_API_REGION || 'auto';
 const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
 const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-const CF_ZONE_ID = process.env.CF_ZONE_ID;
-const CF_API_KEY = process.env.CF_API_KEY;
 
 const s3Client = new S3Client({
   endpoint: S3_API_ENDPOINT as string,
@@ -112,10 +110,6 @@ type Manifest = {
       const op = process.argv.includes('--dry-run') ? printManifestS3OpDryRun : uploadManifestToBucket;
       await op({ manifest, platform, arch });
     }
-  }
-
-  if (!process.argv.includes('--dry-run')) {
-    await purgeCloudflareCache();
   }
 })();
 
@@ -218,28 +212,6 @@ async function uploadManifestToBucket({
     }),
   );
   return key;
-}
-
-async function purgeCloudflareCache() {
-  console.log('Purging Cloudflare cache');
-  const url = `https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${CF_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ hosts: [MANIFESTS_HOST] }),
-  });
-  if (!res.ok) {
-    throw new Error(`Failed to purge Cloudflare cache: ${res.statusText}`);
-  }
-
-  const data = (await res.json()) as { success: boolean; errors: unknown[] };
-  if (!data.success) {
-    throw new Error(`Failed to purge Cloudflare cache: ${JSON.stringify(data.errors)}`);
-  }
-  console.log('Cloudflare cache purged successfully');
 }
 
 async function markdownToPlaintext(input: string): Promise<string> {
