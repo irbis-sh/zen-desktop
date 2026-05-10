@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Request blocked</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+          Helvetica, Arial, sans-serif;
+        background: #f6f7fb;
+        margin: 0;
+        color: #111;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 7vh auto;
+        padding: 24px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+        padding: 28px;
+      }
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 22px;
+      }
+      code,
+      pre {
+        background: #f3f4f6;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+      .actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        appearance: none;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: #2d6cdf;
+        color: #fff;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: #e5e7eb;
+        color: #111;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Blocked by Zen</h1>
+        <p><strong>URL:</strong> <code id="url"></code></p>
+        {{ if .Rule }}
+        <p><strong>Rule:</strong> <code>{{ .Rule }}</code></p>
+        {{ end }} {{ if .FilterList }}
+        <p><strong>Filter list:</strong> {{ .FilterList }}</p>
+        {{ end }}
+
+        <div class="actions">
+          <a id="allowLink" class="btn" onclick="allow()">Allow</a>
+          <a class="btn secondary" onclick="window.history.back()">Go back</a>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.getElementById('url').textContent = window.location.toString();
+
+      const rule = '{{ .Rule }}';
+      const returnTo = encodeURIComponent(location.href);
+
+      document.getElementById(
+        'allowLink'
+      ).href = `http://127.0.0.1:{{ .WhitelistPort }}/allow-rule?rule=${encodeURIComponent(
+        rule
+      )}&returnTo=${returnTo}`;
+    </script>
+  </body>
+</html>

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/irbis-sh/zen-core/filter"
+	"github.com/irbis-sh/zen-desktop/internal/filter"
 )
 
 const myRulesFilterName = "My rules"

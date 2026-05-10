@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/irbis-sh/process"
-	nrule "github.com/irbis-sh/zen-core/networkrules/rule"
+	nrule "github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 )
 
 type filterEventKind string
