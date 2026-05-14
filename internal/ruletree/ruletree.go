@@ -22,8 +22,6 @@ type Tree[T Data] struct {
 	domainBoundaryRoot *node[T]
 	// anchorRoot stores pattern beginning with tokenAnchor (|).
 	anchorRoot *node[T]
-	// generic is data without an associated pattern. It is returned for every Get call.
-	generic []T
 }
 
 func New[T Data]() *Tree[T] {
@@ -31,16 +29,12 @@ func New[T Data]() *Tree[T] {
 		root:               &node[T]{},
 		domainBoundaryRoot: &node[T]{},
 		anchorRoot:         &node[T]{},
-		generic:            make([]T, 0),
 	}
 }
 
 // Insert adds a pattern with associated data to the tree.
 func (t *Tree[T]) Insert(pattern string, v T) {
 	if pattern == "" {
-		t.insertMu.Lock()
-		t.generic = append(t.generic, v)
-		t.insertMu.Unlock()
 		return
 	}
 
@@ -162,11 +156,10 @@ func (t *Tree[T]) Get(url string) []T {
 		}
 	}
 
-	result := make([]T, len(t.generic)+len(data))
-	copy(result, t.generic)
+	result := make([]T, len(data))
 	var i int
 	for d := range data {
-		result[len(t.generic)+i] = d
+		result[i] = d
 		i++
 	}
 	return result

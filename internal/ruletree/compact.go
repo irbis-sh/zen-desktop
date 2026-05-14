@@ -1,11 +1,11 @@
 package ruletree
 
+import "github.com/irbis-sh/zen-desktop/internal/trimslice"
+
 // Compact shrinks internal slice capacities to reduce memory usage.
 func (t *Tree[T]) Compact() {
 	t.insertMu.Lock()
 	defer t.insertMu.Unlock()
-
-	t.generic = trimSlice(t.generic)
 
 	stack := []*node[T]{
 		t.anchorRoot,
@@ -18,11 +18,11 @@ func (t *Tree[T]) Compact() {
 		stack = stack[:len(stack)-1]
 
 		if n.isLeaf() {
-			n.leaf = trimSlice(n.leaf)
+			n.leaf = trimslice.TrimSlice(n.leaf)
 		}
 
-		n.edges = trimSlice(n.edges)
-		n.prefix = trimSlice(n.prefix)
+		n.edges = trimslice.TrimSlice(n.edges)
+		n.prefix = trimslice.TrimSlice(n.prefix)
 
 		if n.wildcard != nil {
 			stack = append(stack, n.wildcard)
@@ -37,14 +37,4 @@ func (t *Tree[T]) Compact() {
 			stack = append(stack, e.node)
 		}
 	}
-}
-
-func trimSlice[T any](s []T) []T {
-	if len(s) == cap(s) {
-		return s
-	}
-
-	newSlice := make([]T, len(s))
-	copy(newSlice, s)
-	return newSlice
 }

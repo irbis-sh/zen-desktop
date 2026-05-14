@@ -7,10 +7,9 @@ import (
 
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/exceptionrule"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
-	"github.com/irbis-sh/zen-desktop/internal/ruletree"
 )
 
-type ruleStore[T any] interface {
+type ruleStore[T comparable] interface {
 	Insert(string, T)
 	Get(string) []T
 	Compact()
@@ -23,8 +22,8 @@ type NetworkRules struct {
 
 func New() *NetworkRules {
 	return &NetworkRules{
-		primaryStore:   ruletree.New[*rule.Rule](),
-		exceptionStore: ruletree.New[*exceptionrule.ExceptionRule](),
+		primaryStore:   newRuleStore[*rule.Rule](),
+		exceptionStore: newRuleStore[*exceptionrule.ExceptionRule](),
 	}
 }
 

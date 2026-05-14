@@ -357,37 +357,18 @@ func TestPatternMatching(t *testing.T) {
 		})
 	})
 
-	t.Run("generic matching", func(t *testing.T) {
+	t.Run("empty pattern is ignored", func(t *testing.T) {
 		t.Parallel()
 
-		t.Run("singular", func(t *testing.T) {
-			t.Parallel()
+		tr := New[string]()
+		tr.Insert("", "")
 
-			tr := New[string]()
-			tr.Insert("", "")
+		got := tr.Get("https://example.com")
+		want := []string{}
 
-			got := tr.Get("https://example.com")
-			want := []string{""}
-
-			if !equalSets(got, want) {
-				t.Fatalf("got=%v, want=%v", got, want)
-			}
-		})
-
-		t.Run("multiple", func(t *testing.T) {
-			t.Parallel()
-
-			tr := New[string]()
-			tr.Insert("", "")
-			tr.Insert("|https://example.com", "|https://example.com")
-			tr.Insert("||example.com", "||example.com")
-
-			got := tr.Get("https://example.com")
-			want := []string{"", "|https://example.com", "||example.com"}
-			if !equalSets(got, want) {
-				t.Fatalf("got=%v, want=%v", got, want)
-			}
-		})
+		if !equalSets(got, want) {
+			t.Fatalf("got=%v, want=%v", got, want)
+		}
 	})
 
 	t.Run("complex rule intersections", func(t *testing.T) {
