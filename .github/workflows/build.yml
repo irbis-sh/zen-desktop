@@ -252,7 +252,7 @@ jobs:
       # https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds#generating-build-provenance-for-binaries
       id-token: write
       attestations: write
-      # https://github.com/softprops/action-gh-release/issues/236
+      # Needed to create a draft release and upload assets with gh.
       contents: write
     name: Attest & Release
     needs: [build-linux, build-macos, build-windows]
@@ -276,8 +276,15 @@ jobs:
           subject-path: artifacts/**
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
-        with:
-          files: artifacts/**
-          tag_name: ${{ github.ref }}
-          draft: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mapfile -d '' files < <(find artifacts -type f -print0)
+
+          if ((${#files[@]} == 0)); then
+            echo "No release artifacts found" >&2
+            exit 1
+          fi
+
+          gh release create "$GITHUB_REF_NAME" "${files[@]}" --draft --title "$GITHUB_REF_NAME"
