@@ -8,16 +8,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  # These permissions are required by golangci-lint to create annotations for PRs.
-  # https://github.com/golangci/golangci-lint-action?tab=readme-ov-file
   contents: read
   pull-requests: read
-  checks: write
 
 jobs:
   lint-go:
     name: Lint Go (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      # These permissions are required by golangci-lint to create annotations for PRs.
+      # https://github.com/golangci/golangci-lint-action?tab=readme-ov-file
+      contents: read
+      pull-requests: read
+      checks: write
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
