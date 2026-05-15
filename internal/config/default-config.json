@@ -312,13 +312,6 @@
         "locales": ["pl"]
       },
       {
-        "url": "https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock.txt",
-        "name": "🇵🇱PL: Oficjalne polskie filtry przeciwko alertom o Adblocku",
-        "enabled": false,
-        "type": "regional",
-        "locales": ["pl"]
-      },
-      {
         "url": "https://raw.githubusercontent.com/tcptomato/ROad-Block/master/road-block-filters-light.txt",
         "name": "🇷🇴RO 🇲🇩MD: Romanian Ad (ROad) Block List Light",
         "enabled": false,

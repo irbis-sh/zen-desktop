@@ -336,6 +336,26 @@ var migrations = []migration{
 			return nil
 		})
 	}},
+	{"v0.22.0", func(c *Config) error {
+		const removedURL = "https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock.txt"
+
+		return c.update(func() error {
+			filtered := c.Filter.FilterLists[:0]
+			removed := false
+			for _, fl := range c.Filter.FilterLists {
+				if fl.URL == removedURL {
+					removed = true
+					continue
+				}
+				filtered = append(filtered, fl)
+			}
+			c.Filter.FilterLists = filtered
+			if removed {
+				log.Printf("v0.22.0 migration: removed stale anti-adblock list")
+			}
+			return nil
+		})
+	}},
 }
 
 // RunMigrations runs the version-to-version migrations in order.
