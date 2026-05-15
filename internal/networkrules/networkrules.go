@@ -9,15 +9,9 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 )
 
-type ruleStore[T comparable] interface {
-	Insert(string, T)
-	Get(string) []T
-	Compact()
-}
-
 type NetworkRules struct {
-	primaryStore   ruleStore[*rule.Rule]
-	exceptionStore ruleStore[*exceptionrule.ExceptionRule]
+	primaryStore   *ruleStore[*rule.Rule]
+	exceptionStore *ruleStore[*exceptionrule.ExceptionRule]
 }
 
 func New() *NetworkRules {
