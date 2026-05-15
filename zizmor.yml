@@ -1,0 +1,5 @@
+rules:
+  cache-poisoning:
+    ignore:
+      # Test jobs do not publish artifacts or use release/deployment credentials.
+      - test.yml
