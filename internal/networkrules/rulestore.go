@@ -29,9 +29,10 @@ func newRuleStore[T comparable]() *ruleStore[T] {
 
 func (s *ruleStore[T]) Insert(pattern string, v T) error {
 	// The pattern is either generic (empty), regexp, or regular.
-	if pattern == "" {
+	switch {
+	case pattern == "":
 		s.generic = append(s.generic, v)
-	} else if len(pattern) > 1 && pattern[0] == '/' && pattern[len(pattern)-1] == '/' {
+	case len(pattern) > 1 && pattern[0] == '/' && pattern[len(pattern)-1] == '/':
 		body := pattern[1 : len(pattern)-1]
 		if body == "" {
 			return fmt.Errorf("empty regexp rule")
@@ -44,7 +45,7 @@ func (s *ruleStore[T]) Insert(pattern string, v T) error {
 			regexp: re,
 			value:  v,
 		})
-	} else {
+	default:
 		s.tree.Insert(pattern, v)
 	}
 
