@@ -57,6 +57,30 @@ func (nr *NetworkRules) ParseRule(rawRule string, filterName *string) (isExcepti
 				return false, fmt.Errorf("parse modifiers: %v", err)
 			}
 		}
+
+		if matches := reHosts.FindStringSubmatch(pattern); matches != nil {
+			hostsField := matches[1]
+			if commentIndex := strings.IndexByte(hostsField, '#'); commentIndex != -1 {
+				hostsField = hostsField[:commentIndex]
+			}
+
+			hosts := strings.Fields(hostsField)
+			r.Document = true
+
+			for _, host := range hosts {
+				if reHostsIgnore.MatchString(host) {
+					continue
+				}
+
+				hostPattern := fmt.Sprintf("||%s^", host)
+				if err := nr.exceptionStore.Insert(hostPattern, r); err != nil {
+					return false, fmt.Errorf("insert hosts exception rule: %w", err)
+				}
+			}
+
+			return true, nil
+		}
+
 		if err := nr.exceptionStore.Insert(pattern, r); err != nil {
 			return false, fmt.Errorf("insert exception rule: %w", err)
 		}
