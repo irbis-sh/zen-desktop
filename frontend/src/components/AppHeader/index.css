@@ -1,10 +1,14 @@
 .heading {
   margin: 0 12px;
   padding: 6px 0;
-  border-bottom: 1px dotted #333;
+  border-bottom: 1px solid rgba(17, 20, 24, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.bp6-dark .heading {
+  border-color: hsla(0, 0%, 100%, 0.2);
 }
 
 .heading__branding {

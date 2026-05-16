@@ -12,10 +12,6 @@
   color: #fff;
 }
 
-.bp6-dark .heading {
-  border-bottom: 1px dotted #f5f5f5;
-}
-
 /* Light theme version of logo */
 #app:not(.bp6-dark) .heading__logo svg {
   stroke: #394b59;
