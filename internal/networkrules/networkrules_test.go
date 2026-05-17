@@ -169,6 +169,138 @@ func TestRegexpRules(t *testing.T) {
 	})
 }
 
+func TestExceptionRules(t *testing.T) {
+	t.Parallel()
+
+	t.Run("generic exception cancels document primary", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$document`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com^`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{
+			"Sec-Fetch-Dest": []string{"document"},
+			"Sec-Fetch-User": []string{"?1"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/", headers))
+		if shouldBlock {
+			t.Fatal("expected generic exception to cancel document primary rule")
+		}
+	})
+
+	t.Run("exception cancels primary with matching request modifiers", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||cdn.example/ad.js$script,domain=example.com`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||cdn.example/ad.js$script,domain=example.com`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{
+			"Referer":        []string{"https://example.com/page"},
+			"Sec-Fetch-Dest": []string{"script"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://cdn.example/ad.js", headers))
+		if shouldBlock {
+			t.Fatal("expected exception to cancel primary rule with matching request modifiers")
+		}
+	})
+
+	t.Run("exception does not cancel a different content type", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com/ad$script`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com/ad$image`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{"Sec-Fetch-Dest": []string{"script"}}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/ad", headers))
+		if !shouldBlock {
+			t.Fatal("expected primary rule to block when exception is for a different content type")
+		}
+	})
+
+	t.Run("single exception cancels multiple primary rules", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com/ad.js$script`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`||example.com/ad.js$script,third-party`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com/ad.js$script`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{
+			"Sec-Fetch-Dest": []string{"script"},
+			"Sec-Fetch-Site": []string{"cross-site"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/ad.js", headers))
+		if shouldBlock {
+			t.Fatal("expected single exception to cancel every matching primary rule")
+		}
+	})
+
+	t.Run("exception cancels query modification", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$removeparam=utm_source`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com^$removeparam=utm_source`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, redirectURL := nr.ModifyReq(newTestRequest(t, "https://example.com/?utm_source=ad&id=1", nil))
+		if shouldBlock {
+			t.Fatal("expected query modification rule not to block")
+		}
+		if redirectURL != "" {
+			t.Fatalf("redirect URL = %q, want empty", redirectURL)
+		}
+	})
+
+	t.Run("exception cancels response modification", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com/tracking.js$removeheader=X-Test`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com/tracking.js$removeheader=X-Test`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		res := &http.Response{Header: http.Header{"X-Test": []string{"1"}}}
+		applied, err := nr.ModifyRes(newTestRequest(t, "https://example.com/tracking.js", nil), res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(applied) != 0 {
+			t.Fatalf("applied rules = %d, want 0", len(applied))
+		}
+		if res.Header.Get("X-Test") != "1" {
+			t.Fatal("expected response header to be preserved")
+		}
+	})
+}
+
 func newTestRequest(t *testing.T, rawURL string, headers http.Header) *http.Request {
 	t.Helper()
 
