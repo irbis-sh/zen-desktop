@@ -121,6 +121,11 @@ func (rm *Rule) ShouldMatchReq(req *http.Request) bool {
 		return false
 	}
 
+	return rm.ModifiersMatchReq(req)
+}
+
+// ModifiersMatchReq returns true if the rule's matching modifiers match the request.
+func (rm *Rule) ModifiersMatchReq(req *http.Request) bool {
 	// AndModifiers: All must match.
 	for _, m := range rm.MatchingModifiers.And {
 		if !m.ShouldMatchReq(req) {
@@ -143,7 +148,11 @@ func (rm *Rule) ShouldMatchReq(req *http.Request) bool {
 
 // ShouldMatchRes returns true if the rule should match the response.
 func (rm *Rule) ShouldMatchRes(res *http.Response) bool {
-	// maybe add sec-fetch logic too
+	return rm.ModifiersMatchRes(res)
+}
+
+// ModifiersMatchRes returns true if the rule's matching modifiers match the response.
+func (rm *Rule) ModifiersMatchRes(res *http.Response) bool {
 	for _, m := range rm.MatchingModifiers.And {
 		if !m.ShouldMatchRes(res) {
 			return false

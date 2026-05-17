@@ -16,8 +16,10 @@ func TestExceptionRule(t *testing.T) {
 		filterName := "test"
 
 		er := &ExceptionRule{
-			RawRule:    "||example.com",
-			FilterName: &filterName,
+			Rule: rule.Rule{
+				RawRule:    "||example.com",
+				FilterName: &filterName,
+			},
 		}
 		r := &rule.Rule{
 			RawRule:    "||example.com$document",
@@ -37,8 +39,10 @@ func TestExceptionRule(t *testing.T) {
 		filterName := "test"
 
 		er := &ExceptionRule{
-			RawRule:    "||example.com$document",
-			FilterName: &filterName,
+			Rule: rule.Rule{
+				RawRule:    "||example.com$document",
+				FilterName: &filterName,
+			},
 		}
 		r := &rule.Rule{
 			RawRule:    "||example.com$document",
@@ -59,8 +63,10 @@ func TestExceptionRule(t *testing.T) {
 		filterName := "test"
 
 		er := &ExceptionRule{
-			RawRule:    "||example.com^$document",
-			FilterName: &filterName,
+			Rule: rule.Rule{
+				RawRule:    "||example.com^$document",
+				FilterName: &filterName,
+			},
 		}
 		r := &rule.Rule{
 			RawRule:    "||example.com",

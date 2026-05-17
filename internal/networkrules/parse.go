@@ -47,8 +47,10 @@ func (nr *NetworkRules) ParseRule(rawRule string, filterName *string) (isExcepti
 
 	if strings.HasPrefix(rawRule, "@@") {
 		r := &exceptionrule.ExceptionRule{
-			RawRule:    rawRule,
-			FilterName: filterName,
+			Rule: rule.Rule{
+				RawRule:    rawRule,
+				FilterName: filterName,
+			},
 		}
 
 		pattern, modifiers := parseRuleParts(rawRule[2:])
