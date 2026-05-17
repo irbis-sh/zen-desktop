@@ -6,6 +6,52 @@ import (
 	"testing"
 )
 
+func TestHostsRules(t *testing.T) {
+	t.Parallel()
+
+	t.Run("blocks matching index request", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`0.0.0.0 example.com`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com", nil))
+		if !shouldBlock {
+			t.Fatal("expected rule to block matching request")
+		}
+	})
+
+	t.Run("blocks matching non-index request", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`0.0.0.0 example.com`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/test", nil))
+		if !shouldBlock {
+			t.Fatal("expected rule to block matching request")
+		}
+	})
+
+	t.Run("blocks matching sub-domain", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`0.0.0.0 example.com`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://sub.example.com", nil))
+		if !shouldBlock {
+			t.Fatal("expected rule to block matching request")
+		}
+	})
+}
+
 func TestRegexpRules(t *testing.T) {
 	t.Parallel()
 
