@@ -287,4 +287,4 @@ jobs:
             exit 1
           fi
 
-          gh release create "$GITHUB_REF_NAME" "${files[@]}" --draft --title "$GITHUB_REF_NAME"
+          gh release create "$GITHUB_REF_NAME" "${files[@]}" --draft --title "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY"
