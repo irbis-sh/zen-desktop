@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.22.0
+
+### What's New
+
+* **Regular-expression rule support**
+  Zen now supports regexp rules. This improves compatibility with filter lists that use regexp patterns to match dynamic tracking and ad URLs.
+* **Fixed allowlisting for hosts rules**
+  The "Allow" button on "Blocked by Zen" pages now works correctly when the block was caused by a hosts-style rule such as `0.0.0.0 example.net`.
+* **Fixed macOS service compatibility**
+  HTTPS exclusions were updated to fix sign-in and calling issues with Apple Messages and FaceTime. Thanks to @rishiskhare for reporting the issue!
+* **Removed a stale built-in filter lists**
+  An outdated Polish anti-adblock list has been removed from the configuration. Thanks to @qorexdevs for the contribution!
+* **UI polish**
+  The header and filter lists now use cleaner divider styling for a more consistent look.
+
+### New Contributors
+* @qorexdevs made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/682
+
+Thank you for using Zen!
+
+**Full changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.21.1...v0.22.0
+
 ## v0.21.1
 
 ### What's New
