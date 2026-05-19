@@ -1,0 +1,199 @@
+{
+  "app": {
+    "proxy": {
+      "description": "プロキシは停止中です。下のボタンをクリックして有効にしてください。",
+      "inactive": "プロキシを有効にすると、ブロックされたリクエストを確認できます"
+    },
+    "tabs": {
+      "filterLists": "フィルターリスト",
+      "home": "ホーム",
+      "rules": "ルール",
+      "settings": "設定"
+    },
+    "update": {
+      "restart": "再起動",
+      "restartFailed": "アプリの再起動に失敗しました: {{error}}",
+      "updateAvailable": "Zen の新しいバージョンが利用可能です。"
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "アプリを追加",
+    "allowlistMode": "選択したアプリのみをプロキシ",
+    "blocklistMode": "選択したアプリ以外はすべてプロキシ",
+    "description": "Zen のプロキシを使用するアプリを選択してください。",
+    "emptyAllowlistWarning": "アプリが選択されていません。すべての通信は Zen を経由しません。",
+    "label": "アプリのルーティング",
+    "removeApp": "アプリを削除",
+    "saveError": "アプリのルーティング設定の保存に失敗しました: {{error}}",
+    "selectError": "アプリの選択に失敗しました: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "スクリプトやスタイルを注入するために内部アセットサーバーが使用するポートです。",
+    "helper": "1024 未満のポートを使用する場合は、管理者権限が必要になることがあります。",
+    "label": "アセットサーバーのポート",
+    "setError": "アセットサーバーのポートの設定に失敗しました: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "ログイン時に Zen を自動起動します",
+    "disableError": "自動起動の無効化に失敗しました: {{error}}",
+    "enableError": "自動起動の有効化に失敗しました: {{error}}",
+    "label": "自動起動"
+  },
+  "common": {
+    "stopProxyToAddFilter": "新しいフィルターリストを追加するにはプロキシを停止してください",
+    "stopProxyToDeleteFilter": "このフィルターリストを削除するにはプロキシを停止してください",
+    "stopProxyToEditRules": "カスタムルールを変更するにはプロキシを停止してください",
+    "stopProxyToModify": "この設定を変更するにはプロキシを停止してください",
+    "stopProxyToToggleFilter": "このフィルターリストを有効/無効にするにはプロキシを停止してください"
+  },
+  "createFilterList": {
+    "addError": "フィルターリストの追加に失敗しました: {{error}}",
+    "addList": "フィルターリストを追加",
+    "trustedListsWarning": "信頼済みリストでは、<code>trusted-</code> スクリプトレットや JavaScript ルールのような強力なブロック機能を使用できますが、悪意のある第三者に改ざんされると<strong>プライバシーとセキュリティを損なう可能性があります</strong>。信頼できる提供元のリストにのみこのオプションを有効にしてください。"
+  },
+  "donate": "寄付",
+  "exportDebugDataButton": {
+    "error": "デバッグデータのエクスポートに失敗しました: {{error}}",
+    "label": "デバッグデータをエクスポート",
+    "success": "デバッグデータをクリップボードにコピーしました",
+    "tooltip": "デバッグ情報をクリップボードにコピー"
+  },
+  "exportFilterList": {
+    "errorMessage": "フィルターリストのエクスポートに失敗しました: {{error}}",
+    "export": "エクスポート",
+    "successMessage": "カスタムフィルターリストを正常にエクスポートしました"
+  },
+  "exportLogsButton": {
+    "label": "ログをエクスポート",
+    "openError": "ログディレクトリを開けませんでした: {{error}}",
+    "tooltip": "ログディレクトリを開く"
+  },
+  "filterLists": {
+    "copied": "コピーしました",
+    "copy": "リンクをコピー",
+    "delete": "削除",
+    "goTo": "ブラウザで開く",
+    "more": "その他",
+    "removeError": "フィルターリストの削除に失敗しました: {{error}}",
+    "toggleError": "フィルターリストの切り替えに失敗しました: {{error}}",
+    "trusted": "信頼済み",
+    "whatIsThis": "これは何ですか"
+  },
+  "filterTypes": {
+    "ads": "広告",
+    "custom": "カスタム",
+    "digitalWellbeing": "デジタルウェルビーイング",
+    "general": "一般",
+    "malware": "マルウェア",
+    "privacy": "プライバシー",
+    "regional": "地域別"
+  },
+  "ignoredHostsInput": {
+    "description": "プロキシ対象から除外するホストです。証明書ピンニングを使うサービスや、プロキシの影響を受けるサービスに使ってください。",
+    "helper": "1 行に 1 つのホストを入力してください。",
+    "label": "無視するホスト"
+  },
+  "importFilterList": {
+    "errorMessage": "フィルターリストのインポートに失敗しました: {{error}}",
+    "import": "インポート",
+    "successMessage": "カスタムフィルターリストを正常にインポートしました"
+  },
+  "intro": {
+    "buttons": {
+      "next": "次へ",
+      "skip": "紹介をスキップ"
+    },
+    "connect": {
+      "caNote": "初回起動時、Zen はローカルのルート CA 証明書のインストールを求めることがあります。これにより HTTPS フィルタリングが有効になり、Zen はすべてのサイトで広告やトラッカーをブロックできます。処理はすべてローカルで完結します。<strong>データがデバイスの外に送られることはありません</strong>。<br />技術的な詳細は GitHub をご覧ください。",
+      "description": "準備はできました。「開始」を押して Zen の包括的なネットワーク保護を有効にしてください。",
+      "donateText": "また、以下からのご支援もご検討ください:",
+      "socialText": "よろしければ、SNS もご覧ください:",
+      "title": "準備完了！"
+    },
+    "filterLists": {
+      "description": "広告ブロックとプライバシー保護を有効にするために、Zen は<strong>フィルターリスト</strong>を使用します。あとからアプリ内で設定することもできます。",
+      "recommendation": "お使いの地域に基づき、以下のフィルターリストを有効にすることをおすすめします:",
+      "title": "フィルターリスト"
+    },
+    "settings": {
+      "description": "以下の設定を確認してください:",
+      "settingsNote": "これらはあとからいつでもアプリ内で変更できます。",
+      "title": "設定"
+    },
+    "welcome": {
+      "description": "言語を選択してください:",
+      "title": "Zen へようこそ！"
+    }
+  },
+  "portInput": {
+    "description": "プロキシサーバーが待ち受けるポートです（0 でランダム）。",
+    "helper": "1024 未満のポートを使用する場合は、管理者権限が必要になることがあります。",
+    "label": "ポート"
+  },
+  "requestLog": {
+    "emptyState": "ブラウジングを開始すると、ブロックされたリクエストが表示されます。",
+    "filterName": "フィルター名",
+    "method": "メソッド",
+    "process": "プロセス",
+    "processName": "名前",
+    "processPath": "パス",
+    "redirectedTo": "リダイレクト先",
+    "referer": "リファラ",
+    "request": "リクエスト",
+    "rule": "ルール",
+    "rules": "ルール",
+    "url": "URL"
+  },
+  "rules": {
+    "help": "ヘルプ",
+    "placeholder": "ここにカスタムルールを追加してください..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "変更履歴",
+      "tagline": "包括的な広告ブロッカーとプライバシーガード",
+      "version": "バージョン"
+    },
+    "ca": {
+      "confirmTitle": "CA をアンインストールしてもよろしいですか？",
+      "errorMessage": "CA のアンインストールに失敗しました: {{error}}",
+      "reasons": {
+        "malfunctioning": "CA のインストールが正常に動作していないと思われる場合。たとえば、HTTPS サイト閲覧時にブラウザーエラーが出る、または他のアプリがインターネットに接続できないといった症状です。",
+        "uninstall": "Zen を完全にアンインストールしたい場合。"
+      },
+      "reinstallInfo": "Zen をもう一度起動すると、新しい CA がインストールされます。",
+      "stopProxyTooltip": "CA をアンインストールするにはプロキシを停止してください",
+      "successMessage": "CA のアンインストールに成功しました",
+      "uninstallButton": "CA をアンインストール",
+      "uninstallConfirm": "アンインストール",
+      "usefulIf": "次のような場合に役立ちます"
+    },
+    "language": {
+      "helper": "使用する言語を選択してください",
+      "label": "言語"
+    },
+    "sections": {
+      "advanced": "詳細設定",
+      "app": "アプリ"
+    },
+    "theme": {
+      "chooseTheme": "テーマを選択",
+      "dark": "ダーク",
+      "light": "ライト",
+      "system": "システムのテーマに従う"
+    },
+    "updates": {
+      "automaticUpdates": "更新を自動的にダウンロード",
+      "description": "有効にすると、Zen は更新を自動的に確認します",
+      "disableError": "自動更新の無効化に失敗しました: {{error}}",
+      "enableError": "自動更新の有効化に失敗しました: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "開始",
+    "startError": "プロキシの開始に失敗しました: {{error}}",
+    "stop": "停止",
+    "stopError": "プロキシの停止に失敗しました: {{error}}",
+    "unsupportedDEGuide": "システムプロキシの自動設定は、現在 GNOME と KDE のみ対応しています。<br />アプリごとにプロキシを設定するには、<guide-link>こちらのガイド</guide-link>に従ってください。"
+  }
+}
