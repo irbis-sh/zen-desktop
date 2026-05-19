@@ -7,6 +7,7 @@ import deDE from './locales/de-DE.json';
 import enUS from './locales/en-US.json';
 import frFR from './locales/fr-FR.json';
 import itIT from './locales/it-IT.json';
+import jaJP from './locales/ja-JP.json';
 import kkKZ from './locales/kk-KZ.json';
 import ruRU from './locales/ru-RU.json';
 import trTR from './locales/tr-TR.json';
@@ -29,6 +30,8 @@ export const SUPPORTED_LOCALES = [
   'zh',
   'zh-CN',
   'zh-TW',
+  'ja',
+  'ja-JP',
   'fr',
   'fr-FR',
 ] as const;
@@ -47,6 +50,7 @@ export const LOCALE_LABELS: LocaleItem[] = [
   { value: 'ru-RU', label: 'Русский' },
   { value: 'zh-CN', label: '中文（简体）' },
   { value: 'zh-TW', label: '中文（繁體）' },
+  { value: 'ja-JP', label: '日本語' },
   { value: 'it-IT', label: 'Italiano' },
   { value: 'tr-TR', label: 'Türkçe' },
   { value: 'fr-FR', label: 'Français' },
@@ -62,11 +66,13 @@ LOCALE_LABELS.sort((a, b) => localeLabelsCollator.compare(a.label, b.label));
 
 export function detectSystemLocale(): SupportedLocale {
   const browserLang = navigator.language;
-  const detected = (SUPPORTED_LOCALES as readonly string[]).includes(browserLang)
+  const supportedLocales = SUPPORTED_LOCALES as readonly string[];
+  const languageCode = browserLang.split('-')[0];
+  const detected = supportedLocales.includes(browserLang)
     ? (browserLang as SupportedLocale)
-    : FALLBACK_LOCALE;
+    : supportedLocales.find((locale) => locale === languageCode || locale.startsWith(`${languageCode}-`));
 
-  return detected;
+  return (detected as SupportedLocale) || FALLBACK_LOCALE;
 }
 
 export function getCurrentLocale(): SupportedLocale {
@@ -100,6 +106,8 @@ export async function initI18n() {
       zh: { translation: zhCN },
       'zh-CN': { translation: zhCN },
       'zh-TW': { translation: zhTW },
+      ja: { translation: jaJP },
+      'ja-JP': { translation: jaJP },
       it: { translation: itIT },
       'it-IT': { translation: itIT },
       tr: { translation: trTR },
