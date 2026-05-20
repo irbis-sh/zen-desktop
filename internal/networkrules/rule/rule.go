@@ -19,19 +19,19 @@ type Rule struct {
 	// FilterName is the name of the filter that the rule belongs to.
 	FilterName *string
 
-	MatchingModifiers matchingModifiers
-	ReqResModifiers   []rulemodifiers.ReqResModifier
-	QueryModifiers    []rulemodifiers.QueryModifier
+	ConditionModifiers conditionModifiers
+	ActionModifiers    []rulemodifiers.ActionModifier
+	QueryModifiers     []rulemodifiers.QueryModifier
 
 	// Document shows if rule has Document modifier.
 	Document bool
 }
 
-type matchingModifiers struct {
+type conditionModifiers struct {
 	// And are modifiers that must all match for the rule to apply.
-	And []rulemodifiers.MatchingModifier
+	And []rulemodifiers.ConditionModifier
 	// Or are modifiers where at least one must match for the rule to apply.
-	Or []rulemodifiers.MatchingModifier
+	Or []rulemodifiers.ConditionModifier
 }
 
 func (rm *Rule) ParseModifiers(modifiers []string) error {
@@ -97,14 +97,14 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 		}
 
 		switch typed := modifier.(type) {
-		case rulemodifiers.MatchingModifier:
+		case rulemodifiers.ConditionModifier:
 			if isOr {
-				rm.MatchingModifiers.Or = append(rm.MatchingModifiers.Or, typed)
+				rm.ConditionModifiers.Or = append(rm.ConditionModifiers.Or, typed)
 			} else {
-				rm.MatchingModifiers.And = append(rm.MatchingModifiers.And, typed)
+				rm.ConditionModifiers.And = append(rm.ConditionModifiers.And, typed)
 			}
-		case rulemodifiers.ReqResModifier:
-			rm.ReqResModifiers = append(rm.ReqResModifiers, typed)
+		case rulemodifiers.ActionModifier:
+			rm.ActionModifiers = append(rm.ActionModifiers, typed)
 		case rulemodifiers.QueryModifier:
 			rm.QueryModifiers = append(rm.QueryModifiers, typed)
 		default:
@@ -127,15 +127,15 @@ func (rm *Rule) ShouldMatchReq(req *http.Request) bool {
 // ModifiersMatchReq returns true if the rule's matching modifiers match the request.
 func (rm *Rule) ModifiersMatchReq(req *http.Request) bool {
 	// AndModifiers: All must match.
-	for _, m := range rm.MatchingModifiers.And {
+	for _, m := range rm.ConditionModifiers.And {
 		if !m.ShouldMatchReq(req) {
 			return false
 		}
 	}
 
 	// OrModifiers: At least one must match.
-	if len(rm.MatchingModifiers.Or) > 0 {
-		for _, m := range rm.MatchingModifiers.Or {
+	if len(rm.ConditionModifiers.Or) > 0 {
+		for _, m := range rm.ConditionModifiers.Or {
 			if m.ShouldMatchReq(req) {
 				return true
 			}
@@ -153,14 +153,14 @@ func (rm *Rule) ShouldMatchRes(res *http.Response) bool {
 
 // ModifiersMatchRes returns true if the rule's matching modifiers match the response.
 func (rm *Rule) ModifiersMatchRes(res *http.Response) bool {
-	for _, m := range rm.MatchingModifiers.And {
+	for _, m := range rm.ConditionModifiers.And {
 		if !m.ShouldMatchRes(res) {
 			return false
 		}
 	}
 
-	if len(rm.MatchingModifiers.Or) > 0 {
-		for _, m := range rm.MatchingModifiers.Or {
+	if len(rm.ConditionModifiers.Or) > 0 {
+		for _, m := range rm.ConditionModifiers.Or {
 			if m.ShouldMatchRes(res) {
 				return true
 			}
@@ -173,12 +173,12 @@ func (rm *Rule) ModifiersMatchRes(res *http.Response) bool {
 
 // ShouldBlockReq returns true if the request should be blocked.
 func (rm *Rule) ShouldBlockReq(*http.Request) bool {
-	return len(rm.ReqResModifiers) == 0 && len(rm.QueryModifiers) == 0
+	return len(rm.ActionModifiers) == 0 && len(rm.QueryModifiers) == 0
 }
 
 // ModifyReq modifies a request. Returns true if the request was modified.
 func (rm *Rule) ModifyReq(req *http.Request) (modified bool) {
-	for _, modifier := range rm.ReqResModifiers {
+	for _, modifier := range rm.ActionModifiers {
 		if modifier.ModifyReq(req) {
 			modified = true
 		}
@@ -200,7 +200,7 @@ func (rm *Rule) ModifyReqQuery(query url.Values) (modified bool) {
 
 // ModifyRes modifies a response. Returns true if the response was modified.
 func (rm *Rule) ModifyRes(res *http.Response) (modified bool, err error) {
-	for _, modifier := range rm.ReqResModifiers {
+	for _, modifier := range rm.ActionModifiers {
 		m, err := modifier.ModifyRes(res)
 		if err != nil {
 			return false, fmt.Errorf("modify response: %w", err)

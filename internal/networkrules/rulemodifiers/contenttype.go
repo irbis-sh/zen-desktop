@@ -9,7 +9,7 @@ type ContentTypeModifier struct {
 	inverted    bool
 }
 
-var _ MatchingModifier = (*ContentTypeModifier)(nil)
+var _ ConditionModifier = (*ContentTypeModifier)(nil)
 
 var (
 	// secFetchDestMap maps Sec-Fetch-Dest header values to corresponding content type modifiers.

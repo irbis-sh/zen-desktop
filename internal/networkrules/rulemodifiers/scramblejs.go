@@ -19,7 +19,7 @@ type ScrambleJSModifier struct {
 	keys []*regexp.Regexp
 }
 
-var _ ReqResModifier = (*ScrambleJSModifier)(nil)
+var _ ActionModifier = (*ScrambleJSModifier)(nil)
 
 var scrambleJSRegex = regexp.MustCompile(`^scramblejs=(.+)$`)
 

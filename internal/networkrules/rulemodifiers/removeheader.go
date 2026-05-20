@@ -76,7 +76,7 @@ type RemoveHeaderModifier struct {
 	HeaderName string
 }
 
-var _ ReqResModifier = (*RemoveHeaderModifier)(nil)
+var _ ActionModifier = (*RemoveHeaderModifier)(nil)
 
 func (rm *RemoveHeaderModifier) Parse(modifier string) error {
 	if !strings.HasPrefix(modifier, "removeheader=") {

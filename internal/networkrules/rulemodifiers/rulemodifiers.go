@@ -11,21 +11,22 @@ type Modifier interface {
 	Cancels(Modifier) bool
 }
 
-// MatchingModifier defines whether a rule matches a request.
-type MatchingModifier interface {
+// ConditionModifier restrict when a rule applies based on request/response metadata.
+type ConditionModifier interface {
 	Modifier
 	ShouldMatchReq(*http.Request) bool
 	ShouldMatchRes(*http.Response) bool
 }
 
-// ReqResModifier modifies requests and responses.
-type ReqResModifier interface {
+// ActionModifier modifies requests and responses.
+type ActionModifier interface {
 	Modifier
 	ModifyReq(*http.Request) bool
 	ModifyRes(*http.Response) (bool, error)
 }
 
 // QueryModifier modifies request query parameters.
+// According to terminology, they are also "action modifiers", but are implemented separately for performance reasons.
 type QueryModifier interface {
 	Modifier
 	ModifyQuery(url.Values) bool

@@ -22,7 +22,7 @@ type DomainModifier struct {
 	inverted bool
 }
 
-var _ MatchingModifier = (*DomainModifier)(nil)
+var _ ConditionModifier = (*DomainModifier)(nil)
 
 func (m *DomainModifier) Parse(modifier string) error {
 	eqIndex := strings.IndexByte(modifier, '=')

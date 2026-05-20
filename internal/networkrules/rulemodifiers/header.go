@@ -17,7 +17,7 @@ type HeaderModifier struct {
 	regexp *regexp.Regexp
 }
 
-var _ MatchingModifier = (*HeaderModifier)(nil)
+var _ ConditionModifier = (*HeaderModifier)(nil)
 
 func (h *HeaderModifier) Parse(modifier string) error {
 	if len(modifier) == 0 {

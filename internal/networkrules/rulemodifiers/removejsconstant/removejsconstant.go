@@ -20,7 +20,7 @@ type Modifier struct {
 	keys [][]string
 }
 
-var _ rulemodifiers.ReqResModifier = (*Modifier)(nil)
+var _ rulemodifiers.ActionModifier = (*Modifier)(nil)
 
 var removeJSConstantRegex = regexp.MustCompile(`^remove-js-constant=(.*)$`)
 
@@ -38,7 +38,7 @@ func (rc *Modifier) Parse(modifier string) error {
 	return nil
 }
 
-// ModifyReq implements [rulemodifiers.ReqResModifier].
+// ModifyReq implements [rulemodifiers.ActionModifier].
 func (*Modifier) ModifyReq(*http.Request) bool {
 	return false
 }

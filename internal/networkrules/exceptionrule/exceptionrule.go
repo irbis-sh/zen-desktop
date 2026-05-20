@@ -15,13 +15,13 @@ func (er *ExceptionRule) Cancels(r *rule.Rule) bool {
 		return false
 	}
 
-	if len(er.MatchingModifiers.And) == 0 && len(er.MatchingModifiers.Or) == 0 && len(er.ReqResModifiers) == 0 && len(er.QueryModifiers) == 0 {
+	if len(er.ConditionModifiers.And) == 0 && len(er.ConditionModifiers.Or) == 0 && len(er.ActionModifiers) == 0 && len(er.QueryModifiers) == 0 {
 		return true
 	}
 
-	for _, exc := range er.MatchingModifiers.And {
+	for _, exc := range er.ConditionModifiers.And {
 		found := false
-		for _, basic := range r.MatchingModifiers.And {
+		for _, basic := range r.ConditionModifiers.And {
 			if exc.Cancels(basic) {
 				found = true
 				break
@@ -32,10 +32,10 @@ func (er *ExceptionRule) Cancels(r *rule.Rule) bool {
 		}
 	}
 
-	if len(er.MatchingModifiers.Or) > 0 {
+	if len(er.ConditionModifiers.Or) > 0 {
 		found := false
-		for _, exc := range er.MatchingModifiers.Or {
-			for _, basic := range r.MatchingModifiers.Or {
+		for _, exc := range er.ConditionModifiers.Or {
+			for _, basic := range r.ConditionModifiers.Or {
 				if exc.Cancels(basic) {
 					found = true
 					break
@@ -50,9 +50,9 @@ func (er *ExceptionRule) Cancels(r *rule.Rule) bool {
 		}
 	}
 
-	for _, exc := range er.ReqResModifiers {
+	for _, exc := range er.ActionModifiers {
 		found := false
-		for _, basic := range r.ReqResModifiers {
+		for _, basic := range r.ActionModifiers {
 			if exc.Cancels(basic) {
 				found = true
 				break

@@ -12,7 +12,7 @@ type MethodModifier struct {
 	inverted bool
 }
 
-var _ MatchingModifier = (*MethodModifier)(nil)
+var _ ConditionModifier = (*MethodModifier)(nil)
 
 func (m *MethodModifier) Parse(modifier string) error {
 	eqIndex := strings.IndexByte(modifier, '=')

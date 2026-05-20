@@ -9,7 +9,7 @@ type ThirdPartyModifier struct {
 	inverted bool
 }
 
-var _ MatchingModifier = (*ThirdPartyModifier)(nil)
+var _ ConditionModifier = (*ThirdPartyModifier)(nil)
 
 func (m *ThirdPartyModifier) Parse(modifier string) error {
 	if modifier[0] == '~' {
