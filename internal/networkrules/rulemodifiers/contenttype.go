@@ -2,6 +2,7 @@ package rulemodifiers
 
 import (
 	"net/http"
+	"strings"
 )
 
 type ContentTypeModifier struct {
@@ -31,7 +32,49 @@ var (
 		"css": "stylesheet",
 		"xhr": "xmlhttprequest",
 	}
+	// contentTypeMimeMap maps content type modifiers to MIME type matching functions
+	// for response-side matching via the Content-Type header.
+	contentTypeMimeMap = map[string]func(string) bool{
+		"stylesheet": func(mime string) bool {
+			return mime == "text/css"
+		},
+		"script": func(mime string) bool {
+			return mime == "text/javascript" ||
+				mime == "application/javascript" ||
+				mime == "application/ecmascript"
+		},
+		"image": func(mime string) bool {
+			return strings.HasPrefix(mime, "image/")
+		},
+		"media": func(mime string) bool {
+			return strings.HasPrefix(mime, "audio/") ||
+				strings.HasPrefix(mime, "video/")
+		},
+		"font": func(mime string) bool {
+			return strings.HasPrefix(mime, "font/")
+		},
+		"subdocument": func(mime string) bool {
+			return mime == "text/html"
+		},
+		"object": func(mime string) bool {
+			// Common plugin content types embedded via <object> or <embed>.
+			return mime == "application/x-shockwave-flash" ||
+				mime == "application/x-java-applet" ||
+				mime == "application/x-silverlight-app"
+		},
+	}
 )
+
+// mimeFromResponse extracts the MIME type from a response's Content-Type header,
+// stripping any parameters (e.g., charset).
+func mimeFromResponse(res *http.Response) string {
+	contentType := res.Header.Get("Content-Type")
+	if contentType == "" {
+		return ""
+	}
+	mimeType, _, _ := strings.Cut(contentType, ";")
+	return strings.TrimSpace(mimeType)
+}
 
 func (m *ContentTypeModifier) Parse(modifier string) error {
 	if modifier[0] == '~' {
@@ -63,8 +106,37 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 	return contentType == m.contentType
 }
 
-func (m *ContentTypeModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *ContentTypeModifier) ShouldMatchRes(res *http.Response) bool {
+	mimeType := mimeFromResponse(res)
+	if mimeType == "" {
+		return false
+	}
+
+	// xmlhttprequest is request-only; never matches on response.
+	if m.contentType == "xmlhttprequest" {
+		return false
+	}
+
+	// For "other": match when no known MIME type matches.
+	if m.contentType == "other" {
+		for _, matchFn := range contentTypeMimeMap {
+			if matchFn(mimeType) {
+				return m.inverted // known type found → not "other"
+			}
+		}
+		return !m.inverted // no known type found → "other"
+	}
+
+	matchFn, ok := contentTypeMimeMap[m.contentType]
+	if !ok {
+		return false
+	}
+
+	matched := matchFn(mimeType)
+	if m.inverted {
+		return !matched
+	}
+	return matched
 }
 
 func (m *ContentTypeModifier) Cancels(modifier Modifier) bool {
