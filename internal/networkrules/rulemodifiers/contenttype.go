@@ -85,6 +85,7 @@ func (m *ContentTypeModifier) ShouldMatchRes(req *http.Response) bool {
 	// strip parameters like charset
 	mimeType := strings.Split(contentType, ";")[0]
 	mimeType = strings.TrimSpace(mimeType)
+	mimeType = strings.ToLower(mimeType)
 
 	normalized, known := mapResponseContentTypeToModifier(mimeType)
 	if m.contentType == "other" {
