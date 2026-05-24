@@ -32,6 +32,18 @@ var (
 		"css": "stylesheet",
 		"xhr": "xmlhttprequest",
 	}
+
+	contentTypeMap = map[string]string{
+		"text/css":               "stylesheet",
+		"text/javascript":        "script",
+		"application/javascript": "script",
+		"application/json":       "xmlhttprequest",
+		"image":                  "image",
+		"audio":                  "media",
+		"video":                  "media",
+		"font":                   "font",
+		"text/html":              "subdocument",
+	}
 )
 
 func (m *ContentTypeModifier) Parse(modifier string) error {
@@ -65,16 +77,43 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 }
 
 func (m *ContentTypeModifier) ShouldMatchRes(req *http.Response) bool {
-	contentTypeRaw := req.Header.Get("Content-Type")
-	if contentTypeRaw == "" {
+	contentType := req.Header.Get("Content-Type")
+	if contentType == "" {
 		return false
 	}
-	contentType := strings.Split(contentTypeRaw, "/")[0]
-	if m.inverted {
-		return contentType != m.contentType
+
+	// strip parameters like charset
+	mimeType := strings.Split(contentType, ";")[0]
+	mimeType = strings.TrimSpace(mimeType)
+
+	normalized, known := mapResponseContentTypeToModifier(mimeType)
+	if m.contentType == "other" {
+		if m.inverted {
+			return known
+		}
+
+		return !known
 	}
 
-	return contentType == m.contentType
+	if m.inverted {
+		return normalized != m.contentType
+	}
+
+	return normalized == m.contentType
+}
+
+func mapResponseContentTypeToModifier(mimeType string) (string, bool) {
+	if mapped, ok := contentTypeMap[mimeType]; ok {
+		return mapped, true
+	}
+
+	// check tp-level type
+	parts := strings.SplitN(mimeType, "/", 2)
+	if top, ok := contentTypeMap[parts[0]]; ok {
+		return top, true
+	}
+
+	return "", false
 }
 
 func (m *ContentTypeModifier) Cancels(modifier Modifier) bool {
