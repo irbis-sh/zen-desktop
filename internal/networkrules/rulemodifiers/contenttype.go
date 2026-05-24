@@ -42,7 +42,6 @@ var (
 		"audio":                  "media",
 		"video":                  "media",
 		"font":                   "font",
-		"text/html":              "subdocument",
 	}
 )
 
