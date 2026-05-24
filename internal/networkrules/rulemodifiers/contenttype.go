@@ -32,7 +32,7 @@ var (
 		"css": "stylesheet",
 		"xhr": "xmlhttprequest",
 	}
-
+	// contentTypeMap maps response Content-Type MIME types to the same modifier
 	contentTypeMap = map[string]string{
 		"text/css":               "stylesheet",
 		"text/javascript":        "script",
