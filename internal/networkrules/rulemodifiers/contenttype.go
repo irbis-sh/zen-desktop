@@ -2,6 +2,7 @@ package rulemodifiers
 
 import (
 	"net/http"
+	"strings"
 )
 
 type ContentTypeModifier struct {
@@ -63,8 +64,17 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 	return contentType == m.contentType
 }
 
-func (m *ContentTypeModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *ContentTypeModifier) ShouldMatchRes(req *http.Response) bool {
+	contentTypeRaw := req.Header.Get("Content-Type")
+	if contentTypeRaw == "" {
+		return false
+	}
+	contentType := strings.Split(contentTypeRaw, "/")[0]
+	if m.inverted {
+		return contentType != m.contentType
+	}
+
+	return contentType == m.contentType
 }
 
 func (m *ContentTypeModifier) Cancels(modifier Modifier) bool {
