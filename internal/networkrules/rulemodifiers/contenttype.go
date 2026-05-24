@@ -75,14 +75,14 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 	return contentType == m.contentType
 }
 
-func (m *ContentTypeModifier) ShouldMatchRes(req *http.Response) bool {
-	contentType := req.Header.Get("Content-Type")
+func (m *ContentTypeModifier) ShouldMatchRes(res *http.Response) bool {
+	contentType := res.Header.Get("Content-Type")
 	if contentType == "" {
 		return false
 	}
 
 	// strip parameters like charset
-	mimeType := strings.Split(contentType, ";")[0]
+	mimeType, _, _ := strings.Cut(contentType, ";")
 	mimeType = strings.TrimSpace(mimeType)
 	mimeType = strings.ToLower(mimeType)
 
@@ -108,8 +108,8 @@ func mapResponseContentTypeToModifier(mimeType string) (string, bool) {
 	}
 
 	// check tp-level type
-	parts := strings.SplitN(mimeType, "/", 2)
-	if top, ok := contentTypeMap[parts[0]]; ok {
+	before, _, _ := strings.Cut(mimeType, "/")
+	if top, ok := contentTypeMap[before]; ok {
 		return top, true
 	}
 
