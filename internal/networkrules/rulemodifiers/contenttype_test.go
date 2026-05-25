@@ -69,7 +69,7 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 	})
 
-	t.Run("matches image/jpeg; with parameters and inverted", func(t *testing.T) {
+	t.Run("matches image/jpeg; with parameters", func(t *testing.T) {
 		t.Parallel()
 
 		m := &ContentTypeModifier{contentType: "image"}
