@@ -104,7 +104,18 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 
 		if !m.ShouldMatchRes(res) {
-			t.Fatal("expected other to match unkwnow content type")
+			t.Fatal("expected other to match unknown content type")
+		}
+	})
+
+	t.Run("inverted other does not match known content type", func(t *testing.T) {
+		t.Parallel()
+		m := &ContentTypeModifier{contentType: "other", inverted: true}
+		res := &http.Response{
+			Header: http.Header{"Content-Type": []string{"image/jpeg"}},
+		}
+		if !m.ShouldMatchRes(res) {
+			t.Fatal("expected inverted other to match known content type")
 		}
 	})
 }
