@@ -108,7 +108,7 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 	})
 
-	t.Run("inverted other does not match known content type", func(t *testing.T) {
+	t.Run("inverted other matches known content type", func(t *testing.T) {
 		t.Parallel()
 		m := &ContentTypeModifier{contentType: "other", inverted: true}
 		res := &http.Response{
