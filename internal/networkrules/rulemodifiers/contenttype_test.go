@@ -69,6 +69,32 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 	})
 
+	t.Run("matches image/jpeg; with parameters and inverted", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "image"}
+		res := &http.Response{
+			Header: http.Header{"Content-Type": []string{"image/jpeg; charset=utf-8"}},
+		}
+
+		if !m.ShouldMatchRes(res) {
+			t.Fatal("expected to match image/jpeg; charset=utf-8 for image")
+		}
+	})
+
+	t.Run("matches mixed-case Application/JSON", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "xmlhttprequest"}
+		res := &http.Response{
+			Header: http.Header{"Content-Type": []string{"Application/JSON"}},
+		}
+
+		if !m.ShouldMatchRes(res) {
+			t.Fatal("expected to match Application/JSON for xmlhttprequest")
+		}
+	})
+
 	t.Run("other matches unknown content type", func(t *testing.T) {
 		t.Parallel()
 
