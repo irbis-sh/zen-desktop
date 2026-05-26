@@ -32,9 +32,9 @@ func (h *HeaderModifier) Parse(modifier string) error {
 
 	switch split := strings.Split(specifier, ":"); len(split) {
 	case 1:
-		h.name = split[0]
+		h.name = http.CanonicalHeaderKey(split[0])
 	case 2:
-		h.name = split[0]
+		h.name = http.CanonicalHeaderKey(split[0])
 		value := split[1]
 		regexp, err := parseRegexp(value)
 		if err != nil {
@@ -57,23 +57,22 @@ func (h *HeaderModifier) ShouldMatchReq(_ *http.Request) bool {
 }
 
 func (h *HeaderModifier) ShouldMatchRes(res *http.Response) bool {
-	value := res.Header.Get(h.name)
-	if len(value) == 0 {
-		return false
+	for _, value := range res.Header[h.name] {
+		if value == "" {
+			continue
+		}
+
+		if h.exact != "" && value != h.exact {
+			continue
+		}
+		if h.regexp != nil && !h.regexp.MatchString(value) {
+			continue
+		}
+
+		return true
 	}
 
-	if h.exact != "" {
-		if value != h.exact {
-			return false
-		}
-	}
-	if h.regexp != nil {
-		if !h.regexp.MatchString(value) {
-			return false
-		}
-	}
-
-	return true
+	return false
 }
 
 func (h *HeaderModifier) Cancels(m Modifier) bool {

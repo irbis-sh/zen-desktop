@@ -36,8 +36,8 @@ func TestHeaderModifier(t *testing.T) {
 	t.Run("matches response by header name", func(t *testing.T) {
 		t.Parallel()
 		m := HeaderModifier{}
-		if err := m.Parse("header=Content-Type"); err != nil {
-			t.Fatalf("headerModifier.Parse(\"header=Content-Type\") = %v, want nil", err)
+		if err := m.Parse("header=content-type"); err != nil {
+			t.Fatalf("headerModifier.Parse(\"header=content-type\") = %v, want nil", err)
 		}
 
 		res := &http.Response{
@@ -52,6 +52,57 @@ func TestHeaderModifier(t *testing.T) {
 		res.Header.Del("Content-Type")
 		if m.ShouldMatchRes(res) {
 			t.Error("headerModifier.ShouldMatchRes(res) = true, want false")
+		}
+	})
+
+	t.Run("matches response by canonicalized header name", func(t *testing.T) {
+		t.Parallel()
+		m := HeaderModifier{}
+		if err := m.Parse("header=etag"); err != nil {
+			t.Fatalf("headerModifier.Parse(\"header=etag\") = %v, want nil", err)
+		}
+
+		res := &http.Response{
+			Header: http.Header{
+				"Etag": []string{`"abc"`},
+			},
+		}
+		if !m.ShouldMatchRes(res) {
+			t.Error("headerModifier.ShouldMatchRes(res) = false, want true")
+		}
+	})
+
+	t.Run("matches response by weirdly capitalized header name", func(t *testing.T) {
+		t.Parallel()
+		m := HeaderModifier{}
+		if err := m.Parse("header=sET-CoOKIe"); err != nil {
+			t.Fatalf("headerModifier.Parse(\"header=sET-CoOKIe\") = %v, want nil", err)
+		}
+
+		res := &http.Response{
+			Header: http.Header{
+				"Set-Cookie": []string{"session=abc"},
+			},
+		}
+		if !m.ShouldMatchRes(res) {
+			t.Error("headerModifier.ShouldMatchRes(res) = false, want true")
+		}
+	})
+
+	t.Run("matches any response header value", func(t *testing.T) {
+		t.Parallel()
+		m := HeaderModifier{}
+		if err := m.Parse("header=sET-CoOKIe:/session=/"); err != nil {
+			t.Fatalf("headerModifier.Parse(\"header=sET-CoOKIe:/session=/\") = %v, want nil", err)
+		}
+
+		res := &http.Response{
+			Header: http.Header{
+				"Set-Cookie": []string{"theme=dark", "session=abc"},
+			},
+		}
+		if !m.ShouldMatchRes(res) {
+			t.Error("headerModifier.ShouldMatchRes(res) = false, want true")
 		}
 	})
 
@@ -136,6 +187,24 @@ func TestHeaderModifier(t *testing.T) {
 				"Should cancel - empty",
 				HeaderModifier{},
 				HeaderModifier{},
+				true,
+			},
+			{
+				"Should cancel - header names differ only by case",
+				func() HeaderModifier {
+					m := HeaderModifier{}
+					if err := m.Parse("header=x-test:value"); err != nil {
+						t.Fatal(err)
+					}
+					return m
+				}(),
+				func() HeaderModifier {
+					m := HeaderModifier{}
+					if err := m.Parse("header=X-Test:value"); err != nil {
+						t.Fatal(err)
+					}
+					return m
+				}(),
 				true,
 			},
 			{
