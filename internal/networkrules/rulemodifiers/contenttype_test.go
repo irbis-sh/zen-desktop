@@ -91,7 +91,7 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 
 		if !m.ShouldMatchRes(res) {
-			t.Fatal("expected to match Application/JavaScript for xmlhttprequest")
+			t.Fatal("expected to match Application/JavaScript for script")
 		}
 	})
 
