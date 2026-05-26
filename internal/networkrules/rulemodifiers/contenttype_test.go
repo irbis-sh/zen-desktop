@@ -82,16 +82,16 @@ func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
 		}
 	})
 
-	t.Run("matches mixed-case Application/JSON", func(t *testing.T) {
+	t.Run("matches mixed-case mime type", func(t *testing.T) {
 		t.Parallel()
 
-		m := &ContentTypeModifier{contentType: "xmlhttprequest"}
+		m := &ContentTypeModifier{contentType: "script"}
 		res := &http.Response{
-			Header: http.Header{"Content-Type": []string{"Application/JSON"}},
+			Header: http.Header{"Content-Type": []string{"Application/JavaScript"}},
 		}
 
 		if !m.ShouldMatchRes(res) {
-			t.Fatal("expected to match Application/JSON for xmlhttprequest")
+			t.Fatal("expected to match Application/JavaScript for xmlhttprequest")
 		}
 	})
 
