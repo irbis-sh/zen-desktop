@@ -34,14 +34,18 @@ var (
 	}
 	// contentTypeMap maps response Content-Type MIME types to the same modifier.
 	contentTypeMap = map[string]string{
-		"text/css":               "stylesheet",
-		"text/javascript":        "script",
-		"application/javascript": "script",
-		"application/json":       "xmlhttprequest",
-		"image":                  "image",
-		"audio":                  "media",
-		"video":                  "media",
-		"font":                   "font",
+		"text/css":                      "stylesheet",
+		"text/javascript":               "script",
+		"application/javascript":        "script",
+		"application/json":              "xmlhttprequest",
+		"image":                         "image",
+		"audio":                         "media",
+		"video":                         "media",
+		"font":                          "font",
+		"text/html":                     "subdocument",
+		"application/pdf":               "object",
+		"application/x-shockwave-flash": "object",
+		"application/octet-stream":      "object",
 	}
 )
 
@@ -107,7 +111,7 @@ func mapResponseContentTypeToModifier(mimeType string) (string, bool) {
 		return mapped, true
 	}
 
-	// check tp-level type
+	// check top-level type
 	before, _, _ := strings.Cut(mimeType, "/")
 	if top, ok := contentTypeMap[before]; ok {
 		return top, true
