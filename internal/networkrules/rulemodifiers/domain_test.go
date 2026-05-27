@@ -22,6 +22,7 @@ func TestDomainModifier(t *testing.T) {
 		{"Single domain - no match with unrelated domain", "domain=example.com", "http://example.org/", false},
 		{"Single inverted domain - match", "domain=~example.com", "http://test.com/", true},
 		{"Single inverted domain - no match", "domain=~example.com", "http://example.com/", false},
+		{"TLD - no match with unrelated subdomain", "domain=google.*", "http://google.schmoogle.com/", false},
 		{"TLD - match", "domain=example.*", "http://example.com/", true},
 		{"TLD - subdomain and path match", "domain=example.*", "https://www.example.co.uk/some/path", true},
 		{"TLD - no match with unrelated domain ending with tld", "domain=example.*", "https://testexample.com", false},

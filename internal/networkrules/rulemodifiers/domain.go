@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 var (
@@ -117,8 +119,17 @@ func (m *domainModifierEntry) MatchDomain(domain string) bool {
 	case m.regular != "":
 		return m.regular == domain || strings.HasSuffix(domain, "."+m.regular)
 	case m.tld != "":
-		segments := strings.Split(domain, ".")
-		return (len(segments) > 1 && segments[len(segments)-2] == m.tld) || (len(segments) > 2 && segments[len(segments)-3] == m.tld)
+		eTLD1, err := publicsuffix.EffectiveTLDPlusOne(domain)
+		if err != nil {
+			return false
+		}
+
+		dotIndex := strings.Index(eTLD1, ".")
+		if dotIndex == -1 {
+			return false
+		}
+
+		return eTLD1[:dotIndex] == m.tld
 	case m.regexp != nil:
 		return m.regexp.MatchString(domain)
 	default:
