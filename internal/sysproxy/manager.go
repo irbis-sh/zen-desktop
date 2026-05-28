@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/irbis-sh/process"
+	"github.com/irbis-sh/zen-desktop/internal/process"
 )
 
 var ErrUnsupportedDesktopEnvironment = errors.New("system proxy configuration is currently only supported on GNOME and KDE")
@@ -115,16 +115,10 @@ func (m *Manager) makeServer(pac []byte, shouldProxy ShouldProxyFunc) (int, erro
 }
 
 func processPathForRequest(r *http.Request) string {
-	pid, err := process.FindPIDByRequest(r)
+	processInfo, err := process.FindByRequest(r)
 	if err != nil {
 		log.Printf("error finding PAC request process: %v", err)
-		return ""
 	}
 
-	path, err := pid.ExecutablePath()
-	if err != nil {
-		log.Printf("error finding PAC request process path: %v", err)
-		return ""
-	}
-	return path
+	return processInfo.ExecutablePath
 }

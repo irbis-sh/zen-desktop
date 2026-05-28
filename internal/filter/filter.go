@@ -13,16 +13,16 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/irbis-sh/process"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
+	"github.com/irbis-sh/zen-desktop/internal/process"
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
 )
 
 // filterActionObserver observes filter events.
 type filterActionObserver interface {
-	OnFilterBlock(method, url, referer string, rules []rule.Rule, pid process.PID)
-	OnFilterRedirect(method, url, to, referer string, rules []rule.Rule, pid process.PID)
-	OnFilterModify(method, url, referer string, rules []rule.Rule, pid process.PID)
+	OnFilterBlock(method, url, referer string, rules []rule.Rule, processInfo process.Info)
+	OnFilterRedirect(method, url, to, referer string, rules []rule.Rule, processInfo process.Info)
+	OnFilterModify(method, url, referer string, rules []rule.Rule, processInfo process.Info)
 }
 
 type filterListStore interface {
@@ -231,12 +231,12 @@ func (f *Filter) addRule(rule string, filterListName *string, filterListTrusted 
 
 // HandleRequest handles the given request by matching it against the filter rules.
 // If the request should be blocked, it returns a response that blocks the request. If the request should be modified, it modifies it in-place.
-func (f *Filter) HandleRequest(req *http.Request, pid process.PID) (*http.Response, error) {
+func (f *Filter) HandleRequest(req *http.Request, processInfo process.Info) (*http.Response, error) {
 	initialURL := req.URL.String()
 
 	appliedRules, shouldBlock, redirectURL := f.networkRules.ModifyReq(req)
 	if shouldBlock {
-		f.actionObserver.OnFilterBlock(req.Method, initialURL, req.Header.Get("Referer"), appliedRules, pid)
+		f.actionObserver.OnFilterBlock(req.Method, initialURL, req.Header.Get("Referer"), appliedRules, processInfo)
 
 		if isUserNavigation(req) {
 			port := f.whitelistSrv.GetPort()
@@ -255,12 +255,12 @@ func (f *Filter) HandleRequest(req *http.Request, pid process.PID) (*http.Respon
 	}
 
 	if redirectURL != "" {
-		f.actionObserver.OnFilterRedirect(req.Method, initialURL, redirectURL, req.Header.Get("Referer"), appliedRules, pid)
+		f.actionObserver.OnFilterRedirect(req.Method, initialURL, redirectURL, req.Header.Get("Referer"), appliedRules, processInfo)
 		return f.networkRules.CreateRedirectResponse(req, redirectURL), nil
 	}
 
 	if len(appliedRules) > 0 {
-		f.actionObserver.OnFilterModify(req.Method, initialURL, req.Header.Get("Referer"), appliedRules, pid)
+		f.actionObserver.OnFilterModify(req.Method, initialURL, req.Header.Get("Referer"), appliedRules, processInfo)
 	}
 
 	return nil, nil
@@ -279,7 +279,7 @@ func (f *Filter) Finalize() {
 //
 // As of April 2024, there are no response-only rules that can block or redirect responses.
 // For that reason, this method does not return a blocking or redirecting response itself.
-func (f *Filter) HandleResponse(req *http.Request, res *http.Response, pid process.PID) error {
+func (f *Filter) HandleResponse(req *http.Request, res *http.Response, processInfo process.Info) error {
 	if isDocumentNavigation(req, res) {
 		if err := f.injector.Inject(req, res); err != nil {
 			// This injection error is recoverable, so we log it and continue processing the response.
@@ -292,7 +292,7 @@ func (f *Filter) HandleResponse(req *http.Request, res *http.Response, pid proce
 		return fmt.Errorf("apply network rules: %v", err)
 	}
 	if len(appliedRules) > 0 {
-		f.actionObserver.OnFilterModify(req.Method, req.URL.String(), req.Header.Get("Referer"), appliedRules, pid)
+		f.actionObserver.OnFilterModify(req.Method, req.URL.String(), req.Header.Get("Referer"), appliedRules, processInfo)
 	}
 
 	return nil

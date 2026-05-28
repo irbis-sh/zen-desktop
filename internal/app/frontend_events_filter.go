@@ -3,8 +3,8 @@ package app
 import (
 	"log"
 
-	"github.com/irbis-sh/process"
 	nrule "github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
+	"github.com/irbis-sh/zen-desktop/internal/process"
 )
 
 type filterEventKind string
@@ -37,7 +37,7 @@ type filterEvent struct {
 	Process processPayload  `json:"process"`
 }
 
-func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules []nrule.Rule, pid process.PID) filterEvent {
+func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules []nrule.Rule, processInfo process.Info) filterEvent {
 	payloadRules := make([]rulePayload, len(rules))
 	for i, rule := range rules {
 		filterName := ""
@@ -51,16 +51,11 @@ func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules
 		}
 	}
 
-	processPayload := processPayload{ID: int(pid)}
-	if name, err := pid.Name(); err == nil {
+	processPayload := processPayload{ID: int(processInfo.PID), DiskPath: processInfo.ExecutablePath}
+	if name, err := processInfo.Name(); err == nil {
 		processPayload.Name = name
 	} else {
-		log.Printf("failed to resolve process name for pid %d: %v", pid, err)
-	}
-	if path, err := pid.ExecutablePath(); err == nil {
-		processPayload.DiskPath = path
-	} else {
-		log.Printf("failed to resolve process path for pid %d: %v", pid, err)
+		log.Printf("failed to resolve process name for pid %d: %v", processInfo.PID, err)
 	}
 
 	return filterEvent{
@@ -74,14 +69,14 @@ func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules
 	}
 }
 
-func (e *frontendEvents) OnFilterBlock(method, url, referer string, rules []nrule.Rule, pid process.PID) {
-	e.emit(filterChannel, newFilterEvent(filterEventBlock, method, url, "", referer, rules, pid))
+func (e *frontendEvents) OnFilterBlock(method, url, referer string, rules []nrule.Rule, processInfo process.Info) {
+	e.emit(filterChannel, newFilterEvent(filterEventBlock, method, url, "", referer, rules, processInfo))
 }
 
-func (e *frontendEvents) OnFilterRedirect(method, url, to, referer string, rules []nrule.Rule, pid process.PID) {
-	e.emit(filterChannel, newFilterEvent(filterEventRedirect, method, url, to, referer, rules, pid))
+func (e *frontendEvents) OnFilterRedirect(method, url, to, referer string, rules []nrule.Rule, processInfo process.Info) {
+	e.emit(filterChannel, newFilterEvent(filterEventRedirect, method, url, to, referer, rules, processInfo))
 }
 
-func (e *frontendEvents) OnFilterModify(method, url, referer string, rules []nrule.Rule, pid process.PID) {
-	e.emit(filterChannel, newFilterEvent(filterEventModify, method, url, "", referer, rules, pid))
+func (e *frontendEvents) OnFilterModify(method, url, referer string, rules []nrule.Rule, processInfo process.Info) {
+	e.emit(filterChannel, newFilterEvent(filterEventModify, method, url, "", referer, rules, processInfo))
 }
