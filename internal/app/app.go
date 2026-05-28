@@ -218,6 +218,15 @@ func (a *App) StartProxy() (err error) {
 	}
 	a.whitelistSrv = whitelistSrv
 
+	defer func() {
+		if err != nil {
+			if err := whitelistSrv.Stop(); err != nil {
+				log.Printf("failed to stop whitelist server: %v", err)
+			}
+			a.whitelistSrv = nil
+		}
+	}()
+
 	routingPolicy := routing.NewPolicy(a.config.GetRouting())
 
 	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy)
