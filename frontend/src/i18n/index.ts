@@ -66,13 +66,11 @@ LOCALE_LABELS.sort((a, b) => localeLabelsCollator.compare(a.label, b.label));
 
 export function detectSystemLocale(): SupportedLocale {
   const browserLang = navigator.language;
-  const supportedLocales = SUPPORTED_LOCALES as readonly string[];
-  const languageCode = browserLang.split('-')[0];
-  const detected = supportedLocales.includes(browserLang)
+  const detected = (SUPPORTED_LOCALES as readonly string[]).includes(browserLang)
     ? (browserLang as SupportedLocale)
-    : supportedLocales.find((locale) => locale === languageCode || locale.startsWith(`${languageCode}-`));
+    : FALLBACK_LOCALE;
 
-  return (detected as SupportedLocale) || FALLBACK_LOCALE;
+  return detected;
 }
 
 export function getCurrentLocale(): SupportedLocale {
