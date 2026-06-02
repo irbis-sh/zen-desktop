@@ -27,6 +27,9 @@ type Rule struct {
 	Document bool
 }
 
+// TODO: The split between And and Or modifiers is somewhat convoluted and exists only to support ContentType.
+// Remove it by grouping multiple ContentTypes into a single modifier and evaluating all modifiers with AND logic.
+
 type conditionModifiers struct {
 	// And are modifiers that must all match for the rule to apply.
 	And []rulemodifiers.ConditionModifier
@@ -40,56 +43,61 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			return errors.New("empty modifier")
 		}
 
-		isKind := func(kind string) bool {
-			if len(m) > 0 && m[0] == '~' {
-				return strings.HasPrefix(m[1:], kind)
-			}
-			return strings.HasPrefix(m, kind)
-		}
-
-		if isKind("document") || isKind("doc") {
-			rm.Document = true
-			continue
-		}
+		name, hasValue := cutModifierName(m)
 
 		var modifier rulemodifiers.Modifier
-		var isOr bool // true if modifier belongs to OrModifiers; false if it belongs to AndModifiers
-		switch {
-		case isKind("domain"):
-			modifier = &rulemodifiers.DomainModifier{}
-		case isKind("method"):
-			modifier = &rulemodifiers.MethodModifier{}
-		case isKind("xmlhttprequest"),
-			isKind("xhr"),
-			isKind("font"),
-			isKind("subdocument"),
-			isKind("image"),
-			isKind("object"),
-			isKind("script"),
-			isKind("stylesheet"),
-			isKind("media"),
-			isKind("other"):
-			modifier = &rulemodifiers.ContentTypeModifier{}
-			isOr = true
-		case isKind("third-party"):
-			modifier = &rulemodifiers.ThirdPartyModifier{}
-		case isKind("removeparam"):
-			modifier = &rulemodifiers.RemoveParamModifier{}
-		case isKind("header"):
-			modifier = &rulemodifiers.HeaderModifier{}
-		case isKind("removeheader"):
-			modifier = &rulemodifiers.RemoveHeaderModifier{}
-		case isKind("remove-js-constant"):
-			modifier = &removejsconstant.Modifier{}
-		case isKind("scramblejs"):
-			modifier = &rulemodifiers.ScrambleJSModifier{}
-		case isKind("jsonprune"):
-			modifier = &rulemodifiers.JSONPruneModifier{}
-		case isKind("all"):
-			// TODO: should act as "popup" modifier once it gets implemented
-			continue
-		default:
-			return fmt.Errorf("unknown modifier %q", m)
+		var isOr bool // true if the modifier belongs to ConditionModifiers.Or.
+
+		if !hasValue {
+			// Flag modifiers.
+			switch name {
+			case "document", "doc":
+				rm.Document = true
+				continue
+			case "xmlhttprequest",
+				"xhr",
+				"font",
+				"subdocument",
+				"image",
+				"object",
+				"script",
+				"stylesheet",
+				"media",
+				"other":
+				modifier = &rulemodifiers.ContentTypeModifier{}
+				isOr = true
+			case "third-party":
+				modifier = &rulemodifiers.ThirdPartyModifier{}
+			case "removeparam":
+				modifier = &rulemodifiers.RemoveParamModifier{}
+			case "all":
+				// TODO: should act as "popup" modifier once it gets implemented
+				continue
+			default:
+				return fmt.Errorf("unknown modifier %q", m)
+			}
+		} else {
+			// Parametrised modifiers.
+			switch name {
+			case "domain":
+				modifier = &rulemodifiers.DomainModifier{}
+			case "method":
+				modifier = &rulemodifiers.MethodModifier{}
+			case "removeparam":
+				modifier = &rulemodifiers.RemoveParamModifier{}
+			case "header":
+				modifier = &rulemodifiers.HeaderModifier{}
+			case "removeheader":
+				modifier = &rulemodifiers.RemoveHeaderModifier{}
+			case "remove-js-constant":
+				modifier = &removejsconstant.Modifier{}
+			case "scramblejs":
+				modifier = &rulemodifiers.ScrambleJSModifier{}
+			case "jsonprune":
+				modifier = &rulemodifiers.JSONPruneModifier{}
+			default:
+				return fmt.Errorf("unknown modifier %q", m)
+			}
 		}
 
 		if err := modifier.Parse(m); err != nil {
@@ -113,6 +121,14 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 	}
 
 	return nil
+}
+
+func cutModifierName(modifier string) (name string, hasValue bool) {
+	if len(modifier) > 0 && modifier[0] == '~' {
+		modifier = modifier[1:]
+	}
+	name, _, hasValue = strings.Cut(modifier, "=")
+	return name, hasValue
 }
 
 // ShouldMatchReq returns true if the rule should match the request.
