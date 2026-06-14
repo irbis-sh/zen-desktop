@@ -30,6 +30,9 @@ jobs:
           go-version-file: ./go.mod
       - name: Run go version
         run: go version
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libayatana-appindicator3-dev
       - name: Set up Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
         with:
