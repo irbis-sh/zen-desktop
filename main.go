@@ -90,7 +90,7 @@ func main() {
 				Message: fmt.Sprintf("Your Comprehensive Ad-Blocker and Privacy Guard\nVersion: %s\n© 2026 Zen contributors", config.Version),
 			},
 		},
-		HideWindowOnClose: runtime.GOOS == "darwin" || runtime.GOOS == "windows",
+		HideWindowOnClose: runtime.GOOS == "darwin" || runtime.GOOS == "windows" || (runtime.GOOS == "linux" && app.TrayAvailable()),
 		StartHidden:       *startHidden,
 	})
 
