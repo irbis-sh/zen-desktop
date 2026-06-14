@@ -27,15 +27,13 @@ func quit() {
 	C.quit()
 }
 
-// AddMenuItemCheckbox adds a menu item with the designated title and tooltip and a checkbox for Linux.
+// addMenuItem adds a menu item with the designated title for Linux.
 // It can be safely invoked from different goroutines.
-// On Windows and OSX this is the same as calling AddMenuItem
+// On Windows and OSX this is the same as calling addMenuItem
 //
 // NOTE: tooltip is not set on Linux.
-func addMenuItemCheckbox(title string, checked bool) *menuItem {
+func addMenuItem(title string) *menuItem {
 	item := newMenuItem(title, "", nil)
-	item.isCheckable = true
-	item.checked = checked
 	item.update()
 	return item
 }
@@ -50,6 +48,7 @@ func setIcon(iconBytes []byte) {
 
 // SetTitle sets the systray title, only available on Mac and Linux.
 func (item *menuItem) SetTitle(title string) {
+	item.title = title
 	C.setTitle(C.CString(title))
 }
 

@@ -42,7 +42,7 @@ func quit() {
 
 // addMenuItem adds a menu item with the designated title and tooltip.
 // It can be safely invoked from different goroutines.
-// Created menu items are checkable on Windows and OSX by default. For Linux you have to use AddMenuItemCheckbox.
+// Created menu items are checkable on Windows and OSX by default. For Linux you have to use addMenuItem.
 func addMenuItem(title string, tooltip string) *menuItem {
 	item := newMenuItem(title, tooltip, nil)
 	item.update()
