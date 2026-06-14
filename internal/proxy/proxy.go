@@ -333,6 +333,19 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		req.RequestURI = ""
 		req.Close = false
 
+		// Filter request, before upgrading to websockets, to catch wss:://
+		filterResp, err := p.filter.HandleRequest(req, processInfo)
+		if err != nil {
+			log.Printf("handling request for %q: %v", redacted.Redacted(req.URL), err)
+		}
+		if filterResp != nil {
+			writeResp(w, filterResp)
+			if filterResp.Body != nil {
+				filterResp.Body.Close()
+			}
+			return
+		}
+
 		// WebSocket upgrade is only done over HTTP/1.1.
 		if isWS(req) && req.ProtoMajor == 1 {
 			p.proxyWebsocketTLS(w, req)
@@ -353,18 +366,6 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 			// If the outbound request doesn't have a User-Agent header set,
 			// don't send the default Go HTTP client User-Agent.
 			req.Header.Set("User-Agent", "")
-		}
-
-		filterResp, err := p.filter.HandleRequest(req, processInfo)
-		if err != nil {
-			log.Printf("handling request for %q: %v", redacted.Redacted(req.URL), err)
-		}
-		if filterResp != nil {
-			writeResp(w, filterResp)
-			if filterResp.Body != nil {
-				filterResp.Body.Close()
-			}
-			return
 		}
 
 		// Go's HTTP server always sets a non-nil value for req.Body.
