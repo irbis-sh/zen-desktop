@@ -15,17 +15,18 @@ var _ ConditionModifier = (*ContentTypeModifier)(nil)
 var (
 	// secFetchDestMap maps Sec-Fetch-Dest header values to corresponding content type modifiers.
 	secFetchDestMap = map[string]string{
-		"empty":  "xmlhttprequest",
-		"font":   "font",
-		"frame":  "subdocument",
-		"iframe": "subdocument",
-		"image":  "image",
-		"object": "object",
-		"script": "script",
-		"style":  "stylesheet",
-		"audio":  "media",
-		"track":  "media",
-		"video":  "media",
+		"empty":     "xmlhttprequest",
+		"font":      "font",
+		"frame":     "subdocument",
+		"iframe":    "subdocument",
+		"image":     "image",
+		"object":    "object",
+		"script":    "script",
+		"style":     "stylesheet",
+		"audio":     "media",
+		"track":     "media",
+		"video":     "media",
+		"websocket": "websocket",
 	}
 	// aliases maps content type aliases to their canonical names.
 	aliases = map[string]string{
@@ -60,6 +61,14 @@ func (m *ContentTypeModifier) Parse(modifier string) error {
 func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 	secFetchDest := req.Header.Get("Sec-Fetch-Dest")
 	if secFetchDest == "" {
+		if m.contentType == "websocket" {
+			isWS := headerContains(req.Header, "Connection", "upgrade") &&
+				headerContains(req.Header, "Upgrade", "websocket")
+			if m.inverted {
+				return !isWS
+			}
+			return isWS
+		}
 		return false
 	}
 	contentType, ok := secFetchDestMap[secFetchDest]
@@ -123,4 +132,16 @@ func (m *ContentTypeModifier) Cancels(modifier Modifier) bool {
 	}
 
 	return other.inverted == m.inverted && other.contentType == m.contentType
+}
+
+// mirror of proxy.headerContains
+func headerContains(h http.Header, name, value string) bool {
+	for _, v := range h[name] {
+		for _, s := range strings.Split(v, ",") {
+			if strings.EqualFold(strings.TrimSpace(s), value) {
+				return true
+			}
+		}
+	}
+	return false
 }

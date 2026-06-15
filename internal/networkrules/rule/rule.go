@@ -63,6 +63,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 				"script",
 				"stylesheet",
 				"media",
+				"websocket",
 				"other":
 				modifier = &rulemodifiers.ContentTypeModifier{}
 				isOr = true
