@@ -1,25 +1,28 @@
-<p align="center">
+<div align="center">
+
+<p>
   <picture>
     <img src="https://github.com/irbis-sh/zen-desktop/blob/master/assets/appicon.png?raw=true" alt="Zen's Blue Shield Logo" width="150" />
   </picture>
 </p>
 
-<h3 align="center">
+<h3>
   Zen: Your Comprehensive Ad-Blocker and Privacy Guard
 </h3>
-<blockquote align="center">
+
+<blockquote>
 There is, simply, no way, to ignore privacy. Because a citizenry’s freedoms are interdependent, to surrender your own privacy is really to surrender everyone’s.
 
 Edward Snowden, Permanent Record
-
 </blockquote>
 
 ![GitHub License](https://img.shields.io/github/license/irbis-sh/zen-desktop)
 ![GitHub release](https://img.shields.io/github/v/release/irbis-sh/zen-desktop)
 ![GitHub download counter](https://img.shields.io/github/downloads/irbis-sh/zen-desktop/total)
-<a href="https://discord.gg/zGeQVatAUm">
-  <img alt="Discord" src="https://img.shields.io/discord/1334633399490711685?logo=discord&logoColor=fff&label=Discord&color=5865F2"/>
-</a>
+
+[**Website**](https://irbis.sh/zen) • [**Mastodon**](https://mastodon.social/@irbis_sh) • [**Bluesky**](https://bsky.app/profile/irbis.sh) • [**Discord**](https://discord.gg/zGeQVatAUm) • [**Documentation**](https://docs.irbis.sh/docs/zen/)
+
+</div>
 
 Zen is an open-source system-wide ad-blocker and privacy guard for Windows, macOS, and Linux. It works by setting up a proxy that intercepts HTTP requests from all applications, and blocks those serving ads, tracking scripts that monitor your behavior, malware, and other unwanted content. By operating at the system level, Zen can protect against threats that browser extensions cannot, such as trackers embedded in desktop applications and operating system components. Zen comes with many pre-installed filters, but also allows you to easily add hosts files and EasyList-style filters, enabling you to tailor your protection to your specific needs.
 
