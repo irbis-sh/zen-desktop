@@ -13,6 +13,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/config"
 	"github.com/irbis-sh/zen-desktop/internal/constants"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
+	"github.com/irbis-sh/zen-desktop/internal/systray"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -90,7 +91,7 @@ func main() {
 				Message: fmt.Sprintf("Your Comprehensive Ad-Blocker and Privacy Guard\nVersion: %s\n© 2026 Zen contributors", config.Version),
 			},
 		},
-		HideWindowOnClose: runtime.GOOS == "darwin" || runtime.GOOS == "windows" || (runtime.GOOS == "linux" && app.TrayAvailable()),
+		HideWindowOnClose: runtime.GOOS == "darwin" || runtime.GOOS == "windows" || (runtime.GOOS == "linux" && systray.Available()),
 		StartHidden:       *startHidden,
 	})
 

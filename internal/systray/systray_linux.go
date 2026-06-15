@@ -49,7 +49,7 @@ func setIcon(iconBytes []byte) {
 // SetTitle sets the systray title, only available on Mac and Linux.
 func (item *menuItem) SetTitle(title string) {
 	item.title = title
-	C.setTitle(C.CString(title))
+	item.update()
 }
 
 // SetTooltip sets the systray tooltip to display on mouse hover of the tray icon,

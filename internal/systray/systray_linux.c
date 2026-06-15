@@ -39,14 +39,17 @@ typedef struct {
   short isCheckable;
 } MenuItemInfo;
 
-void registerSystray(void) {
+gboolean do_register_systray(gpointer data) {
   global_app_indicator = app_indicator_new(
       "systray", "", APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
   app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
   global_tray_menu = gtk_menu_new();
   app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
   systray_ready();
+  return FALSE;
 }
+
+void registerSystray(void) { g_idle_add(do_register_systray, NULL); }
 
 int nativeLoop(void) {
   systray_on_exit();
