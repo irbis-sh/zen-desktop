@@ -134,7 +134,6 @@ func (m *ContentTypeModifier) Cancels(modifier Modifier) bool {
 	return other.inverted == m.inverted && other.contentType == m.contentType
 }
 
-// mirror of proxy.headerContains
 func headerContains(h http.Header, name, value string) bool {
 	for _, v := range h[name] {
 		for _, s := range strings.Split(v, ",") {

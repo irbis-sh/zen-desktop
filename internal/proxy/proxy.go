@@ -333,7 +333,7 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		req.RequestURI = ""
 		req.Close = false
 
-		// Filter request, before upgrading to websockets, to match/block wss::// handshake
+		// Filter request, before upgrading to websockets, to match/block wss:// handshake
 		filterResp, err := p.filter.HandleRequest(req, processInfo)
 		if err != nil {
 			log.Printf("handling request for %q: %v", redacted.Redacted(req.URL), err)
