@@ -250,8 +250,6 @@ void setTitle(char *ctitle) {
   free(ctitle);
 }
 
-void setTooltip(char *ctooltip) { free(ctooltip); }
-
 void setMenuItemIcon(const char *iconBytes, int length, int menuId,
                      bool template) {}
 

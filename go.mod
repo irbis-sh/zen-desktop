@@ -17,6 +17,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/getlantern/elevate v0.0.0-20220903142053-479ab992b264
+	github.com/godbus/dbus/v5 v5.1.0
 	github.com/hectane/go-acl v0.0.0-20230122075934-ca0b05cb1adb
 	github.com/klauspost/compress v1.18.0
 	github.com/spyzhov/ajson v0.9.6
@@ -38,7 +39,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
