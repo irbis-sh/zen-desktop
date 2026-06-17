@@ -58,7 +58,8 @@ func (m *Manager) onReady(ctx context.Context) func() {
 			startStopTitle = "Stop"
 		}
 
-		m.startStopMenuItem = addMenuItem(startStopTitle)
+		startStopMenuItem := addMenuItem(startStopTitle)
+		m.startStopMenuItem = startStopMenuItem
 		m.mu.Unlock()
 
 		go func() {
