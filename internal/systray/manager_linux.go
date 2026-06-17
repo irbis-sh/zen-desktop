@@ -52,19 +52,19 @@ func (m *Manager) onReady(ctx context.Context) func() {
 		}()
 
 		m.mu.Lock()
-		active := m.proxyActive
-		m.mu.Unlock()
 
-		if active {
-			m.startStopMenuItem = addMenuItem("Stop")
-		} else {
-			m.startStopMenuItem = addMenuItem("Start")
+		startStopTitle := "Start"
+		if m.proxyActive {
+			startStopTitle = "Stop"
 		}
+
+		m.startStopMenuItem = addMenuItem(startStopTitle)
+		m.mu.Unlock()
 
 		go func() {
 			for range m.startStopMenuItem.ClickedCh {
 				m.mu.Lock()
-				active = m.proxyActive
+				active := m.proxyActive
 				m.mu.Unlock()
 				if active {
 					m.proxyStop()
