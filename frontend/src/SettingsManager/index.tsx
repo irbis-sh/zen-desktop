@@ -73,8 +73,8 @@ export function SettingsManager() {
 
         <div className="settings-manager__section-body">
           <PortInput />
-          <AssetPortInput />
           <PACPortInput />
+          <AssetPortInput />
           <IgnoredHostsInput />
           <AppRoutingSettings />
           <UninstallCADialog proxyState={proxyState} />
