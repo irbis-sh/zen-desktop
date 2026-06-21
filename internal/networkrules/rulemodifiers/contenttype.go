@@ -36,6 +36,7 @@ var (
 	// contentTypeMap maps Content-Type MIME types to corresponding content type modifiers.
 	contentTypeMap = map[string]string{
 		"text/css":                      "stylesheet",
+		"text/ping":                     "ping",
 		"text/javascript":               "script",
 		"application/javascript":        "script",
 		"image":                         "image",
@@ -59,6 +60,24 @@ func (m *ContentTypeModifier) Parse(modifier string) error {
 }
 
 func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
+	isPing := req.Header.Get("Ping-To") != "" ||
+		req.Header.Get("Ping-From") != "" ||
+		headerContains(req.Header, "Content-Type", "text/ping")
+
+	if isPing {
+		if m.contentType == "other" {
+			return m.inverted
+		}
+		if m.contentType == "ping" {
+			return !m.inverted
+		}
+		return m.inverted
+	}
+
+	if m.contentType == "ping" {
+		return m.inverted
+	}
+
 	secFetchDest := req.Header.Get("Sec-Fetch-Dest")
 	if secFetchDest == "" {
 		if m.contentType == "websocket" {

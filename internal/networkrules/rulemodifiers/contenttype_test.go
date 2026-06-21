@@ -8,6 +8,19 @@ import (
 func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 	t.Parallel()
 
+	t.Run("matches ping for ping modifier", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "ping"}
+		req := &http.Request{
+			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}},
+		}
+
+		if !m.ShouldMatchReq(req) {
+			t.Fatal("expected to match ping")
+		}
+	})
+
 	t.Run("matches websocket for websocket modifier", func(t *testing.T) {
 		t.Parallel()
 
@@ -47,6 +60,17 @@ func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 		}
 	})
 
+	t.Run("inverted ping with no headers matches", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "ping", inverted: true}
+		req := &http.Request{}
+
+		if !m.ShouldMatchReq(req) {
+			t.Fatal("expected inverted with no header to match")
+		}
+	})
+
 	t.Run("inverted websocket with no headers matches", func(t *testing.T) {
 		t.Parallel()
 
@@ -69,6 +93,18 @@ func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 		}
 	})
 
+	t.Run("inverted does not match ping modifier", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "ping", inverted: true}
+		req := &http.Request{
+			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}},
+		}
+
+		if m.ShouldMatchReq(req) {
+			t.Fatal("expected inverted not to match ping")
+		}
+	})
 	t.Run("inverted does not match websocket modifier", func(t *testing.T) {
 		t.Parallel()
 
@@ -94,6 +130,46 @@ func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 			t.Fatal("expected inverted with empty Sec-Fetch-Dest not to match")
 		}
 	})
+
+	t.Run("ping precedence over xmlhttprequest", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "ping"}
+		req := &http.Request{
+			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}, "Sec-Fetch-Dest": []string{"xmlhttprequest"}},
+		}
+
+		if !m.ShouldMatchReq(req) {
+			t.Fatal("expected to match ping even with conflicting Sec-Fetch-Dest")
+		}
+	})
+
+	t.Run("ping not matched as other", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "other"}
+		req := &http.Request{
+			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}},
+		}
+
+		if m.ShouldMatchReq(req) {
+			t.Fatal("expected ping not to match other")
+		}
+	})
+
+	t.Run("matches text/ping for ping modifier in response", func(t *testing.T) {
+		t.Parallel()
+
+		m := &ContentTypeModifier{contentType: "ping"}
+		res := &http.Response{
+			Header: http.Header{"Content-Type": []string{"text/ping; charset=utf-8"}},
+		}
+
+		if !m.ShouldMatchRes(res) {
+			t.Fatal("expected to match text/ping response")
+		}
+	})
+
 }
 
 func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
