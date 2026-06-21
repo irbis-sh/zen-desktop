@@ -125,6 +125,12 @@
       "title": "Willkommen bei Zen!"
     }
   },
+  "pacPortInput": {
+    "description": "Der Port, auf dem der PAC-Server (Proxy Auto-Configuration) lauscht (0 für zufällig).",
+    "helper": "Die Verwendung eines Ports unter 1024 kann erhöhte Rechte erfordern.",
+    "label": "PAC-Server-Port",
+    "setError": "PAC-Server-Port kann nicht festgelegt werden: {{error}}"
+  },
   "portInput": {
     "description": "Der Port, auf dem der Proxy-Server lauscht (0 für zufällig).",
     "helper": "Die Verwendung eines Ports unter 1024 kann erhöhte Rechte erfordern.",

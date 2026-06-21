@@ -94,6 +94,10 @@ export function SetLocale(arg1) {
   return window['go']['config']['Config']['SetLocale'](arg1);
 }
 
+export function SetPACPort(arg1) {
+  return window['go']['config']['Config']['SetPACPort'](arg1);
+}
+
 export function SetPort(arg1) {
   return window['go']['config']['Config']['SetPort'](arg1);
 }

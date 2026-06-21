@@ -125,6 +125,12 @@
       "title": "歡迎使用 Zen！"
     }
   },
+  "pacPortInput": {
+    "description": "PAC（代理自動設定）伺服器將監聽的連接埠（0 為隨機）。",
+    "helper": "使用 1024 以下的連接埠可能需要系統管理員權限。",
+    "label": "PAC 伺服器連接埠",
+    "setError": "設定 PAC 伺服器連接埠失敗：{{error}}"
+  },
   "portInput": {
     "description": "代理伺服器監聽的連接埠（0 為隨機）。",
     "helper": "使用 1024 以下的連接埠可能需要系統管理員權限。",

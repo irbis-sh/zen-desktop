@@ -422,6 +422,18 @@ func (c *Config) GetPACPort() int {
 	return c.Proxy.PACPort
 }
 
+// SetPACPort sets the port the PAC server is set to listen on.
+func (c *Config) SetPACPort(port int) error {
+	if port < 0 || port > 65535 {
+		return fmt.Errorf("port must be between 0 and 65535")
+	}
+
+	return c.update(func() error {
+		c.Proxy.PACPort = port
+		return nil
+	})
+}
+
 // GetAssetPort returns the port the asset server is set to listen on.
 func (c *Config) GetAssetPort() int {
 	c.mu.RLock()

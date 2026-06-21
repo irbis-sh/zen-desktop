@@ -125,6 +125,12 @@
       "title": "Welcome to Zen!"
     }
   },
+  "pacPortInput": {
+    "description": "The port the PAC (proxy auto-configuration) server will listen on (0 for random).",
+    "helper": "Using a port below 1024 may require elevated privileges.",
+    "label": "PAC server port",
+    "setError": "Failed to set PAC server port: {{error}}"
+  },
   "portInput": {
     "description": "The port the proxy server will listen on (0 for random).",
     "helper": "Using a port below 1024 may require elevated privileges.",

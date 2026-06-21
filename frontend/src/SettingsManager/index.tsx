@@ -18,6 +18,7 @@ import { ExportDebugDataButton } from './ExportDebugDataButton';
 import { ExportLogsButton } from './ExportLogsButton';
 import { IgnoredHostsInput } from './IgnoredHostsInput';
 import { LocaleSelector } from './LocaleSelector';
+import { PACPortInput } from './PACPortInput';
 import { PortInput } from './PortInput';
 import { ThemeSelector } from './ThemeSelector';
 import { UninstallCADialog } from './UninstallCADialog';
@@ -73,6 +74,7 @@ export function SettingsManager() {
         <div className="settings-manager__section-body">
           <PortInput />
           <AssetPortInput />
+          <PACPortInput />
           <IgnoredHostsInput />
           <AppRoutingSettings />
           <UninstallCADialog proxyState={proxyState} />

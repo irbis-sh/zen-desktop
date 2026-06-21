@@ -39,6 +39,12 @@ func NewManager(pacPort int) *Manager {
 	}
 }
 
+// SetPACPort sets the port the PAC server will listen on the next time it is started.
+// If pacPort is 0, a random port will be chosen. It has no effect on an already-running server.
+func (m *Manager) SetPACPort(pacPort int) {
+	m.pacPort = pacPort
+}
+
 // Set configures the system proxy to use the proxy server listening on the given port.
 func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string, shouldProxy ShouldProxyFunc) error {
 	if shouldProxy == nil {

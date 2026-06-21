@@ -382,6 +382,7 @@
   },
   "proxy": {
     "port": 0,
+    "pacPort": 0,
     "routing": {
       "mode": "blocklist",
       "appPaths": []

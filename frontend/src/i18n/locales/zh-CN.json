@@ -125,6 +125,12 @@
       "title": "欢迎使用 Zen！"
     }
   },
+  "pacPortInput": {
+    "description": "PAC（代理自动配置）服务器监听的端口（0 为随机）。",
+    "helper": "使用 1024 以下的端口可能需要管理员权限。",
+    "label": "PAC 服务器端口",
+    "setError": "设置 PAC 服务器端口失败：{{error}}"
+  },
   "portInput": {
     "description": "代理服务器监听的端口（0 为随机）。",
     "helper": "使用 1024 以下的端口可能需要管理员权限。",

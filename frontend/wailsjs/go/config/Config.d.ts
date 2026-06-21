@@ -48,6 +48,8 @@ export function SetIgnoredHosts(arg1:Array<string>):Promise<void>;
 
 export function SetLocale(arg1:string):Promise<void>;
 
+export function SetPACPort(arg1:number):Promise<void>;
+
 export function SetPort(arg1:number):Promise<void>;
 
 export function SetRouting(arg1:config.RoutingConfig):Promise<void>;
