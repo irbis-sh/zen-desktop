@@ -134,7 +134,7 @@
   "portInput": {
     "description": "代理伺服器監聽的連接埠（0 為隨機）。",
     "helper": "使用 1024 以下的連接埠可能需要系統管理員權限。",
-    "label": "連接埠"
+    "label": "代理伺服器連接埠"
   },
   "requestLog": {
     "emptyState": "開始瀏覽以檢視被攔截的請求。",

@@ -134,7 +134,7 @@
   "portInput": {
     "description": "Der Port, auf dem der Proxy-Server lauscht (0 für zufällig).",
     "helper": "Die Verwendung eines Ports unter 1024 kann erhöhte Rechte erfordern.",
-    "label": "Port"
+    "label": "Proxy-Port"
   },
   "requestLog": {
     "emptyState": "Beginnen Sie mit dem Surfen, um blockierte Anfragen zu sehen.",

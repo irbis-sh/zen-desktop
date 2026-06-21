@@ -134,7 +134,7 @@
   "portInput": {
     "description": "The port the proxy server will listen on (0 for random).",
     "helper": "Using a port below 1024 may require elevated privileges.",
-    "label": "Port"
+    "label": "Proxy port"
   },
   "requestLog": {
     "emptyState": "Start browsing to see blocked requests.",

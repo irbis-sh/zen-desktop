@@ -134,7 +134,7 @@
   "portInput": {
     "description": "代理服务器监听的端口（0 为随机）。",
     "helper": "使用 1024 以下的端口可能需要管理员权限。",
-    "label": "端口"
+    "label": "代理端口"
   },
   "requestLog": {
     "emptyState": "开始浏览以查看被拦截的请求。",

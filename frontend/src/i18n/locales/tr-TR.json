@@ -134,7 +134,7 @@
   "portInput": {
     "description": "Proxy sunucusunun dinleyeceği port (rastgele için 0).",
     "helper": "1024'ün altında bir port kullanmak yükseltilmiş ayrıcalıklar gerektirebilir.",
-    "label": "Port"
+    "label": "Proxy portu"
   },
   "requestLog": {
     "emptyState": "Engellenen istekleri görmek için gezinmeye başlayın.",

@@ -134,7 +134,7 @@
   "portInput": {
     "description": "La porta su cui il server proxy ascolterà (0 per casuale).",
     "helper": "L'uso di una porta inferiore a 1024 potrebbe richiedere privilegi elevati.",
-    "label": "Porta"
+    "label": "Porta del proxy"
   },
   "requestLog": {
     "emptyState": "Inizia a navigare per vedere le richieste bloccate.",
