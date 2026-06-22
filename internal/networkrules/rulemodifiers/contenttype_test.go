@@ -136,7 +136,7 @@ func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 
 		m := &ContentTypeModifier{contentType: "ping"}
 		req := &http.Request{
-			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}, "Sec-Fetch-Dest": []string{"xmlhttprequest"}},
+			Header: http.Header{"Content-Type": []string{"text/ping"}, "Ping-To": []string{"http://example.com"}, "Sec-Fetch-Dest": []string{"empty"}},
 		}
 
 		if !m.ShouldMatchReq(req) {

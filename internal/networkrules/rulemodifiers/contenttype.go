@@ -60,18 +60,13 @@ func (m *ContentTypeModifier) Parse(modifier string) error {
 }
 
 func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
-	isPing := req.Header.Get("Ping-To") != "" ||
-		req.Header.Get("Ping-From") != "" ||
-		headerContains(req.Header, "Content-Type", "text/ping")
+	mimeType := m.getMimeType(req.Header)
+
+	hasPingHeaders := req.Header.Get("Ping-To") != "" || req.Header.Get("Ping-From") != ""
+	isPing := hasPingHeaders && mimeType == "text/ping"
 
 	if isPing {
-		if m.contentType == "other" {
-			return m.inverted
-		}
-		if m.contentType == "ping" {
-			return !m.inverted
-		}
-		return m.inverted
+		return (m.contentType == "ping") != m.inverted
 	}
 
 	if m.contentType == "ping" {
@@ -104,15 +99,7 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 }
 
 func (m *ContentTypeModifier) ShouldMatchRes(res *http.Response) bool {
-	contentType := res.Header.Get("Content-Type")
-	if contentType == "" {
-		return false
-	}
-
-	// strip parameters like charset
-	mimeType, _, _ := strings.Cut(contentType, ";")
-	mimeType = strings.TrimSpace(mimeType)
-	mimeType = strings.ToLower(mimeType)
+	mimeType := m.getMimeType(res.Header)
 
 	normalized, known := mapResponseContentTypeToModifier(mimeType)
 	if m.contentType == "other" {
@@ -162,4 +149,18 @@ func headerContains(h http.Header, name, value string) bool {
 		}
 	}
 	return false
+}
+
+func (m *ContentTypeModifier) getMimeType(header http.Header) string {
+	contentType := header.Get("Content-Type")
+	if contentType == "" {
+		return ""
+	}
+
+	// strip parameters like charset
+	mimeType, _, _ := strings.Cut(contentType, ";")
+	mimeType = strings.TrimSpace(mimeType)
+	mimeType = strings.ToLower(mimeType)
+
+	return mimeType
 }
