@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.23.0
+
+### What's New
+
+* **Linux system tray support**
+  Zen now sits in the system tray on Linux in supported desktop environments. Closing the window minimizes Zen to the tray and keeps the proxy running instead of shutting it down. Thanks to @ohdonny!
+* **こんにちは！**
+  Zen's UI is now available in Japanese, thanks to @AI-Avalon!
+* **WebSocket filtering**
+  WebSocket traffic can now be matched and blocked. Additionally, Zen now recognizes the `$websocket` content type modifier. Thanks to @inflame-ue!
+* **More reliable content-type matching**
+  Content-type rules now match against the `Content-Type` response header, not only the `Sec-Fetch-Dest` request header. These rules now work more consistently, especially with non-browser apps. Thanks to @Mirwinli!
+* **Separate PAC port setting**
+  Settings > Advanced now has a field for the PAC proxy port. Useful for apps that do not respect system proxy settings automatically and need to be configured to use Zen manually.
+* **Other improvements**
+  Tightened the scope of generated certificates (thanks @inflame-ue!), fixed a resource leak when the proxy fails to start (thanks @Mirwinli!), improved filtering accuracy (thanks @Mirwinli!), and made other internal improvements to the filtering engine.
+
+### New Contributors
+* @Mirwinli made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/700
+* @AI-Avalon made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/696
+* @inflame-ue made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/717
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.22.0...v0.23.0
+
 ## v0.22.0
 
 ### What's New
