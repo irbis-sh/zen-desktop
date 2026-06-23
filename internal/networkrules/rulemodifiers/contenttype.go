@@ -36,7 +36,6 @@ var (
 	// contentTypeMap maps Content-Type MIME types to corresponding content type modifiers.
 	contentTypeMap = map[string]string{
 		"text/css":                      "stylesheet",
-		"text/ping":                     "ping",
 		"text/javascript":               "script",
 		"application/javascript":        "script",
 		"image":                         "image",
@@ -60,7 +59,7 @@ func (m *ContentTypeModifier) Parse(modifier string) error {
 }
 
 func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
-	mimeType := m.getMimeType(req.Header)
+	mimeType := getMimeType(req.Header)
 
 	hasPingHeaders := req.Header.Get("Ping-To") != "" || req.Header.Get("Ping-From") != ""
 	isPing := hasPingHeaders && mimeType == "text/ping"
@@ -99,7 +98,7 @@ func (m *ContentTypeModifier) ShouldMatchReq(req *http.Request) bool {
 }
 
 func (m *ContentTypeModifier) ShouldMatchRes(res *http.Response) bool {
-	mimeType := m.getMimeType(res.Header)
+	mimeType := getMimeType(res.Header)
 
 	normalized, known := mapResponseContentTypeToModifier(mimeType)
 	if m.contentType == "other" {
@@ -151,7 +150,7 @@ func headerContains(h http.Header, name, value string) bool {
 	return false
 }
 
-func (m *ContentTypeModifier) getMimeType(header http.Header) string {
+func getMimeType(header http.Header) string {
 	contentType := header.Get("Content-Type")
 	if contentType == "" {
 		return ""

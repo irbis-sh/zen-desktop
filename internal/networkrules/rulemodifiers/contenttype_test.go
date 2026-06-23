@@ -157,19 +157,17 @@ func TestContentTypeModifier_ShouldMatchReq(t *testing.T) {
 		}
 	})
 
-	t.Run("matches text/ping for ping modifier in response", func(t *testing.T) {
+	t.Run("ping with charset matches", func(t *testing.T) {
 		t.Parallel()
 
 		m := &ContentTypeModifier{contentType: "ping"}
-		res := &http.Response{
-			Header: http.Header{"Content-Type": []string{"text/ping; charset=utf-8"}},
+		req := &http.Request{
+			Header: http.Header{"Content-Type": []string{"text/ping; charset=utf-8"}, "Ping-To": []string{"http://example.com"}},
 		}
-
-		if !m.ShouldMatchRes(res) {
-			t.Fatal("expected to match text/ping response")
+		if !m.ShouldMatchReq(req) {
+			t.Fatal("expected ping with charset and ping headers to match")
 		}
 	})
-
 }
 
 func TestContentTypeModifier_ShouldMatchRes(t *testing.T) {
