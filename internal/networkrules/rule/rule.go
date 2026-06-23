@@ -43,6 +43,11 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			return errors.New("empty modifier")
 		}
 
+		// Noop modifier is ignored
+		if isNoopModifier(m) {
+			continue
+		}
+
 		name, hasValue := cutModifierName(m)
 
 		var modifier rulemodifiers.Modifier
@@ -122,6 +127,19 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 	}
 
 	return nil
+}
+
+// isNoopModifier returns true if modifier is one or more underscores.
+func isNoopModifier(modifier string) bool {
+	if modifier == "" {
+		return false
+	}
+	for i := 0; i < len(modifier); i++ {
+		if modifier[i] != '_' {
+			return false
+		}
+	}
+	return true
 }
 
 func cutModifierName(modifier string) (name string, hasValue bool) {

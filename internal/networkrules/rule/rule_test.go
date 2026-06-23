@@ -100,6 +100,63 @@ func TestParseModifiers(t *testing.T) {
 		)
 	})
 
+	t.Run("noop modifiers are ignored", func(t *testing.T) {
+		t.Parallel()
+
+		for _, modifier := range []string{"_", "__", "___", "____"} {
+			t.Run(modifier, func(t *testing.T) {
+				t.Parallel()
+
+				var r Rule
+				if err := r.ParseModifiers([]string{modifier}); err != nil {
+					t.Fatalf("ParseModifiers(%q) = %v, want nil", modifier, err)
+				}
+
+				assertRuleBuckets(t, &r, false, nil, nil, nil, nil)
+			})
+		}
+	})
+
+	t.Run("noop modifiers do not affect other modifiers", func(t *testing.T) {
+		t.Parallel()
+
+		var r Rule
+		if err := r.ParseModifiers([]string{"script", "_", "domain=example.com", "__"}); err != nil {
+			t.Fatalf("ParseModifiers() = %v, want nil", err)
+		}
+
+		assertRuleBuckets(t, &r, false,
+			[]string{"*rulemodifiers.DomainModifier"},
+			[]string{"*rulemodifiers.ContentTypeModifier"},
+			nil,
+			nil,
+		)
+	})
+
+	t.Run("rejects noop-like modifiers with non-underscore characters", func(t *testing.T) {
+		t.Parallel()
+
+		for _, modifier := range []string{
+			"_abc",      // letters after underscore
+			"abc_",      // letters before underscore
+			"___=value", // noop with a value
+			"_=_",       // underscore with a value
+		} {
+			t.Run(modifier, func(t *testing.T) {
+				t.Parallel()
+
+				var r Rule
+				err := r.ParseModifiers([]string{modifier})
+				if err == nil {
+					t.Fatalf("ParseModifiers(%q) = nil, want unknown modifier error", modifier)
+				}
+				if !strings.Contains(err.Error(), "unknown modifier") {
+					t.Fatalf("ParseModifiers(%q) error = %q, want unknown modifier", modifier, err)
+				}
+			})
+		}
+	})
+
 	t.Run("rejects prefix collisions", func(t *testing.T) {
 		t.Parallel()
 
