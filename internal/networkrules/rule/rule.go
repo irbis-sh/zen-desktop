@@ -131,9 +131,6 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 
 // isNoopModifier returns true if modifier is one or more underscores.
 func isNoopModifier(modifier string) bool {
-	if modifier == "" {
-		return false
-	}
 	for i := 0; i < len(modifier); i++ {
 		if modifier[i] != '_' {
 			return false
