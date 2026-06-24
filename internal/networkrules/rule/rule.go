@@ -25,6 +25,8 @@ type Rule struct {
 
 	// Document shows if rule has Document modifier.
 	Document bool
+	// Important shows if rule has Important modifier.
+	Important bool
 }
 
 // TODO: The split between And and Or modifiers is somewhat convoluted and exists only to support ContentType.
@@ -58,6 +60,9 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			switch name {
 			case "document", "doc":
 				rm.Document = true
+				continue
+			case "important":
+				rm.Important = true
 				continue
 			case "xmlhttprequest",
 				"xhr",
