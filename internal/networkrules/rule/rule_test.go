@@ -123,7 +123,7 @@ func TestParseModifiers(t *testing.T) {
 					t.Fatalf("ParseModifiers(%q) = %v, want nil", modifier, err)
 				}
 
-				assertRuleBuckets(t, &r, false, nil, nil, nil, nil)
+				assertRuleBuckets(t, &r, false, false, nil, nil, nil, nil)
 			})
 		}
 	})
@@ -136,7 +136,7 @@ func TestParseModifiers(t *testing.T) {
 			t.Fatalf("ParseModifiers() = %v, want nil", err)
 		}
 
-		assertRuleBuckets(t, &r, false,
+		assertRuleBuckets(t, &r, false, false,
 			[]string{"*rulemodifiers.DomainModifier"},
 			[]string{"*rulemodifiers.ContentTypeModifier"},
 			nil,
