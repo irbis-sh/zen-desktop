@@ -17,7 +17,18 @@ func TestParseModifiers(t *testing.T) {
 			t.Fatalf("ParseModifiers(nil) = %v, want nil", err)
 		}
 
-		assertRuleBuckets(t, &r, false, nil, nil, nil, nil)
+		assertRuleBuckets(t, &r, false, false, nil, nil, nil, nil)
+	})
+
+	t.Run("important modifier sets important flag only", func(t *testing.T) {
+		t.Parallel()
+
+		var r Rule
+		if err := r.ParseModifiers([]string{"important"}); err != nil {
+			t.Fatalf("ParseModifiers(%q) = %v, want nil", "important", err)
+		}
+
+		assertRuleBuckets(t, &r, true, false, nil, nil, nil, nil)
 	})
 
 	t.Run("document modifiers set document flag only", func(t *testing.T) {
@@ -32,7 +43,7 @@ func TestParseModifiers(t *testing.T) {
 					t.Fatalf("ParseModifiers(%q) = %v, want nil", modifier, err)
 				}
 
-				assertRuleBuckets(t, &r, true, nil, nil, nil, nil)
+				assertRuleBuckets(t, &r, false, true, nil, nil, nil, nil)
 			})
 		}
 	})
@@ -68,7 +79,7 @@ func TestParseModifiers(t *testing.T) {
 			t.Fatalf("ParseModifiers() = %v, want nil", err)
 		}
 
-		assertRuleBuckets(t, &r, false,
+		assertRuleBuckets(t, &r, false, false,
 			[]string{
 				"*rulemodifiers.DomainModifier",
 				"*rulemodifiers.MethodModifier",
@@ -151,9 +162,12 @@ func TestParseModifiers(t *testing.T) {
 	})
 }
 
-func assertRuleBuckets(t *testing.T, r *Rule, wantDocument bool, wantAnd, wantOr, wantQuery, wantActions []string) {
+func assertRuleBuckets(t *testing.T, r *Rule, wantImportant, wantDocument bool, wantAnd, wantOr, wantQuery, wantActions []string) {
 	t.Helper()
 
+	if r.Important != wantImportant {
+		t.Errorf("Important = %v, want %v", r.Important, wantImportant)
+	}
 	if r.Document != wantDocument {
 		t.Errorf("Document = %v, want %v", r.Document, wantDocument)
 	}
