@@ -81,36 +81,73 @@ func TestExceptionRule(t *testing.T) {
 		}
 	})
 
-	t.Run("important exception should cancel important block", func(t *testing.T) {
+	t.Run("'@@||page$important' should cancel '||page$important'", func(t *testing.T) {
 		t.Parallel()
 
-		er := &ExceptionRule{Rule: rule.Rule{Important: true}}
-		r := &rule.Rule{Important: true}
+		filterName := "test"
 
-		if !er.Cancels(r) {
-			t.Errorf("Important exception rule should cancel important block rule")
+		er := &ExceptionRule{
+			Rule: rule.Rule{
+				RawRule:    "@@||example.com$important",
+				FilterName: &filterName,
+			},
+		}
+		r := &rule.Rule{
+			RawRule:    "||example.com$important",
+			FilterName: &filterName,
+		}
+		r.ParseModifiers([]string{"important"})
+		er.ParseModifiers([]string{"important"})
+
+		want := true
+		if got := er.Cancels(r); got != want {
+			t.Errorf("'%s'.Cancels('%s') = %t, want %t", er.RawRule, r.RawRule, got, want)
 		}
 	})
 
-	t.Run("normal exception should not cancel important block", func(t *testing.T) {
+	t.Run("'@@||page' should not cancel '||page$important'", func(t *testing.T) {
 		t.Parallel()
 
-		er := &ExceptionRule{Rule: rule.Rule{Important: false}}
-		r := &rule.Rule{Important: true}
+		filterName := "test"
 
-		if er.Cancels(r) {
-			t.Errorf("Normal exception rule should NOT cancel important block rule")
+		er := &ExceptionRule{
+			Rule: rule.Rule{
+				RawRule:    "@@||example.com",
+				FilterName: &filterName,
+			},
+		}
+		r := &rule.Rule{
+			RawRule:    "||example.com$important",
+			FilterName: &filterName,
+		}
+		r.ParseModifiers([]string{"important"})
+
+		want := false
+		if got := er.Cancels(r); got != want {
+			t.Errorf("'%s'.Cancels('%s') = %t, want %t", er.RawRule, r.RawRule, got, want)
 		}
 	})
 
-	t.Run("important exception should cancel normal block", func(t *testing.T) {
+	t.Run("'@@||page$important' should cancel '||page'", func(t *testing.T) {
 		t.Parallel()
 
-		er := &ExceptionRule{Rule: rule.Rule{Important: true}}
-		r := &rule.Rule{Important: false}
+		filterName := "test"
 
-		if !er.Cancels(r) {
-			t.Errorf("Important exception rule should cancel normal block rule")
+		er := &ExceptionRule{
+			Rule: rule.Rule{
+				RawRule:    "@@||example.com$important",
+				FilterName: &filterName,
+			},
+		}
+		r := &rule.Rule{
+			RawRule:    "||example.com",
+			FilterName: &filterName,
+		}
+		er.ParseModifiers([]string{"important"})
+
+		want := true
+		if got := er.Cancels(r); got != want {
+			t.Errorf("'%s'.Cancels('%s') = %t, want %t", er.RawRule, r.RawRule, got, want)
 		}
 	})
 }

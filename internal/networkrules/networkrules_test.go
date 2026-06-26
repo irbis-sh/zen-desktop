@@ -345,6 +345,40 @@ func TestExceptionRules(t *testing.T) {
 			t.Fatal("expected response header to be preserved")
 		}
 	})
+
+	t.Run("normal exception does not cancel important primary", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$important`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com^`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/", nil))
+		if !shouldBlock {
+			t.Fatal("expected normal exception NOT to cancel important primary rule")
+		}
+	})
+
+	t.Run("important exception cancels important primary", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$important`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com^$important`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/", nil))
+		if shouldBlock {
+			t.Fatal("expected important exception to cancel important primary rule")
+		}
+	})
 }
 
 func newTestRequest(t *testing.T, rawURL string, headers http.Header) *http.Request {
