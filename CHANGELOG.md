@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.24.0
+
+### What's New
+* **Linux app starts again without `libayatana-appindicator3`**
+  Since `v0.23.0`, Zen failed to launch on Linux systems that didn't have AppIndicator installed, quitting with a shared-library loading error. Zen now loads the system tray library at runtime instead of linking it at build time, so the app starts whether or not the library is present. If you ran into this after updating, see the troubleshooting guide: https://docs.irbis.sh/docs/zen/how-to/troubleshoot/#zen-wont-start-after-updating-to-v0230
+* **`important` modifier**
+  Zen now supports the `important` rule modifier. An important rule wins over regular exception rules, and only an important exception rule can cancel it. Thanks to @LucasM4r!
+* **`ping` content-type modifier**
+  Rules can now match hyperlink auditing (ping) requests with the `ping` content-type modifier. Thanks to @LucasM4r!
+* **Noop modifiers**
+  Zen now accepts noop modifiers (`_`) in rules and ignores them during parsing, which improves compatibility with filter lists. Thanks to @kamalovk!
+
+### New Contributors
+* @LucasM4r made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/726
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.23.0...v0.24.0
+
 ## v0.23.0
 
 ### What's New
