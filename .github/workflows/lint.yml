@@ -35,6 +35,9 @@ jobs:
           go-version-file: ./go.mod
       - name: Run go version
         run: go version
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
       - name: Create placeholder asset
         # go:embed in main.go requires the directory to exist and be non-empty
         run: |
