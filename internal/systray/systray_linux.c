@@ -224,6 +224,7 @@ gboolean do_set_icon(gpointer data) {
   if (written != size) {
     printf("failed to write temp icon file %s: %s\n", temp_file_name,
            strerror(errno));
+    _unlink_temp_file();
     g_bytes_unref(bytes);
     return FALSE;
   }
