@@ -8,6 +8,8 @@ package systray
 	See more in the COPYING.md file in the root directory of this project.
 */
 
+// #cgo linux pkg-config: gtk+-3.0
+// #cgo linux LDFLAGS: -ldl
 // #include "systray.h"
 import "C"
 
@@ -25,6 +27,16 @@ func nativeLoop() {
 
 func quit() {
 	C.quit()
+}
+
+// trayLibraryAvailable reports whether the AppIndicator library could be loaded
+// at runtime. It only performs dlopen/dlsym (no GTK), so it is safe to call
+// before GTK is initialized. The underlying C cache is not synchronized for
+// concurrent first-time calls, so it must be primed once on a single goroutine
+// before the GTK loop starts; in practice Available() does this during
+// wails.Run setup. See try_load_appindicator in systray_linux.c.
+func trayLibraryAvailable() bool {
+	return C.try_load_appindicator() != 0
 }
 
 // addMenuItem adds a menu item with the designated title for Linux.

@@ -2,7 +2,6 @@ package systray
 
 import (
 	"context"
-	"log"
 	"sync/atomic"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -15,8 +14,8 @@ func (m *Manager) OnProxyStarted() {
 	m.proxyActive = true
 
 	if m.startStopMenuItem == nil {
-		// Sanity check.
-		log.Println("startStopMenuItem is nil")
+		// The tray is not active (e.g. the AppIndicator library is unavailable),
+		// so there is no menu item to update.
 		return
 	}
 
@@ -31,8 +30,8 @@ func (m *Manager) OnProxyStopped() {
 	m.proxyActive = false
 
 	if m.startStopMenuItem == nil {
-		// Sanity check.
-		log.Println("startStopMenuItem is nil")
+		// The tray is not active (e.g. the AppIndicator library is unavailable),
+		// so there is no menu item to update.
 		return
 	}
 

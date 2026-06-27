@@ -14,5 +14,9 @@ func Available() bool {
 		return false
 	}
 	registered, ok := v.Value().(bool)
-	return registered && ok
+	// Require both a registered StatusNotifier host AND the AppIndicator library
+	// to be loadable. Otherwise, on a host with a tray (e.g. KDE) but without the
+	// client library, HideWindowOnClose would hide the window into a tray that
+	// has no icon and no way to reopen it.
+	return registered && ok && trayLibraryAvailable()
 }

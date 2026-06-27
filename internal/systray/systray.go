@@ -75,7 +75,10 @@ func run(onReady func(), onExit func()) {
 	if onReady == nil {
 		systrayReady = func() {}
 	} else {
-		// Run onReady on separate goroutine to avoid blocking event loop
+		// Run onReady on separate goroutine to avoid blocking event loop.
+		// On Linux, if the AppIndicator library is unavailable the C side never
+		// calls systray_ready (see do_register_systray), so this goroutine stays
+		// parked for the process lifetime. That is not ideal but negligible.
 		readyCh := make(chan interface{})
 		go func() {
 			<-readyCh

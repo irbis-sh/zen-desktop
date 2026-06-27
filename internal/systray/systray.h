@@ -11,6 +11,7 @@
 extern void systray_ready();
 extern void systray_on_exit();
 extern void systray_menu_item_selected(int menu_id);
+int try_load_appindicator(void);
 void registerSystray(void);
 int nativeLoop(void);
 
