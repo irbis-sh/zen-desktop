@@ -2,6 +2,7 @@ build/bin
 build/windows/installer/wails_tools.nsh
 node_modules
 frontend/dist
+frontend/package.json.md5
 .DS_Store
 *.dmg
 *.app
