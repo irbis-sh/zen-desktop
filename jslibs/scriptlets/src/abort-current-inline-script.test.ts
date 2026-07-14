@@ -7,7 +7,6 @@ describe('abort-current-inline-script', () => {
     delete (window as any).PROPERTY;
     delete (window as any).test;
     delete (window as any).prop1;
-    // Traps are defined as own properties, so deleting restores the prototype method.
     delete (document as any).createElement;
     delete (document as any).currentScript;
   });
@@ -70,9 +69,6 @@ describe('abort-current-inline-script', () => {
     }).toThrow(ReferenceError);
   });
 
-  // Regression test: createElement lives on Document.prototype, not on document itself.
-  // The trap must return the inherited method for non-aborted reads, not shadow it
-  // with undefined (https://github.com/irbis-sh/zen-desktop/discussions/749).
   test('inherited method keeps working for non-matching scripts', () => {
     abortCurrentInlineScript('document.createElement', 'match-me');
 

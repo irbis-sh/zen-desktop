@@ -62,9 +62,6 @@ describe('abort-on-property-read', () => {
     }).toThrow(ReferenceError);
   });
 
-  // Regression tests for prototype-inherited intermediate chain segments, like
-  // the serviceWorker in navigator.serviceWorker.register
-  // (https://github.com/irbis-sh/zen-desktop/issues/752).
   test('chain with prototype-inherited intermediate', () => {
     const container = { register: () => {} };
     const proto = {
