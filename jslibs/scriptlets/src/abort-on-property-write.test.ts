@@ -7,6 +7,7 @@ describe('abort-on-property-write', () => {
     delete (window as any).PROPERTY;
     delete (window as any).test;
     delete (window as any).prop1;
+    delete (document as any).querySelector;
   });
 
   test('abort on single prop write', () => {
@@ -58,6 +59,17 @@ describe('abort-on-property-write', () => {
 
     expect(() => {
       (window.document.querySelectorAll as any) = () => {};
+    }).toThrow(ReferenceError);
+  });
+
+  test('inherited method keeps working for reads', () => {
+    abortOnPropertyWrite('document.querySelector');
+
+    expect(typeof document.querySelector).toEqual('function');
+    expect(document.querySelector('body')).not.toBeNull();
+
+    expect(() => {
+      (document.querySelector as any) = () => {};
     }).toThrow(ReferenceError);
   });
 

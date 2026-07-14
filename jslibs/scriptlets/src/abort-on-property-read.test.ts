@@ -7,6 +7,7 @@ describe('abort-on-property-read', () => {
     delete (window as any).PROPERTY;
     delete (window as any).test;
     delete (window as any).prop1;
+    delete (window as any).atob;
   });
 
   test('abort on single prop read', () => {
@@ -59,6 +60,52 @@ describe('abort-on-property-read', () => {
     expect(() => {
       window.document.querySelectorAll('test');
     }).toThrow(ReferenceError);
+  });
+
+  // Regression tests for prototype-inherited intermediate chain segments, like
+  // the serviceWorker in navigator.serviceWorker.register
+  // (https://github.com/irbis-sh/zen-desktop/issues/752).
+  test('chain with prototype-inherited intermediate', () => {
+    const container = { register: () => {} };
+    const proto = {
+      get sw() {
+        return container;
+      },
+    };
+    (window as any).test = Object.create(proto);
+
+    abortOnPropertyRead('test.sw.register');
+
+    // The intermediate must stay reachable through its inherited getter.
+    expect((window as any).test.sw).toBe(container);
+
+    expect(() => {
+      (window as any).test.sw.register;
+    }).toThrow(ReferenceError);
+  });
+
+  test('chain with inherited DOM intermediate', () => {
+    // defaultView is an accessor on Document.prototype returning the window.
+    abortOnPropertyRead('document.defaultView.atob');
+
+    expect(document.defaultView).toBe(window);
+
+    expect(() => {
+      document.defaultView!.atob;
+    }).toThrow(ReferenceError);
+  });
+
+  test('chain with null intermediate is left intact', () => {
+    const proto = {
+      get child() {
+        return null;
+      },
+    };
+    (window as any).test = Object.create(proto);
+
+    abortOnPropertyRead('test.child.prop');
+
+    expect((window as any).test.child).toBeNull();
   });
 
   test('properties inside chain are not initialized by scriptlet', () => {

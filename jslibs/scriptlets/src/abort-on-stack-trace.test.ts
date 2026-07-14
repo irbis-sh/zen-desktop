@@ -7,6 +7,7 @@ describe('abort-on-stack-trace', () => {
     delete (window as any).PROPERTY;
     delete (window as any).test;
     delete (window as any).prop1;
+    delete (document as any).getElementById;
   });
   test('abort on matching stack', () => {
     abortOnStackTrace('test', 'jest');
@@ -66,6 +67,21 @@ describe('abort-on-stack-trace', () => {
     expect(() => {
       (window as any).test.prop.prop2 = '123';
     }).not.toThrow(ReferenceError);
+  });
+
+  test('inherited method passes through on non-matching stack', () => {
+    abortOnStackTrace('document.getElementById', 'ihopethistackwontmatch');
+
+    expect(typeof document.getElementById).toEqual('function');
+    expect(document.getElementById('nonexistent')).toBeNull();
+  });
+
+  test('inherited method aborts on matching stack', () => {
+    abortOnStackTrace('document.getElementById', 'jest');
+
+    expect(() => {
+      document.getElementById('nonexistent');
+    }).toThrow(ReferenceError);
   });
 
   test('properties inside chain are not initialized by scriptlet', () => {

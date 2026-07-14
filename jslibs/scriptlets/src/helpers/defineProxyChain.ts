@@ -1,4 +1,7 @@
 import { isProxyable } from './isProxyable';
+import { createLogger } from './logger';
+
+const logger = createLogger('defineProxyChain');
 
 type AnyObject = { [key: string]: any };
 
@@ -14,17 +17,22 @@ export function defineProxyChain(root: AnyObject, chain: string, callbacks: Prox
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     const isLast = i === parts.length - 1;
-    const chainSoFar = parts.slice(0, i + 1);
 
-    // final property in chain
+    // Final property in the chain.
     if (isLast) {
-      const propName = chainSoFar[chainSoFar.length - 1];
-      const originalDescriptor = Object.getOwnPropertyDescriptor(current, propName) || {};
-      const originalGetter = originalDescriptor.get;
-      const originalSetter = originalDescriptor.set;
-      let originalValue = originalDescriptor.value;
+      // Methods like document.createElement live on the prototype (Document.prototype),
+      // not on the instance, so walk the prototype chain to find the descriptor.
+      // An own-property-only lookup would capture undefined and shadow the real method.
+      let holder: AnyObject | null = current;
+      let originalDescriptor: PropertyDescriptor | undefined;
+      while (holder !== null && (originalDescriptor = Object.getOwnPropertyDescriptor(holder, part)) === undefined) {
+        holder = Object.getPrototypeOf(holder);
+      }
+      const originalGetter = originalDescriptor?.get;
+      const originalSetter = originalDescriptor?.set;
+      let originalValue = originalDescriptor?.value;
 
-      Object.defineProperty(current, parts[parts.length - 1], {
+      Object.defineProperty(current, part, {
         configurable: true,
         enumerable: true,
         get() {
@@ -47,10 +55,11 @@ export function defineProxyChain(root: AnyObject, chain: string, callbacks: Prox
         },
       });
     } else {
-      const isConfigurable = isPropertyConfigurable(current, part);
-      const propExists = Object.prototype.hasOwnProperty.call(current, part);
-
-      if (isConfigurable && !propExists) {
+      // `in` checks the whole prototype chain: inherited intermediates like
+      // document.defaultView or navigator.serviceWorker must be descended into,
+      // not shadowed by the deferred trap below (which would make them read
+      // back as undefined).
+      if (!(part in current)) {
         let internalValue: any;
 
         const createProxy = (target: AnyObject, chainParts: string[]) => {
@@ -99,19 +108,17 @@ export function defineProxyChain(root: AnyObject, chain: string, callbacks: Prox
 
       // Move into the next level of the chain.
       current = current[part];
+      if (!isProxyable(current)) {
+        // E.g. an inherited accessor that currently returns null, like
+        // document.body while parsing is still inside <head>. Trapping deeper
+        // would mean shadowing a live accessor, so give up instead. This
+        // deliberately also gives up on inherited data properties holding
+        // undefined (where a deferred trap could catch a later instance
+        // assignment): the trap would hide later prototype assignments, and
+        // not breaking the page outweighs supporting that rare pattern.
+        logger.warn(`Giving up on "${chain}": "${part}" is not an object`);
+        return;
+      }
     }
   }
-}
-
-function isPropertyConfigurable(o: AnyObject, prop: string): boolean {
-  if (!o) {
-    return true;
-  }
-
-  const descriptor = Object.getOwnPropertyDescriptor(o, prop);
-  if (!descriptor) {
-    return true;
-  }
-
-  return Boolean(descriptor.configurable);
 }
