@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.24.1
+
+### What's New
+
+* **Scriptlet fixes**
+  Fixed a couple of bugs that stopped some scriptlet rules from working, which could let ads and trackers through on certain sites. The affected rules now behave as written.
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.24.0...v0.24.1
+
 ## v0.24.0
 
 ### What's New
