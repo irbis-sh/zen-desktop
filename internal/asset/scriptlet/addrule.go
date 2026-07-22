@@ -61,7 +61,10 @@ func (inj *Injector) AddRule(rule string, filterListTrusted bool) error {
 		return errUntrusted
 	}
 
-	al := newArgList(args)
+	al, err := newArgList(args)
+	if err != nil {
+		return fmt.Errorf("encode argument list: %v", err)
+	}
 
 	switch isException {
 	case true:

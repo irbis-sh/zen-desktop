@@ -18,20 +18,22 @@ import (
 type argList string
 
 // newArgList encodes decoded scriptlet arguments into their canonical form.
-func newArgList(args []string) argList {
+func newArgList(args []string) (argList, error) {
 	encoded := make([]string, len(args))
 	for i, arg := range args {
 		// json.Marshal escapes everything that could terminate the string or
 		// the surrounding script early, including quotes, backslashes, control
-		// characters and angle brackets.
+		// characters and angle brackets. It cannot fail for strings today, but
+		// arguments come from untrusted filter lists, so treat a failure as a
+		// bad rule rather than assuming this holds across Go releases
+		// (encoding/json/v2 already rejects invalid UTF-8, for one).
 		b, err := json.Marshal(arg)
 		if err != nil {
-			// Marshaling a string never fails.
-			panic(err)
+			return "", fmt.Errorf("marshal argument %d: %v", i, err)
 		}
 		encoded[i] = string(b)
 	}
-	return argList(strings.Join(encoded, ","))
+	return argList(strings.Join(encoded, ",")), nil
 }
 
 func (al argList) GenerateInjection(w io.Writer) error {

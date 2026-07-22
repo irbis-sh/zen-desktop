@@ -28,7 +28,10 @@ func TestAddRule(t *testing.T) {
 			t.Errorf("expected hostname to be collected, got %q", spyStore.PrimaryEntries[0].HostnamePatterns)
 		}
 
-		expectedArgList := newArgList([]string{"set-constant", "first", "false"})
+		expectedArgList, err := newArgList([]string{"set-constant", "first", "false"})
+		if err != nil {
+			t.Fatalf("failed to encode expected arg list: %v", err)
+		}
 
 		if spyStore.PrimaryEntries[0].ArgList != expectedArgList {
 			t.Errorf("expected first scriptlet to be %v, got %v", expectedArgList, spyStore.PrimaryEntries[0].ArgList)
@@ -55,7 +58,10 @@ func TestAddRule(t *testing.T) {
 			t.Errorf("expected hostname to be collected, got %q", spyStore.ExceptionEntries[0].HostnamePatterns)
 		}
 
-		expectedArgList := newArgList([]string{"set-constant", "first", "false"})
+		expectedArgList, err := newArgList([]string{"set-constant", "first", "false"})
+		if err != nil {
+			t.Fatalf("failed to encode expected arg list: %v", err)
+		}
 
 		if spyStore.ExceptionEntries[0].ArgList != expectedArgList {
 			t.Errorf("expected first scriptlet to be %v, got %v", expectedArgList, spyStore.ExceptionEntries[0].ArgList)
@@ -84,7 +90,10 @@ func TestAddRule(t *testing.T) {
 
 		// Same canonical form as the equivalent AdGuard-syntax rule, which is
 		// what makes exception rules match across syntaxes.
-		expectedArgList := newArgList([]string{"set-constant", "first", "false"})
+		expectedArgList, err := newArgList([]string{"set-constant", "first", "false"})
+		if err != nil {
+			t.Fatalf("failed to encode expected arg list: %v", err)
+		}
 
 		if spyStore.PrimaryEntries[0].ArgList != expectedArgList {
 			t.Errorf("expected first scriptlet to be %v, got %v", expectedArgList, spyStore.PrimaryEntries[0].ArgList)
@@ -113,7 +122,10 @@ func TestAddRule(t *testing.T) {
 
 		// Same canonical form as the equivalent AdGuard-syntax rule, which is
 		// what makes exception rules match across syntaxes.
-		expectedArgList := newArgList([]string{"set-constant", "first", "false"})
+		expectedArgList, err := newArgList([]string{"set-constant", "first", "false"})
+		if err != nil {
+			t.Fatalf("failed to encode expected arg list: %v", err)
+		}
 
 		if spyStore.ExceptionEntries[0].ArgList != expectedArgList {
 			t.Errorf("expected first scriptlet to be %v, got %v", expectedArgList, spyStore.ExceptionEntries[0].ArgList)

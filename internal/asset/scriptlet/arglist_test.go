@@ -23,7 +23,11 @@ func TestNewArgList(t *testing.T) {
 		}
 
 		for _, test := range testCases {
-			if got := newArgList(test.args); string(got) != test.expected {
+			got, err := newArgList(test.args)
+			if err != nil {
+				t.Fatalf("newArgList(%q) returned an error: %v", test.args, err)
+			}
+			if string(got) != test.expected {
 				t.Errorf("newArgList(%q) = %q, want %q", test.args, got, test.expected)
 			}
 		}
@@ -46,7 +50,10 @@ func TestNewArgList(t *testing.T) {
 		}
 
 		for _, args := range testCases {
-			al := newArgList(args)
+			al, err := newArgList(args)
+			if err != nil {
+				t.Fatalf("newArgList(%q) returned an error: %v", args, err)
+			}
 			var decoded []string
 			if err := json.Unmarshal([]byte("["+string(al)+"]"), &decoded); err != nil {
 				t.Fatalf("newArgList(%q) produced invalid JSON: %v", args, err)
@@ -65,7 +72,10 @@ func TestNewArgList(t *testing.T) {
 	t.Run("escapes characters that could break out of the script context", func(t *testing.T) {
 		t.Parallel()
 
-		al := newArgList([]string{"aopr", "</script><script>alert(1)</script>"})
+		al, err := newArgList([]string{"aopr", "</script><script>alert(1)</script>"})
+		if err != nil {
+			t.Fatalf("newArgList returned an error: %v", err)
+		}
 		if strings.Contains(string(al), "<") || strings.Contains(string(al), ">") {
 			t.Errorf("newArgList left angle brackets unescaped: %q", al)
 		}
@@ -76,7 +86,10 @@ func TestGenerateInjection(t *testing.T) {
 	t.Parallel()
 
 	var b strings.Builder
-	al := newArgList([]string{"abort-on-property-read", `/\d+\.\d+/`})
+	al, err := newArgList([]string{"abort-on-property-read", `/\d+\.\d+/`})
+	if err != nil {
+		t.Fatalf("newArgList returned an error: %v", err)
+	}
 	if err := al.GenerateInjection(&b); err != nil {
 		t.Fatalf("GenerateInjection returned an error: %v", err)
 	}
