@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -21,38 +22,46 @@ var (
 	errUntrusted            = errors.New("trusted scriptlet in an untrusted filter list")
 )
 
+// trustedPrefix marks scriptlets that may only come from trusted filter lists.
+const trustedPrefix = "trusted-"
+
 func (inj *Injector) AddRule(rule string, filterListTrusted bool) error {
-	var al argList
-	var isException bool
+	var body string
+	var isUblock, isException bool
 	var hostnamePatterns string
 
 	if match := canonicalPrimary.FindStringSubmatch(rule); match != nil {
-		hostnamePatterns = match[1]
-		al = argList(match[2])
+		hostnamePatterns, body = match[1], match[2]
 	} else if match := canonicalExceptionRegex.FindStringSubmatch(rule); match != nil {
-		hostnamePatterns = match[1]
-		al = argList(match[2])
+		hostnamePatterns, body = match[1], match[2]
 		isException = true
 	} else if match := ublockPrimaryRegex.FindStringSubmatch(rule); match != nil {
-		hostnamePatterns = match[1]
-		al = argList(match[2]).ConvertUboToCanonical()
+		hostnamePatterns, body = match[1], match[2]
+		isUblock = true
 	} else if match := ublockExceptionRegex.FindStringSubmatch(rule); match != nil {
-		hostnamePatterns = match[1]
-		al = argList(match[2]).ConvertUboToCanonical()
+		hostnamePatterns, body = match[1], match[2]
+		isUblock = true
 		isException = true
 	} else {
 		return errUnsupportedSyntax
 	}
 
+	var args []string
 	var err error
-	al, err = al.Normalize()
+	if isUblock {
+		args, err = parseUboArgList(body)
+	} else {
+		args, err = parseCanonicalArgList(body)
+	}
 	if err != nil {
-		return fmt.Errorf("normalize argList: %v", err)
+		return fmt.Errorf("parse argument list: %v", err)
 	}
 
-	if !filterListTrusted && al.IsTrusted() {
+	if !filterListTrusted && strings.HasPrefix(args[0], trustedPrefix) {
 		return errUntrusted
 	}
+
+	al := newArgList(args)
 
 	switch isException {
 	case true:
