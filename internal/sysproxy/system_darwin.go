@@ -46,6 +46,15 @@ func setSystemProxy(pacURL string) error {
 
 	for _, args := range cmds {
 		if out, err := exec.Command(args[0], args[1:]...).CombinedOutput(); err != nil { // #nosec G204 -- command input comes from trusted sources
+			if isAdminPrivilegesError(out) {
+				// The pre-check reads system.preferences.network, but since macOS 26 networksetup
+				// denies standard users regardless of that right (see discussion #751).
+				// Retry the whole batch elevated; re-running already-succeeded commands is harmless.
+				if out, err := runElevated(cmds); err != nil {
+					return fmt.Errorf("set system proxy with elevation: %v (%q)", err, out)
+				}
+				return nil
+			}
 			return fmt.Errorf("%s: %v (%q)", strings.Join(args, " "), err, out)
 		}
 	}
@@ -71,6 +80,16 @@ func unsetSystemProxy() error {
 	} else {
 		for _, args := range cmds {
 			if out, err := exec.Command(args[0], args[1:]...).CombinedOutput(); err != nil { // #nosec G204 -- command input comes from trusted sources
+				if isAdminPrivilegesError(out) {
+					// See the equivalent fallback in setSystemProxy. The elevated batch retries
+					// every command, superseding any per-command errors collected so far.
+					if out, err := runElevated(cmds); err != nil {
+						finalErr = fmt.Errorf("unset system proxy with elevation: %v (%q)", err, out)
+					} else {
+						finalErr = nil
+					}
+					break
+				}
 				finalErr = multierror.Append(finalErr, fmt.Errorf("%s: %v (%q)", strings.Join(args, " "), err, out))
 			}
 		}
@@ -95,6 +114,14 @@ func requiresAdminPrivileges() bool {
 	}
 	// When "Require an administrator password to access system-wide settings" is enabled, "shared" is false.
 	return !entry.Shared
+}
+
+// isAdminPrivilegesError reports whether networksetup output indicates the command
+// was denied for lack of admin privileges ("** Error: Command requires admin privileges.",
+// exit status 14). Matched on the message rather than the exit status, whose meaning
+// is undocumented.
+func isAdminPrivilegesError(out []byte) bool {
+	return strings.Contains(strings.ToLower(string(out)), "requires admin privileges")
 }
 
 // discoverNetworkServices returns a list of all network service names.
