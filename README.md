@@ -62,6 +62,14 @@ brew install --cask zen-privacy
 
 ### Linux
 
+Zen has an install script that covers most linux distributions. To install, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/irbis-sh/zen-desktop/master/scripts/install.sh | sh
+```
+
+Other existing installation methods are available below:
+
 - AUR: [👾 zen-adblocker-bin](https://aur.archlinux.org/packages/zen-adblocker-bin)
 - x64: [📦 Portable](https://github.com/irbis-sh/zen-desktop/releases/latest/download/Zen_linux_amd64.tar.gz)
 - ARM64: [📦 Portable](https://github.com/irbis-sh/zen-desktop/releases/latest/download/Zen_linux_arm64.tar.gz)
