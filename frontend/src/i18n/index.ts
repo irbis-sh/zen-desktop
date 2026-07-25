@@ -116,7 +116,7 @@ export async function initI18n() {
       'tr-TR': { translation: trTR },
       fr: { translation: frFR },
       'fr-FR': { translation: frFR },
-       vi: { translation: viVN },
+      vi: { translation: viVN },
       'vi-VN': { translation: viVN },
     },
     lng: locale,
