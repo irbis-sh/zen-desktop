@@ -68,6 +68,12 @@ Zen has an install script that covers most linux distributions. To install, run:
 curl -fsSL https://raw.githubusercontent.com/irbis-sh/zen-desktop/master/scripts/install.sh | sh
 ```
 
+To Uninstall, run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/irbis-sh/zen-desktop/master/scripts/install.sh | sh -s -- --uninstall
+```
+
 Other existing installation methods are available below:
 
 - AUR: [👾 zen-adblocker-bin](https://aur.archlinux.org/packages/zen-adblocker-bin)

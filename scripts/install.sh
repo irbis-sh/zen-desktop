@@ -5,7 +5,7 @@ set -eu
 # If you'd prefer to do this manually, you can find the latest release at
 # https://github.com/irbis-sh/zen-desktop/releases or alternatively at
 # https://irbis.sh/zen/#downloads
-# 
+#
 # This installer provides a prebuilt glibc binary and will not work
 # on distributions that do not have a system-wide glibc by default.
 # That includes NixOS and musl based distributions.
@@ -165,7 +165,10 @@ uninstall() {
     appsdir="$HOME/.local/share/applications"
 
     if [ -x "$bindir/zen" ]; then
-        "$bindir/zen" --uninstall-ca 2>/dev/null || true
+        if ! "$bindir/zen" --uninstall-ca; then
+            echo "Aborting Uninstallation of Zen">&2
+            exit 1
+        fi
     fi
 
     rm -f "$bindir/zen"
