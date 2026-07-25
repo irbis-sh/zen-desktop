@@ -162,11 +162,28 @@ func runElevated(cmds [][]string) ([]byte, error) {
 	for i, args := range cmds {
 		quoted := make([]string, len(args))
 		for j, a := range args {
-			quoted[j] = fmt.Sprintf("%q", a)
+			quoted[j] = shellQuote(a)
 		}
 		parts[i] = strings.Join(quoted, " ")
 	}
 	shellCmd := strings.Join(parts, "&&")
-	script := fmt.Sprintf(`do shell script %q with administrator privileges with prompt "Authorize Zen to modify system proxy settings"`, shellCmd)
+	script := fmt.Sprintf(`do shell script %s with administrator privileges with prompt "Authorize Zen to modify system proxy settings"`, appleScriptQuote(shellCmd))
 	return exec.Command("osascript", "-e", script).CombinedOutput()
+}
+
+// shellQuote wraps s in single quotes so that sh treats every character in it literally.
+// An embedded single quote is closed, escaped, and reopened. Network service names come from
+// networksetup and may contain anything, including $(...) and backticks, which would otherwise
+// be expanded by the shell inside "do shell script" - as root, on the elevated path.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+var appleScriptEscaper = strings.NewReplacer(`\`, `\\`, `"`, `\"`)
+
+// appleScriptQuote wraps s in double quotes for AppleScript, where only \ and " are special.
+// Go's %q is not a substitute: for non-printable runes it emits Go escapes (\u00XX, \a, \v)
+// that AppleScript does not understand, which would corrupt the command.
+func appleScriptQuote(s string) string {
+	return `"` + appleScriptEscaper.Replace(s) + `"`
 }
