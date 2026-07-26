@@ -10,6 +10,10 @@ set -eu
 # on distributions that do not have a system-wide glibc by default.
 # That includes NixOS and musl based distributions.
 
+bindir="$HOME/.local/bin"
+icondir="$HOME/.local/share/icons/hicolor/scalable/apps"
+appsdir="$HOME/.local/share/applications"
+
 main() {
     if [ "${1:-}" = "--uninstall" ]; then
         uninstall
@@ -93,7 +97,6 @@ main() {
         exit 1
     fi
 
-    bindir="$HOME/.local/bin"
     mkdir -p "$bindir"
     cp "$tmpdir/extract/Zen" "$bindir/zen.new"
     chmod +x "$bindir/zen.new"
@@ -101,22 +104,20 @@ main() {
 
     echo "Installed Zen to $bindir/zen"
 
-    icondir="$HOME/.local/share/icons"
     mkdir -p "$icondir"
     icon_url="https://raw.githubusercontent.com/irbis-sh/zen-desktop/refs/tags/$version/assets/logo.png"
-    if ! curl "$icon_url" > "$icondir/zen-adblocker.png"; then
+    if ! curl "$icon_url" > "$icondir/zen.png"; then
         echo "[WARN] Failed to download icon" >&2
-        rm -f "$icondir/zen-adblocker.png"
+        rm -f "$icondir/zen.png"
     fi
 
-    appsdir="$HOME/.local/share/applications"
     cat > "$appsdir/zen-adblocker.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Zen
 Comment=An open-source system-wide ad-blocker and privacy guard
 Exec=$bindir/zen
-Icon=zen-adblocker
+Icon=zen
 StartupWMClass=zen
 EOF
 
@@ -160,20 +161,18 @@ uninstall() {
         sleep 1
     fi
 
-    bindir="$HOME/.local/bin"
-    icondir="$HOME/.local/share/pixmaps"
-    appsdir="$HOME/.local/share/applications"
-
     if [ -x "$bindir/zen" ]; then
-        if ! "$bindir/zen" --uninstall-ca; then
-            echo "Aborted Uninstallation of Zen">&2
-            exit 1
+        if trust list | grep -qi "zen personal ca"; then
+            if ! "$bindir/zen" --uninstall-ca; then
+                echo "Aborted Uninstallation of Zen">&2
+                exit 1
+            fi
         fi
     fi
 
     rm -f "$bindir/zen"
     rm -f "$appsdir/zen-adblocker.desktop"
-    rm -f "$icondir/zen-adblocker.png"
+    rm -f "$icondir/zen.png"
 
     if command -v update-desktop-database >/dev/null 2>&1; then
         update-desktop-database "$appsdir" 2>/dev/null || true
