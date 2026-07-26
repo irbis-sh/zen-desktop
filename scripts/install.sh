@@ -101,7 +101,7 @@ main() {
 
     echo "Installed Zen to $bindir/zen"
 
-    icondir="$HOME/.local/share/pixmaps"
+    icondir="$HOME/.local/share/icons"
     mkdir -p "$icondir"
     icon_url="https://raw.githubusercontent.com/irbis-sh/zen-desktop/refs/tags/$version/assets/logo.png"
     if ! curl "$icon_url" > "$icondir/zen-adblocker.png"; then
@@ -133,7 +133,7 @@ EOF
             elif command -v apt >/dev/null 2>&1; then
                 echo "sudo apt install libwebkit2gtk-4.1-0">&2
             elif command -v dnf >/dev/null 2>&1; then
-                echo "sudo dnf install webkit2gtk-4.1">&2
+                echo "sudo dnf install webkit2gtk4.1">&2
             else
                 echo "please check your system's package manager">&2
             fi
