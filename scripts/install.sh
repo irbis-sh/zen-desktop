@@ -111,6 +111,7 @@ main() {
         rm -f "$icondir/zen.png"
     fi
 
+    mkdir -p "$appsdir"
     cat > "$appsdir/zen-adblocker.desktop" <<EOF
 [Desktop Entry]
 Type=Application
