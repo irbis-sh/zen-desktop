@@ -166,7 +166,7 @@ uninstall() {
 
     if [ -x "$bindir/zen" ]; then
         if ! "$bindir/zen" --uninstall-ca; then
-            echo "Aborting Uninstallation of Zen">&2
+            echo "Aborted Uninstallation of Zen">&2
             exit 1
         fi
     fi
