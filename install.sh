@@ -169,6 +169,10 @@ uninstall() {
             sleep 1
             i=$((i + 1))
         done
+        if pgrep -x zen >/dev/null 2>&1; then
+            echo "[ERROR] Failed to stop Zen; aborting uninstallation" >&2
+            exit 1
+        fi
     fi
 
     if [ -x "$bindir/zen" ]; then
