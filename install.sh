@@ -15,10 +15,6 @@ icondir="$HOME/.local/share/icons/hicolor/scalable/apps"
 appsdir="$HOME/.local/share/applications"
 
 main() {
-    if [ "${1:-}" = "--uninstall" ]; then
-        uninstall
-    fi
-
     platform="$(uname -s)"
     arch="$(uname -m)"
 
@@ -27,6 +23,10 @@ main() {
     else
         echo "[ERROR] This script only supports Linux (detected: $platform)">&2
         exit 1
+    fi
+
+    if [ "${1:-}" = "--uninstall" ]; then
+        uninstall
     fi
 
     if [ "$arch" = "x86_64" ]; then
@@ -116,10 +116,12 @@ main() {
 [Desktop Entry]
 Type=Application
 Name=Zen
-Comment=An open-source system-wide ad-blocker and privacy guard
+Comment=System-wide ad-blocker and privacy guard
 Exec=$bindir/zen
 Icon=zen
 StartupWMClass=zen
+Categories=Network;Security;Utility;
+Keywords=adblock;ad-block;privacy;proxy;
 EOF
 
     if command -v update-desktop-database >/dev/null 2>&1; then
@@ -127,8 +129,11 @@ EOF
     fi
 
     # Check runtime dependencies
-    if command -v ldconfig >/dev/null 2>&1; then
-        if ! ldconfig -p | grep -qi webkit2gtk-4.1; then
+    ldconfig_bin="$(command -v ldconfig || echo /sbin/ldconfig)"
+    if [ -x "$ldconfig_bin" ]; then
+        ldcache="$("$ldconfig_bin" -p 2>/dev/null)"
+
+        if ! echo "$ldcache" | grep -qi webkit2gtk-4.1; then
             echo "[WARN] Zen requires webkit2gtk-4.1 to run, install it running:">&2
             if command -v pacman >/dev/null 2>&1; then
                 echo "sudo pacman -S webkit2gtk-4.1">&2
@@ -140,12 +145,12 @@ EOF
                 echo "please check your system's package manager">&2
             fi
         fi
-        if ! ldconfig -p | grep -qi libgtk-3; then
+        if ! echo "$ldcache" | grep -qi libgtk-3; then
             echo "[WARN] Zen requires gtk3 to run, install it running:">&2
             if command -v pacman >/dev/null 2>&1; then
                 echo "sudo pacman -S gtk3">&2
             elif command -v apt >/dev/null 2>&1; then
-                echo "sudo apt install libgtk-3-0t64">&2
+                echo "sudo apt install libgtk-3-0 || sudo apt install libgtk-3-0t64">&2
             elif command -v dnf >/dev/null 2>&1; then
                 echo "sudo dnf install gtk3">&2
             else
@@ -159,7 +164,11 @@ uninstall() {
     echo "Uninstalling Zen..."
     if pgrep -x zen >/dev/null 2>&1; then
         pkill -x zen 2>/dev/null || true
-        sleep 1
+        i=1
+        while [ "$i" -le 10 ] && pgrep -x zen >/dev/null 2>&1 ; do
+            sleep 1
+            i=$((i + 1))
+        done
     fi
 
     if [ -x "$bindir/zen" ]; then
