@@ -117,7 +117,7 @@ main() {
 Type=Application
 Name=Zen
 Comment=System-wide ad-blocker and privacy guard
-Exec=$bindir/zen
+Exec="$bindir/zen"
 Icon=zen
 StartupWMClass=zen
 Categories=Network;Security;Utility;
