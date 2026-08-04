@@ -19,6 +19,7 @@ Name={{.Name}}
 Comment=Automatically start {{.Name}} at user login
 Type=Application
 Exec={{.ExecPath}} --start --hidden
+Icon=zen-adblocker
 X-GNOME-Autostart-enabled=true`
 )
 
