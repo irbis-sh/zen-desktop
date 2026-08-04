@@ -117,15 +117,17 @@ func (m Manager) Disable() (err error) {
 // getAutostartDir returns the autostart directory as defined in:
 // https://specifications.freedesktop.org/autostart-spec/autostart-spec-latest.html
 func getAutostartDir() (string, error) {
-	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
-		return configHome, nil
-	}
+	configHome := os.Getenv("XDG_CONFIG_HOME")
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("get user home dir: %w", err)
+	if configHome == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("get user home dir: %w", err)
+		}
+		configHome = filepath.Join(homeDir, ".config")
 	}
-	return filepath.Join(homeDir, ".config"), nil
+	
+	return filepath.Join(configHome, "autostart"), nil
 }
 
 // getDesktopPath returns the path of the .desktop file that autostarts the app.
