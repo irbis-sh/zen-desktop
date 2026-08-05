@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -40,11 +41,16 @@ func New(cachePath string) (*FilterListStore, error) {
 }
 
 func (st *FilterListStore) Get(url string) (io.ReadCloser, error) {
-	if content, err := st.cache.Load(url); err != nil {
+	if content, meta, err := st.cache.Load(url); err != nil {
 		log.Printf("failed to load from cache: %v", err)
 	} else if content != nil {
-		log.Printf("loading %q from cache", url)
-		return content, nil
+		if meta.IsFresh() {
+			log.Printf("loading %q from cache", url)
+			return content, nil
+		}
+		// Stale entries are kept on disk as a fallback for failed fetches,
+		// but a fetch is still attempted first.
+		content.Close()
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -117,10 +123,28 @@ func (st *FilterListStore) Get(url string) (io.ReadCloser, error) {
 		}
 		expiresAt := time.Now().Add(cacheTTL) // time.Now() might deviate from the time the request was received, but it isn't critical.
 
-		if err := st.cache.Save(url, cacheContent, expiresAt); err != nil {
+		if err := st.saveToCache(url, cacheContent, diskcache.Meta{ExpiresAt: expiresAt, TTL: cacheTTL}); err != nil {
 			log.Printf("failed to store in cache: %v", err)
 		}
 	}()
 
 	return resp.Body, nil
+}
+
+// saveToCache spools content to a temporary file and promotes it into the cache.
+func (st *FilterListStore) saveToCache(url string, content []byte, meta diskcache.Meta) error {
+	tmp, err := st.cache.TempFile()
+	if err != nil {
+		return err
+	}
+	if _, err := tmp.Write(content); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	return st.cache.Promote(url, tmp.Name(), meta)
 }
