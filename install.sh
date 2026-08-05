@@ -104,11 +104,20 @@ main() {
 
     echo "Installed Zen to $bindir/zen"
 
+    # The icon name must stay in sync with the Icon= entries below and in
+    # internal/autostart/autostart_linux.go, and with the AUR package.
     mkdir -p "$icondir"
-    icon_url="https://raw.githubusercontent.com/irbis-sh/zen-desktop/refs/tags/$version/assets/logo.png"
-    if ! curl "$icon_url" > "$icondir/zen.png"; then
-        echo "[WARN] Failed to download icon" >&2
+    icon_url="https://raw.githubusercontent.com/irbis-sh/zen-desktop/refs/tags/$version/assets/logo.svg"
+    # Tagged trees of releases that predate assets/logo.svg don't have it; take master's.
+    fallback_icon_url="https://raw.githubusercontent.com/irbis-sh/zen-desktop/refs/heads/master/assets/logo.svg"
+    # Download to a temporary path first so a failed download can't clobber a
+    # previously installed icon.
+    if curl "$icon_url" > "$tmpdir/icon.svg" || curl "$fallback_icon_url" > "$tmpdir/icon.svg"; then
+        mv "$tmpdir/icon.svg" "$icondir/zen-adblocker.svg"
+        # Earlier versions of this script installed the icon as a PNG named "zen".
         rm -f "$icondir/zen.png"
+    else
+        echo "[WARN] Failed to download icon" >&2
     fi
 
     mkdir -p "$appsdir"
@@ -118,7 +127,7 @@ Type=Application
 Name=Zen
 Comment=System-wide ad-blocker and privacy guard
 Exec="$bindir/zen"
-Icon=zen
+Icon=zen-adblocker
 StartupWMClass=zen
 Categories=Network;Security;Utility;
 Keywords=adblock;ad-block;privacy;proxy;
@@ -186,7 +195,7 @@ uninstall() {
 
     rm -f "$bindir/zen"
     rm -f "$appsdir/zen-adblocker.desktop"
-    rm -f "$icondir/zen.png"
+    rm -f "$icondir/zen-adblocker.svg" "$icondir/zen.png"
 
     if command -v update-desktop-database >/dev/null 2>&1; then
         update-desktop-database "$appsdir" 2>/dev/null || true
