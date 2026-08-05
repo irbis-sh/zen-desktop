@@ -127,7 +127,7 @@ func getAutostartDir() (string, error) {
 		}
 		configHome = filepath.Join(homeDir, ".config")
 	}
-	
+
 	return filepath.Join(configHome, "autostart"), nil
 }
 
