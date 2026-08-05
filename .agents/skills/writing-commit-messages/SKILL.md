@@ -51,5 +51,6 @@ description: >-
 2. Determine the prefix from the changed file paths.
 3. Identify related issues from the diff context.
 4. Draft the message following the format above.
-5. Stage only the files belonging to the change and commit.
-6. Do not push, leave that to the user.
+5. For a draft-only request, stop after Step 4.
+6. For an explicit commit request, stage only the files belonging to the change and commit.
+7. Do not push, leave that to the user.
