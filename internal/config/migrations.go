@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/irbis-sh/zen-desktop/internal/autostart"
+	"github.com/irbis-sh/zen-desktop/internal/constants"
 )
 
 type migration struct {
@@ -355,6 +357,47 @@ var migrations = []migration{
 			}
 			return nil
 		})
+	}},
+	{"v0.25.0", func(_ *Config) error {
+		if runtime.GOOS != "linux" {
+			return nil
+		}
+
+		// Before v0.25.0, the Linux autostart entry was written to $XDG_CONFIG_HOME
+		// (or ~/.config) rather than its autostart subdirectory. No desktop
+		// environment scans that location, so the entry never ran. The legacy file
+		// is useless wherever it is and always gets removed; its presence only
+		// tells us the user had autostart enabled, so the entry is recreated at
+		// the correct location.
+		configHome := os.Getenv("XDG_CONFIG_HOME")
+		if configHome == "" {
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf("get user home dir: %w", err)
+			}
+			configHome = filepath.Join(homeDir, ".config")
+		}
+		legacyPath := filepath.Join(configHome, constants.AppName+"-autostart.desktop")
+
+		if _, err := os.Stat(legacyPath); err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return fmt.Errorf("stat legacy autostart entry: %w", err)
+		}
+
+		var errs []error
+		if err := (autostart.Manager{}).Enable(); err != nil {
+			errs = append(errs, fmt.Errorf("enable autostart: %w", err))
+		}
+		if err := os.Remove(legacyPath); err != nil {
+			errs = append(errs, fmt.Errorf("remove legacy autostart entry: %w", err))
+		}
+		if len(errs) > 0 {
+			return errors.Join(errs...)
+		}
+		log.Printf("v0.25.0 migration: moved autostart entry to the autostart directory")
+		return nil
 	}},
 }
 
