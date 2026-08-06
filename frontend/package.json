@@ -32,9 +32,11 @@
     "vite": "8.0.9"
   },
   "devDependencies": {
+    "@babel/core": "7.29.0",
     "@dword-design/eslint-plugin-import-alias": "8.1.8",
     "@eslint/js": "9.39.4",
     "@rolldown/plugin-babel": "0.2.3",
+    "@types/babel__core": "7.20.5",
     "@types/node": "24.12.2",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "9.39.4",

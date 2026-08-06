@@ -1,4 +1,4 @@
-import { Spinner, SpinnerSize, Switch, Button, MenuItem, Popover, Menu, Tag, Tooltip } from '@blueprintjs/core';
+import { Spinner, SpinnerSize, Switch, Button, MenuItem, PopoverNext, Menu, Tag, Tooltip } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -85,7 +85,7 @@ export function FilterLists() {
         )}
 
         {type === FilterListType.CUSTOM && (
-          <Popover
+          <PopoverNext
             content={
               <Menu>
                 <ExportFilterList />
@@ -94,7 +94,7 @@ export function FilterLists() {
             }
           >
             <Button icon="more" text={t('filterLists.more')} />
-          </Popover>
+          </PopoverNext>
         )}
       </div>
 
