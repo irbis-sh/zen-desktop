@@ -2,11 +2,11 @@ package filterliststore
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"regexp"
@@ -25,6 +25,19 @@ var (
 	headerRegex = regexp.MustCompile(`^(?:!|\[|#[^#%@$])`)
 )
 
+// FetchMode controls how Get balances the cache against the network.
+type FetchMode int
+
+const (
+	// ModeDefault serves fresh cache entries and fetches otherwise.
+	ModeDefault FetchMode = iota
+	// ModePreferCache serves any cache entry, stale ones included, and only
+	// fetches on a cache miss.
+	ModePreferCache
+	// ModeCacheOnly never touches the network; a cache miss is an error.
+	ModeCacheOnly
+)
+
 type FilterListStore struct {
 	cache *diskcache.Cache
 }
@@ -40,17 +53,26 @@ func New(cachePath string) (*FilterListStore, error) {
 	}, nil
 }
 
-func (st *FilterListStore) Get(url string) (io.ReadCloser, error) {
+// Get returns a stream of the filter list at url. Network-served content is
+// cached as it is read: once the returned reader hits a verified EOF, the
+// downloaded copy becomes the authoritative cache entry. A download that breaks
+// mid-body surfaces the failure as an error from Read, so a consumer draining
+// the stream (e.g. via bufio.Scanner) always learns it saw truncated content.
+func (st *FilterListStore) Get(url string, mode FetchMode) (io.ReadCloser, error) {
 	if content, meta, err := st.cache.Load(url); err != nil {
 		log.Printf("failed to load from cache: %v", err)
 	} else if content != nil {
-		if meta.IsFresh() {
+		if mode != ModeDefault || meta.IsFresh() {
 			log.Printf("loading %q from cache", url)
 			return content, nil
 		}
 		// Stale entries are kept on disk as a fallback for failed fetches,
 		// but a fetch is still attempted first.
 		content.Close()
+	}
+
+	if mode == ModeCacheOnly {
+		return nil, fmt.Errorf("no cached copy of %q", url)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -68,83 +90,93 @@ func (st *FilterListStore) Get(url string) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("non-200 response: %q", resp.Status)
 	}
 
-	var teeBuffer bytes.Buffer
-	var notifyCh <-chan struct{}
-	var errCh <-chan struct{}
-	resp.Body, notifyCh, errCh = newNotifyReadCloser(struct {
-		io.Reader
-		io.Closer
-	}{
-		Reader: io.TeeReader(resp.Body, &teeBuffer),
-		Closer: resp.Body,
-	})
+	// A 200 carrying HTML is a captive portal or a misconfigured server, not a
+	// filter list. Under keep-forever cache semantics, promoting it would
+	// install the portal page as the authoritative copy, so treat it as a
+	// fetch failure instead. The parse error is deliberately ignored:
+	// ParseMediaType still returns the media type when only a parameter is
+	// malformed (mime.ErrInvalidMediaParameter), and hand-rolled portal
+	// servers are exactly where malformed headers come from.
+	if mt, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type")); mt == "text/html" {
+		resp.Body.Close()
+		return nil, fmt.Errorf("response content type is %q, expected a filter list", mt)
+	}
 
-	go func() {
-		// The goal here is to make caching non-blocking. Data from the response body is cloned into teeBuffer,
-		// and the cache is saved in a separate goroutine.
-		// This allows the consumer of Get to start reading the response body without waiting for the entire response to be fetched.
-		select {
-		case <-errCh:
-			// An error occurred while reading the response body, so the response should not be cached.
-			return
-		case <-notifyCh:
-			// The response body has been closed, and we can proceed to cache the content.
-		}
+	tempFile, err := st.cache.TempFile()
+	if err != nil {
+		// Caching is best-effort: the caller still gets the stream.
+		log.Printf("failed to create temp file: %v", err)
+	}
 
-		cacheContent, _ := io.ReadAll(&teeBuffer) // err is always nil with bytes.Buffer.
-
-		var cacheTTL time.Duration
-		scanner := bufio.NewScanner(bytes.NewReader(cacheContent))
-
-	outer:
-		for scanner.Scan() {
-			line := scanner.Bytes()
-
-			if len(line) != 0 && !headerRegex.Match(line) {
-				// Stop scanning for "! Expires" if we encounter a non-comment line.
-				break
+	return &cachingReader{
+		body:          resp.Body,
+		tempFile:      tempFile,
+		contentLength: resp.ContentLength,
+		onComplete: func(download *os.File) {
+			if err := st.cacheDownload(url, download); err != nil {
+				log.Printf("failed to cache %q: %v", url, err)
 			}
-
-			cacheTTL, err = parseExpires(line)
-			switch {
-			case errors.Is(err, errNotExpires):
-				continue
-			case err != nil:
-				log.Printf("failed to parse cache TTL from %q, assuming default: %v", line, err)
-				break outer
-			default:
-				break outer
-			}
-		}
-
-		if cacheTTL == 0 {
-			// Default to 24 hours if no expiry is found.
-			cacheTTL = defaultExpiry
-		}
-		expiresAt := time.Now().Add(cacheTTL) // time.Now() might deviate from the time the request was received, but it isn't critical.
-
-		if err := st.saveToCache(url, cacheContent, diskcache.Meta{ExpiresAt: expiresAt, TTL: cacheTTL}); err != nil {
-			log.Printf("failed to store in cache: %v", err)
-		}
-	}()
-
-	return resp.Body, nil
+		},
+	}, nil
 }
 
-// saveToCache spools content to a temporary file and promotes it into the cache.
-func (st *FilterListStore) saveToCache(url string, content []byte, meta diskcache.Meta) error {
-	tmp, err := st.cache.TempFile()
-	if err != nil {
-		return err
+// cacheDownload installs a fully downloaded temp file as the authoritative
+// cache content for url. The list's header is scanned for an "! Expires"
+// directive to determine the entry's TTL. On failure the file is removed.
+func (st *FilterListStore) cacheDownload(url string, download *os.File) error {
+	if _, err := download.Seek(0, io.SeekStart); err != nil {
+		download.Close()
+		os.Remove(download.Name())
+		return fmt.Errorf("rewind temp file: %v", err)
 	}
-	if _, err := tmp.Write(content); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
-		return err
+	ttl := parseCacheTTL(download)
+	if ttl == 0 {
+		ttl = defaultExpiry
 	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmp.Name())
-		return err
+	// The rename in Promote is atomic for the name but not the data: without a
+	// sync, a crash shortly after promotion could persist the rename and the
+	// index while leaving the content truncated or empty.
+	if err := download.Sync(); err != nil {
+		download.Close()
+		os.Remove(download.Name())
+		return fmt.Errorf("sync temp file: %v", err)
 	}
-	return st.cache.Promote(url, tmp.Name(), meta)
+	if err := download.Close(); err != nil {
+		os.Remove(download.Name())
+		return fmt.Errorf("close temp file: %v", err)
+	}
+
+	return st.cache.Promote(url, download.Name(), diskcache.Meta{
+		ExpiresAt: time.Now().Add(ttl),
+		TTL:       ttl,
+	})
+}
+
+// parseCacheTTL extracts a TTL from a filter list's "! Expires" header comment.
+// It returns 0 when the list does not declare one.
+func parseCacheTTL(r io.Reader) time.Duration {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+
+		if len(line) != 0 && !headerRegex.Match(line) {
+			// The header block is over.
+			break
+		}
+
+		ttl, err := parseExpires(line)
+		switch {
+		case errors.Is(err, errNotExpires):
+			continue
+		case err != nil:
+			log.Printf("failed to parse cache TTL from %q, assuming default: %v", line, err)
+			return 0
+		default:
+			return ttl
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("failed to scan filter list header for TTL, assuming default: %v", err)
+	}
+	return 0
 }

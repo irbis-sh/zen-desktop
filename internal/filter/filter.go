@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 	"github.com/irbis-sh/zen-desktop/internal/process"
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
@@ -26,7 +27,7 @@ type filterActionObserver interface {
 }
 
 type filterListStore interface {
-	Get(url string) (io.ReadCloser, error)
+	Get(url string, mode filterliststore.FetchMode) (io.ReadCloser, error)
 }
 
 type networkRules interface {
@@ -150,7 +151,7 @@ func (f *Filter) AddURL(listURL string, listName string, listTrusted bool) error
 		visited[currentURL] = struct{}{}
 		visitedMu.Unlock()
 
-		contents, err := f.filterListStore.Get(currentURL)
+		contents, err := f.filterListStore.Get(currentURL, filterliststore.ModeDefault)
 		if err != nil {
 			log.Printf("failed to get filter list %q from store: %v", currentURL, err)
 			return
