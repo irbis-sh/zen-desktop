@@ -2,6 +2,7 @@ package filter
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -27,7 +28,7 @@ type filterActionObserver interface {
 }
 
 type filterListStore interface {
-	Get(url string, mode filterliststore.FetchMode) (io.ReadCloser, error)
+	Get(ctx context.Context, url string, mode filterliststore.FetchMode) (io.ReadCloser, error)
 }
 
 type networkRules interface {
@@ -151,7 +152,7 @@ func (f *Filter) AddURL(listURL string, listName string, listTrusted bool) error
 		visited[currentURL] = struct{}{}
 		visitedMu.Unlock()
 
-		contents, err := f.filterListStore.Get(currentURL, filterliststore.ModeDefault)
+		contents, err := f.filterListStore.Get(context.Background(), currentURL, filterliststore.ModeDefault)
 		if err != nil {
 			log.Printf("failed to get filter list %q from store: %v", currentURL, err)
 			return
@@ -168,6 +169,12 @@ func (f *Filter) AddURL(listURL string, listName string, listTrusted bool) error
 					continue
 				}
 
+				// Includes are parsed on their own goroutines and never
+				// awaited here: this goroutine still holds its list's fetch
+				// slot until the reader hits EOF or is closed, so blocking on
+				// a descendant that may be queued for a slot would deadlock at
+				// low fetch concurrency. The top-level WaitGroup is the only
+				// join point.
 				wg.Add(1)
 				go parseURL(includeURL, depth+1)
 				continue
