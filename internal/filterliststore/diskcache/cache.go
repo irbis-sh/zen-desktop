@@ -351,6 +351,13 @@ func (c *Cache) Flush() error {
 		os.Remove(tmp.Name())
 		return fmt.Errorf("write index: %v", err)
 	}
+	// The rename below is atomic for the name but not the data: without a
+	// sync, a crash shortly after could persist an empty or truncated index.
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return fmt.Errorf("sync index: %v", err)
+	}
 	if err := tmp.Close(); err != nil {
 		os.Remove(tmp.Name())
 		return fmt.Errorf("close index: %v", err)
