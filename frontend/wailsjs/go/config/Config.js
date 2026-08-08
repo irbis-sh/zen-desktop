@@ -38,6 +38,14 @@ export function GetIgnoredHosts() {
   return window['go']['config']['Config']['GetIgnoredHosts']();
 }
 
+export function GetLocalResources() {
+  return window['go']['config']['Config']['GetLocalResources']();
+}
+
+export function GetLocalResourcesStats() {
+  return window['go']['config']['Config']['GetLocalResourcesStats']();
+}
+
 export function GetLocale() {
   return window['go']['config']['Config']['GetLocale']();
 }
@@ -74,6 +82,10 @@ export function RemoveFilterList(arg1) {
   return window['go']['config']['Config']['RemoveFilterList'](arg1);
 }
 
+export function ResetLocalResourcesStats() {
+  return window['go']['config']['Config']['ResetLocalResourcesStats']();
+}
+
 export function RunMigrations() {
   return window['go']['config']['Config']['RunMigrations']();
 }
@@ -88,6 +100,30 @@ export function SetCAInstalled(arg1) {
 
 export function SetIgnoredHosts(arg1) {
   return window['go']['config']['Config']['SetIgnoredHosts'](arg1);
+}
+
+export function SetLocalResourcesBlockMissing(arg1) {
+  return window['go']['config']['Config']['SetLocalResourcesBlockMissing'](arg1);
+}
+
+export function SetLocalResourcesCustomDir(arg1) {
+  return window['go']['config']['Config']['SetLocalResourcesCustomDir'](arg1);
+}
+
+export function SetLocalResourcesCustomMappings(arg1) {
+  return window['go']['config']['Config']['SetLocalResourcesCustomMappings'](arg1);
+}
+
+export function SetLocalResourcesEnabled(arg1) {
+  return window['go']['config']['Config']['SetLocalResourcesEnabled'](arg1);
+}
+
+export function SetLocalResourcesLibraryEnabled(arg1, arg2) {
+  return window['go']['config']['Config']['SetLocalResourcesLibraryEnabled'](arg1, arg2);
+}
+
+export function SetLocalResourcesStats(arg1) {
+  return window['go']['config']['Config']['SetLocalResourcesStats'](arg1);
 }
 
 export function SetLocale(arg1) {
