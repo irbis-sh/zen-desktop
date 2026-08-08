@@ -37,15 +37,6 @@ var passModes = []filterliststore.FetchMode{
 // and serve exactly these instances: allowlisting inserts rules through the
 // whitelist server into this pass's rule store, and the asset server must
 // serve this pass's engine.
-//
-// A stream that breaks mid-body leaves partially parsed rules behind -
-// including a possible trailing fragment applied as a rule - so a truncated
-// pass is not patched: its whole structure is discarded and rebuilt in the
-// next pass, mostly from the copies the previous pass promoted to cache.
-// Failed lists don't trigger a rebuild: refetching cannot help a list with
-// no network and no cache, so they are skipped (initFilter logs each). The
-// exception is lists the build deadline cut off - they fail before their
-// cached copies are consulted, so one extra cache-only pass recovers them.
 func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Engine, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), filterBuildTimeout)
 	defer cancel()
@@ -55,13 +46,7 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		whitelistSrv  *whitelistserver.Server
 		assetInjector *asset.Engine
 	)
-	for pass, mode := range passModes {
-		if ctx.Err() != nil {
-			// The deadline is spent: degrade straight to cache-only, which
-			// never touches the network or consults the context.
-			mode = filterliststore.ModeCacheOnly
-		}
-
+	err := runBuildPasses(ctx, func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error) {
 		// Reassigning drops the previous pass's tainted structures before
 		// the heavy parsing starts, so peak memory stays bounded by one full
 		// rule tree plus the one being built.
@@ -70,14 +55,45 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		var err error
 		assetInjector, err = asset.NewEngine(a.config.GetAssetPort())
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("create asset injector: %v", err)
+			return filter.Outcome{}, fmt.Errorf("create asset injector: %v", err)
 		}
 		f, err = filter.NewFilter(networkRules, assetInjector, a.filterListStore, a.frontendEvents, whitelistSrv)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("create filter: %v", err)
+			return filter.Outcome{}, fmt.Errorf("create filter: %v", err)
+		}
+		return a.initFilter(ctx, f, mode), nil
+	})
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	f.Finalize()
+	return f, whitelistSrv, assetInjector, nil
+}
+
+// runBuildPasses drives buildPass down the passModes ladder until a pass is
+// accepted or the cap is hit, and stops early on a construction error.
+//
+// A stream that breaks mid-body leaves partially parsed rules behind -
+// including a possible trailing fragment applied as a rule - so a truncated
+// pass is not patched: its whole structure is discarded and rebuilt in the
+// next pass, mostly from the copies the previous pass promoted to cache.
+// Failed lists don't trigger a rebuild: refetching cannot help a list with
+// no network and no cache, so they are skipped (initFilter logs each). The
+// exception is lists the build deadline cut off - they fail before their
+// cached copies are consulted, so one extra cache-only pass recovers them.
+func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error)) error {
+	for pass, mode := range passModes {
+		if ctx.Err() != nil {
+			// The deadline is spent: degrade straight to cache-only, which
+			// never touches the network or consults the context.
+			mode = filterliststore.ModeCacheOnly
 		}
 
-		outcome := a.initFilter(ctx, f, mode)
+		outcome, err := buildPass(ctx, mode)
+		if err != nil {
+			return err
+		}
 		// A Failed list normally has neither network nor cache. When the
 		// deadline expired mid-pass, however, Failed can also mean the list
 		// was cut off before reaching its cached copy: Get refuses to dress
@@ -85,13 +101,13 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		// happen here, in the pass forced to cache-only above.
 		deadlineCutOff := outcome.Failed && ctx.Err() != nil && mode != filterliststore.ModeCacheOnly
 		if !outcome.Truncated && !deadlineCutOff {
-			break
+			return nil
 		}
 		if pass == len(passModes)-1 {
 			// Theoretically reachable (a disk read can break too), but the
 			// hard pass cap wins over completeness: serve what parsed.
 			log.Printf("filter lists still truncated after %d passes, continuing with incomplete rules", len(passModes))
-			break
+			return nil
 		}
 		if outcome.Truncated {
 			log.Printf("truncated filter list detected on pass %d, rebuilding", pass+1)
@@ -99,9 +115,7 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 			log.Printf("build deadline expired before every filter list was served on pass %d, rebuilding from cache", pass+1)
 		}
 	}
-
-	f.Finalize()
-	return f, whitelistSrv, assetInjector, nil
+	return nil
 }
 
 // initFilter populates f with every enabled filter list plus the user's own
