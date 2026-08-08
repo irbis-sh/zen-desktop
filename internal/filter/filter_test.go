@@ -34,7 +34,7 @@ func TestAddURLThreadsCtxAndModeToEveryFetch(t *testing.T) {
 	}
 	assertRules(t, rules.got(), "||ads.example.com^", "||track.example.com^")
 	// The include's fetch must observe the same ctx and mode as the root's:
-	// stage 6's per-pass mode ladder and deadline depend on it.
+	// buildFilter's per-pass mode ladder and build deadline depend on it.
 	for _, url := range []string{"https://example.com/list.txt", "https://example.com/extra.txt"} {
 		rec := store.fetched(url)
 		if rec.mode != filterliststore.ModePreferCache {

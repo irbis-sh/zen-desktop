@@ -65,7 +65,7 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		if err != nil {
 			return filter.Outcome{}, fmt.Errorf("create filter: %v", err)
 		}
-		return a.initFilter(ctx, f, mode), nil
+		return a.populateFilter(ctx, f, mode), nil
 	})
 	if err != nil {
 		return nil, nil, nil, err
@@ -83,7 +83,7 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 // pass is not patched: its whole structure is discarded and rebuilt in the
 // next pass, mostly from the copies the previous pass promoted to cache.
 // Failed lists don't trigger a rebuild: refetching cannot help a list with
-// no network and no cache, so they are skipped (initFilter logs each). The
+// no network and no cache, so they are skipped (populateFilter logs each). The
 // exception is lists the build deadline cut off - they fail before their
 // cached copies are consulted, so one extra cache-only pass recovers them.
 func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error)) error {
@@ -108,8 +108,10 @@ func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mod
 			return nil
 		}
 		if pass == len(passModes)-1 {
-			// Theoretically reachable (a disk read can break too), but the
-			// hard pass cap wins over completeness: serve what parsed.
+			// Unreachable if the store honours its contract: cache-only
+			// serves are read into memory up front, so a disk failure
+			// surfaces as Failed, not Truncated. Kept as insurance; serve
+			// what parsed.
 			log.Printf("filter lists still truncated after %d passes, continuing with incomplete rules", len(passModes))
 			return nil
 		}
@@ -122,12 +124,12 @@ func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mod
 	return nil
 }
 
-// initFilter populates f with every enabled filter list plus the user's own
+// populateFilter fills f with every enabled filter list plus the user's own
 // rules, and reports the merged outcome across all lists. It returns after
 // every list has been fetched and parsed. f is left unfinalized: compacting
 // a structure that a truncated outcome is about to discard would be wasted
 // work, so buildFilter finalizes the accepted pass only.
-func (a *App) initFilter(ctx context.Context, f *filter.Filter, mode filterliststore.FetchMode) filter.Outcome {
+func (a *App) populateFilter(ctx context.Context, f *filter.Filter, mode filterliststore.FetchMode) filter.Outcome {
 	var outcome filter.Outcome
 	var outcomeMu sync.Mutex
 
