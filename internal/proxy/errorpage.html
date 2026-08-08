@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ .Title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <style>
+      {{ .SharedStyle }}
+      details {
+        margin-top: 16px;
+      }
+      summary {
+        cursor: pointer;
+      }
+      pre {
+        padding: 10px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>{{ .Title }}</h1>
+        <p>{{ .Message }}</p>
+        <p><strong>URL:</strong> <code id="url"></code></p>
+        <details>
+          <summary>Technical details</summary>
+          <pre>{{ .Detail }}</pre>
+        </details>
+
+        <div class="actions">
+          <a class="btn" href="">Retry</a>
+          <button type="button" class="btn secondary" onclick="window.history.back()">
+            Go back
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.getElementById('url').textContent = window.location.toString();
+    </script>
+  </body>
+</html>

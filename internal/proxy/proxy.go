@@ -224,7 +224,7 @@ func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo pr
 	roundTripMutex.Unlock()
 	if err != nil {
 		log.Printf("error making request: %v", redacted.Redacted(err)) // The error might contain information about the hostname we are connecting to.
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		writeUpstreamError(w, r, err)
 		return
 	}
 	defer resp.Body.Close()
@@ -234,7 +234,7 @@ func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo pr
 	if shouldProxy {
 		if err := p.filter.HandleResponse(r, resp, processInfo); err != nil {
 			log.Printf("error handling response by filter: %v", err)
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			writeFilterError(w, r, err)
 			return
 		}
 	}
@@ -298,8 +298,7 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 	// Perform the TLS handshake manually so we can capture TLS errors
 	// and add the host to transparentHosts before entering the server loop.
 	if err := tlsConn.HandshakeContext(context.Background()); err != nil {
-		msg := err.Error()
-		if strings.Contains(msg, "tls: ") {
+		if isTLSError(err) {
 			log.Printf("adding %s to ignored hosts", redacted.Redacted(host))
 			p.addTransparentHost(host)
 		}
@@ -404,12 +403,12 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		roundTripDone = true
 		roundTripMutex.Unlock()
 		if err != nil {
-			if strings.Contains(err.Error(), "tls: ") {
+			if isTLSError(err) {
 				log.Printf("adding %s to ignored hosts", redacted.Redacted(host))
 				p.addTransparentHost(host)
 			}
 			log.Printf("roundtrip(%s): %v", redacted.Redacted(connReq.Host), err)
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			writeUpstreamError(w, req, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -418,7 +417,7 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 
 		if err := p.filter.HandleResponse(req, resp, processInfo); err != nil {
 			log.Printf("error handling response by filter for %q: %v", redacted.Redacted(req.URL), err)
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			writeFilterError(w, req, err)
 			return
 		}
 
@@ -555,6 +554,12 @@ func headerContains(h http.Header, name, value string) bool {
 		}
 	}
 	return false
+}
+
+// isTLSError reports whether err is a TLS protocol error. The proxy treats these
+// as a signal that a host cannot be MITM'd and should be tunnelled transparently.
+func isTLSError(err error) bool {
+	return strings.Contains(err.Error(), "tls: ")
 }
 
 // isCloseable returns true if the error is one that indicates the connection

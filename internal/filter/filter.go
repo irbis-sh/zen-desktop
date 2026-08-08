@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/irbis-sh/zen-desktop/internal/fetchmeta"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 	"github.com/irbis-sh/zen-desktop/internal/process"
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
@@ -238,7 +239,7 @@ func (f *Filter) HandleRequest(req *http.Request, processInfo process.Info) (*ht
 	if shouldBlock {
 		f.actionObserver.OnFilterBlock(req.Method, initialURL, req.Header.Get("Referer"), appliedRules, processInfo)
 
-		if isUserNavigation(req) {
+		if fetchmeta.IsUserNavigation(req) {
 			port := f.whitelistSrv.GetPort()
 			if port <= 0 {
 				log.Printf("whitelist server not ready, falling back to simple block response for %q", redacted.Redacted(req.URL))
@@ -318,15 +319,4 @@ func isDocumentNavigation(req *http.Request, res *http.Response) bool {
 	}
 
 	return true
-}
-
-func isUserNavigation(req *http.Request) bool {
-	dest := req.Header.Get("Sec-Fetch-Dest")
-	mode := req.Header.Get("Sec-Fetch-Mode")
-	user := req.Header.Get("Sec-Fetch-User")
-
-	if dest == "document" && (mode == "navigate" || user == "?1") {
-		return true
-	}
-	return false
 }
