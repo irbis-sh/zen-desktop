@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Välityspalvelin ei ole aktiivinen. Ota se käyttöön napsauttamalla alla olevaa painiketta.",
+      "inactive": "Ota välityspalvelin käyttöön nähdäksesi estetyt pyynnöt"
+    },
+    "tabs": {
+      "filterLists": "Suodatinluettelot",
+      "home": "Aloitus",
+      "rules": "Säännöt",
+      "settings": "Asetukset"
+    },
+    "update": {
+      "restart": "Käynnistä uudelleen",
+      "restartFailed": "Sovelluksen uudelleenkäynnistys epäonnistui: {{error}}",
+      "updateAvailable": "Zenistä on saatavilla uusi versio."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Lisää sovellus",
+    "allowlistMode": "Vain valitut sovellukset käyttävät välityspalvelinta",
+    "blocklistMode": "Kaikki sovellukset paitsi valitut käyttävät välityspalvelinta",
+    "description": "Valitse, mitkä sovellukset käyttävät Zenin välityspalvelinta.",
+    "emptyAllowlistWarning": "Sovelluksia ei ole valittu. Kaikki liikenne ohittaa Zenin.",
+    "label": "Sovellusten reititys",
+    "removeApp": "Poista sovellus",
+    "saveError": "Reititysasetusten tallentaminen epäonnistui: {{error}}",
+    "selectError": "Sovelluksen valitseminen epäonnistui: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Portti, jota sisäinen resurssipalvelin käyttää skriptien ja tyylien lisäämiseen.",
+    "helper": "Alle 1024 olevan portin käyttö voi vaatia korotettuja oikeuksia.",
+    "label": "Resurssipalvelimen portti",
+    "setError": "Resurssipalvelimen portin asettaminen epäonnistui: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Käynnistä Zen automaattisesti kirjautumisen yhteydessä",
+    "disableError": "Automaattisen käynnistyksen poistaminen epäonnistui: {{error}}",
+    "enableError": "Automaattisen käynnistyksen ottaminen käyttöön epäonnistui: {{error}}",
+    "label": "Automaattinen käynnistys"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Pysäytä välityspalvelin lisätäksesi uuden suodatinluettelon",
+    "stopProxyToDeleteFilter": "Pysäytä välityspalvelin poistaaksesi tämän suodatinluettelon",
+    "stopProxyToEditRules": "Pysäytä välityspalvelin muokataksesi mukautettuja sääntöjä",
+    "stopProxyToModify": "Pysäytä välityspalvelin muuttaaksesi tätä asetusta",
+    "stopProxyToToggleFilter": "Pysäytä välityspalvelin ottaaksesi tämän suodatinluettelon käyttöön tai pois käytöstä"
+  },
+  "createFilterList": {
+    "addError": "Suodatinluettelon lisääminen epäonnistui: {{error}}",
+    "addList": "Lisää suodatinluettelo",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Lahjoita",
+  "exportDebugDataButton": {
+    "error": "Virheenjäljitystietojen vieminen epäonnistui: {{error}}",
+    "label": "Vie virheenjäljitystiedot",
+    "success": "Virheenjäljitystiedot kopioitu leikepöydälle",
+    "tooltip": "Kopioi virheenjäljitystiedot leikepöydälle"
+  },
+  "exportFilterList": {
+    "errorMessage": "Suodatinluetteloiden vieminen epäonnistui: {{error}}",
+    "export": "Vie",
+    "successMessage": "Mukautetut suodatinluettelot viety onnistuneesti"
+  },
+  "exportLogsButton": {
+    "label": "Vie lokit",
+    "openError": "Lokikansion avaaminen epäonnistui: {{error}}",
+    "tooltip": "Avaa lokikansio"
+  },
+  "filterLists": {
+    "copied": "Kopioitu",
+    "copy": "Kopioi linkki",
+    "delete": "Poista",
+    "goTo": "Avaa selaimessa",
+    "more": "Lisää",
+    "removeError": "Suodatinluettelon poistaminen epäonnistui: {{error}}",
+    "toggleError": "Suodatinluettelon vaihtaminen epäonnistui: {{error}}",
+    "trusted": "Luotettu",
+    "whatIsThis": "Mikä tämä on"
+  },
+  "filterTypes": {
+    "ads": "Mainokset",
+    "custom": "Mukautettu",
+    "digitalWellbeing": "Digitaalinen hyvinvointi",
+    "general": "Yleinen",
+    "malware": "Haittaohjelmat",
+    "privacy": "Yksityisyys",
+    "regional": "Alueellinen"
+  },
+  "ignoredHostsInput": {
+    "description": "Välityspalvelimen ulkopuolelle jätetyt isännät. Käytä palveluille, joilla on varmenteen kiinnitys tai joita välityspalvelin häiritsee.",
+    "helper": "Anna yksi isäntä riviä kohti.",
+    "label": "Ohitetut isännät"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Kun käytössä, pyynnöt tunnetuille CDN-verkkotunnuksille, joilla ei ole mukana toimitettua paikallista kopiota, estetään lähettämisen sijaan.",
+      "label": "Estä puuttuvat resurssit",
+      "setError": "Puuttuvien resurssien estämisen asetuksen päivittäminen epäonnistui: {{error}}"
+    },
+    "counter": {
+      "label": "Paikallisesti tarjotut resurssit",
+      "perLibrary": "Kirjastoittain",
+      "reset": "Nollaa laskuri",
+      "resetError": "Laskurin nollaaminen epäonnistui: {{error}}",
+      "sinceInstall": "Asennuksesta lähtien",
+      "sinceReset": "Viimeisestä nollauksesta lähtien",
+      "perCDN": "CDN:n mukaan",
+      "cacheNote": "Välimuistissa olevat resurssit toimittaa selain, ja ne lasketaan vasta välimuistin tyhjentämisen jälkeen.",
+      "total": "Yhteensä",
+      "filterListHits": "Suodatinlistojen osumat",
+      "filter": "Suodatin",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Kansio, jossa on tiedostot, joihin mukautetut resurssimääritykset viittaavat.",
+      "helper": "Jätä tyhjäksi poistaaksesi mukautetut resurssit käytöstä.",
+      "label": "Mukautettujen resurssien kansio",
+      "setError": "Mukautettujen resurssien kansion asettaminen epäonnistui: {{error}}"
+    },
+    "enable": {
+      "description": "Tarjoa suosittujen CDN-kirjastojen mukana tulevia kopioita sen sijaan, että lataisit ne etä-CDN:istä.",
+      "label": "Paikallisten resurssien moottori",
+      "setError": "Paikallisten resurssien moottorin asetuksen päivittäminen epäonnistui: {{error}}"
+    },
+    "importExport": {
+      "export": "Vie määritykset",
+      "exportError": "Mukautettujen resurssimääritysten vienti epäonnistui: {{error}}",
+      "exportSuccess": "Mukautetut resurssimääritykset viety",
+      "import": "Tuo määritykset",
+      "importError": "Mukautettujen resurssimääritysten tuonti epäonnistui: {{error}}",
+      "importSuccess": "Mukautetut resurssimääritykset tuotu",
+      "label": "Mukautetut resurssimääritykset"
+    },
+    "libraries": {
+      "description": "Valitse, mitkä kirjastot voidaan tarjota paikallisesti.",
+      "label": "Kirjastot",
+      "toggleError": "Kirjaston päivittäminen epäonnistui: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Suodatinluetteloiden tuominen epäonnistui: {{error}}",
+    "import": "Tuo",
+    "successMessage": "Mukautetut suodatinluettelot tuotu onnistuneesti"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Portti, jossa PAC-palvelin (välityspalvelimen automaattinen määritys) kuuntelee (0 satunnaista varten).",
+    "helper": "Alle 1024 olevan portin käyttö voi vaatia korotettuja oikeuksia.",
+    "label": "PAC-palvelimen portti",
+    "setError": "PAC-palvelimen portin asettaminen epäonnistui: {{error}}"
+  },
+  "portInput": {
+    "description": "Portti, jossa välityspalvelin kuuntelee (0 satunnaista varten).",
+    "helper": "Alle 1024 olevan portin käyttö voi vaatia korotettuja oikeuksia.",
+    "label": "Välityspalvelimen portti"
+  },
+  "requestLog": {
+    "emptyState": "Aloita selailu nähdäksesi estetyt pyynnöt.",
+    "filterName": "Suodattimen nimi",
+    "local": "Paikallinen",
+    "localBlocked": "Puuttuva resurssi estetty",
+    "method": "Menetelmä",
+    "process": "Prosessi",
+    "processName": "Nimi",
+    "processPath": "Polku",
+    "redirectedTo": "Ohjattu kohteeseen",
+    "referer": "Viittaja",
+    "request": "Pyyntö",
+    "rule": "Sääntö",
+    "rules": "Säännöt",
+    "url": "URL",
+    "version": "Versio",
+    "versionUpgraded": "Tarjottiin uudempi versio kuin pyydettiin",
+    "versionDowngraded": "Tarjottiin vanhempi versio kuin pyydettiin"
+  },
+  "rules": {
+    "help": "Ohje",
+    "placeholder": "Lisää mukautetut säännöt tähän..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "muutosloki",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Versio"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Valitse haluamasi kieli",
+      "label": "Kieli"
+    },
+    "sections": {
+      "advanced": "Lisäasetukset",
+      "app": "Sovellus",
+      "localResources": "Paikalliset resurssit"
+    },
+    "theme": {
+      "chooseTheme": "Valitse teema",
+      "dark": "Tumma",
+      "light": "Vaalea",
+      "system": "Seuraa järjestelmän teemaa"
+    },
+    "updates": {
+      "automaticUpdates": "Lataa päivitykset automaattisesti",
+      "description": "Kun käytössä, Zen tarkistaa päivitykset automaattisesti",
+      "disableError": "Automaattisten päivitysten poistaminen epäonnistui: {{error}}",
+      "enableError": "Automaattisten päivitysten ottaminen käyttöön epäonnistui: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Käynnistä",
+    "startError": "Välityspalvelimen käynnistäminen epäonnistui: {{error}}",
+    "stop": "Pysäytä",
+    "stopError": "Välityspalvelimen pysäyttäminen epäonnistui: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

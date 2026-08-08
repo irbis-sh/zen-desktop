@@ -93,6 +93,52 @@
     "helper": "Enter one host per line.",
     "label": "Ignored hosts"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "When enabled, requests to known CDN domains that have no bundled local copy are blocked instead of being forwarded.",
+      "label": "Block missing resources",
+      "setError": "Failed to update block missing resources setting: {{error}}"
+    },
+    "counter": {
+      "label": "Resources served locally",
+      "perLibrary": "Per Library",
+      "reset": "Reset counter",
+      "resetError": "Failed to reset counter: {{error}}",
+      "sinceInstall": "Since install",
+      "sinceReset": "Since last reset",
+      "perCDN": "Per CDN",
+      "cacheNote": "Cached resources are served by the browser and only count after the cache is cleared.",
+      "total": "Total",
+      "filterListHits": "Filter list hits",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Directory containing files referenced by custom resource mappings.",
+      "helper": "Leave empty to disable custom resources.",
+      "label": "Custom resource directory",
+      "setError": "Failed to set custom resource directory: {{error}}"
+    },
+    "enable": {
+      "description": "Serve bundled copies of popular CDN libraries instead of downloading them from remote CDNs.",
+      "label": "Local Resource Engine",
+      "setError": "Failed to update local resource engine setting: {{error}}"
+    },
+    "importExport": {
+      "export": "Export mappings",
+      "exportError": "Failed to export custom resource mappings: {{error}}",
+      "exportSuccess": "Custom resource mappings exported successfully",
+      "import": "Import mappings",
+      "importError": "Failed to import custom resource mappings: {{error}}",
+      "importSuccess": "Custom resource mappings imported successfully",
+      "label": "Custom resource mappings"
+    },
+    "libraries": {
+      "description": "Choose which libraries can be served locally.",
+      "label": "Libraries",
+      "toggleError": "Failed to update library: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Failed to import filter lists: {{error}}",
     "import": "Import",
@@ -139,6 +185,8 @@
   "requestLog": {
     "emptyState": "Start browsing to see blocked requests.",
     "filterName": "Filter name",
+    "local": "Local",
+    "localBlocked": "Missing resource blocked",
     "method": "Method",
     "process": "Process",
     "processName": "Name",
@@ -148,7 +196,10 @@
     "request": "Request",
     "rule": "Rule",
     "rules": "Rules",
-    "url": "URL"
+    "url": "URL",
+    "version": "Version",
+    "versionUpgraded": "Served a newer version than requested",
+    "versionDowngraded": "Served an older version than requested"
   },
   "rules": {
     "help": "Help",
@@ -180,7 +231,8 @@
     },
     "sections": {
       "advanced": "Advanced",
-      "app": "App"
+      "app": "App",
+      "localResources": "Local Resources"
     },
     "theme": {
       "chooseTheme": "Choose a theme",

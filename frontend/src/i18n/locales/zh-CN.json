@@ -93,6 +93,52 @@
     "helper": "每行一个主机名。",
     "label": "忽略的主机"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "启用后，对没有本地捆绑副本的已知 CDN 域名的请求将被阻止，而不是转发。",
+      "label": "阻止缺失的资源",
+      "setError": "更新阻止缺失资源设置失败：{{error}}"
+    },
+    "counter": {
+      "label": "本地提供的资源",
+      "perLibrary": "按库统计",
+      "reset": "重置计数器",
+      "resetError": "重置计数器失败：{{error}}",
+      "sinceInstall": "自安装以来",
+      "sinceReset": "自上次重置以来",
+      "perCDN": "按 CDN 统计",
+      "cacheNote": "已缓存的资源由浏览器提供，清除缓存后才会被计数。",
+      "total": "总计",
+      "filterListHits": "过滤列表命中",
+      "filter": "过滤",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "包含自定义资源映射所引用文件的目录。",
+      "helper": "留空以禁用自定义资源。",
+      "label": "自定义资源目录",
+      "setError": "设置自定义资源目录失败：{{error}}"
+    },
+    "enable": {
+      "description": "提供流行的 CDN 库的捆绑副本，而不是从远程 CDN 下载。",
+      "label": "本地资源引擎",
+      "setError": "更新本地资源引擎设置失败：{{error}}"
+    },
+    "importExport": {
+      "export": "导出映射",
+      "exportError": "导出自定义资源映射失败：{{error}}",
+      "exportSuccess": "已成功导出自定义资源映射",
+      "import": "导入映射",
+      "importError": "导入自定义资源映射失败：{{error}}",
+      "importSuccess": "已成功导入自定义资源映射",
+      "label": "自定义资源映射"
+    },
+    "libraries": {
+      "description": "选择可在本地提供的库。",
+      "label": "库",
+      "toggleError": "更新库失败：{{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "导入过滤列表失败：{{error}}",
     "import": "导入",
@@ -137,6 +183,8 @@
     "label": "代理端口"
   },
   "requestLog": {
+    "local": "本地",
+    "localBlocked": "已阻止缺失的资源",
     "emptyState": "开始浏览以查看被拦截的请求。",
     "filterName": "过滤器名称",
     "method": "方法",
@@ -148,7 +196,10 @@
     "request": "请求",
     "rule": "规则",
     "rules": "规则",
-    "url": "网址"
+    "url": "网址",
+    "version": "版本",
+    "versionUpgraded": "提供了比请求更新的版本",
+    "versionDowngraded": "提供了比请求更旧的版本"
   },
   "rules": {
     "help": "帮助",
@@ -179,6 +230,7 @@
       "label": "语言"
     },
     "sections": {
+      "localResources": "本地资源",
       "advanced": "高级",
       "app": "应用"
     },

@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "A proxy nem aktív. Kattintson az alábbi gombra az aktiválásához.",
+      "inactive": "Aktiválja a proxyt a blokkolt kérések megtekintéséhez"
+    },
+    "tabs": {
+      "filterLists": "Szűrőlisták",
+      "home": "Kezdőlap",
+      "rules": "Szabályok",
+      "settings": "Beállítások"
+    },
+    "update": {
+      "restart": "Újraindítás",
+      "restartFailed": "Az alkalmazás újraindítása sikertelen: {{error}}",
+      "updateAvailable": "A Zen új verziója érhető el."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Alkalmazás hozzáadása",
+    "allowlistMode": "Csak a kiválasztott alkalmazások használják a proxyt",
+    "blocklistMode": "Minden alkalmazás használja a proxyt, kivéve a kiválasztottakat",
+    "description": "Válassza ki, mely alkalmazások használják a Zen proxyját.",
+    "emptyAllowlistWarning": "Nincs kiválasztva alkalmazás. Minden forgalom megkerüli a Zen-t.",
+    "label": "Alkalmazás-útválasztás",
+    "removeApp": "Alkalmazás eltávolítása",
+    "saveError": "Az útválasztási beállítások mentése sikertelen: {{error}}",
+    "selectError": "Az alkalmazás kiválasztása sikertelen: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "A port, amelyet a belső erőforrás-kiszolgáló használ a szkriptek és stílusok befecskendezéséhez.",
+    "helper": "Az 1024 alatti port használata emelt jogosultságokat igényelhet.",
+    "label": "Erőforrás-kiszolgáló port",
+    "setError": "Az erőforrás-kiszolgáló portjának beállítása sikertelen: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "A Zen automatikus indítása bejelentkezéskor",
+    "disableError": "Az automatikus indítás kikapcsolása sikertelen: {{error}}",
+    "enableError": "Az automatikus indítás bekapcsolása sikertelen: {{error}}",
+    "label": "Automatikus indítás"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Állítsa le a proxyt egy új szűrőlista hozzáadásához",
+    "stopProxyToDeleteFilter": "Állítsa le a proxyt ennek a szűrőlistának a törléséhez",
+    "stopProxyToEditRules": "Állítsa le a proxyt az egyéni szabályok módosításához",
+    "stopProxyToModify": "Állítsa le a proxyt ennek a beállításnak a módosításához",
+    "stopProxyToToggleFilter": "Állítsa le a proxyt ennek a szűrőlistának a be- vagy kikapcsolásához"
+  },
+  "createFilterList": {
+    "addError": "A szűrőlista hozzáadása sikertelen: {{error}}",
+    "addList": "Szűrőlista hozzáadása",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Adományozás",
+  "exportDebugDataButton": {
+    "error": "A hibakeresési adatok exportálása sikertelen: {{error}}",
+    "label": "Hibakeresési adatok exportálása",
+    "success": "A hibakeresési adatok a vágólapra lettek másolva",
+    "tooltip": "Hibakeresési információk másolása a vágólapra"
+  },
+  "exportFilterList": {
+    "errorMessage": "A szűrőlisták exportálása sikertelen: {{error}}",
+    "export": "Exportálás",
+    "successMessage": "Az egyéni szűrőlisták sikeresen exportálva"
+  },
+  "exportLogsButton": {
+    "label": "Naplók exportálása",
+    "openError": "A naplómappa megnyitása sikertelen: {{error}}",
+    "tooltip": "Naplómappa megnyitása"
+  },
+  "filterLists": {
+    "copied": "Másolva",
+    "copy": "Hivatkozás másolása",
+    "delete": "Törlés",
+    "goTo": "Megnyitás böngészőben",
+    "more": "Továbbiak",
+    "removeError": "A szűrőlista eltávolítása sikertelen: {{error}}",
+    "toggleError": "A szűrőlista váltása sikertelen: {{error}}",
+    "trusted": "Megbízható",
+    "whatIsThis": "Mi ez"
+  },
+  "filterTypes": {
+    "ads": "Hirdetések",
+    "custom": "Egyéni",
+    "digitalWellbeing": "Digitális jóllét",
+    "general": "Általános",
+    "malware": "Kártevő",
+    "privacy": "Adatvédelem",
+    "regional": "Regionális"
+  },
+  "ignoredHostsInput": {
+    "description": "A proxyból kizárt hosztok. Használja tanúsítványrögzítést alkalmazó vagy a proxy által zavart szolgáltatásokhoz.",
+    "helper": "Soronként egy hosztot adjon meg.",
+    "label": "Figyelmen kívül hagyott hosztok"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Bekapcsolásakor az ismert CDN-tartományokra irányuló, csomagolt helyi másolattal nem rendelkező kérések továbbítás helyett blokkolva lesznek.",
+      "label": "Hiányzó erőforrások blokkolása",
+      "setError": "A hiányzó erőforrások blokkolása beállítás frissítése sikertelen: {{error}}"
+    },
+    "counter": {
+      "label": "Helyben kiszolgált erőforrások",
+      "perLibrary": "Könyvtáranként",
+      "reset": "Számláló visszaállítása",
+      "resetError": "A számláló visszaállítása sikertelen: {{error}}",
+      "sinceInstall": "Telepítés óta",
+      "sinceReset": "Az utolsó visszaállítás óta",
+      "perCDN": "CDN-ként",
+      "cacheNote": "A gyorsítótárazott erőforrásokat a böngésző szolgálja ki, és csak a gyorsítótár törlése után számítanak.",
+      "total": "Összesen",
+      "filterListHits": "Szűrőlista-találatok",
+      "filter": "Szűrő",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Az egyéni erőforrás-hozzárendelések által hivatkozott fájlokat tartalmazó mappa.",
+      "helper": "Az egyéni erőforrások letiltásához hagyja üresen.",
+      "label": "Egyéni erőforrások mappája",
+      "setError": "Az egyéni erőforrások mappájának beállítása sikertelen: {{error}}"
+    },
+    "enable": {
+      "description": "Népszerű CDN-könyvtárak csomagolt másolatainak kiszolgálása a távoli CDN-ekről való letöltés helyett.",
+      "label": "Helyi erőforrás-motor",
+      "setError": "A helyi erőforrás-motor beállításának frissítése sikertelen: {{error}}"
+    },
+    "importExport": {
+      "export": "Hozzárendelések exportálása",
+      "exportError": "Az egyéni erőforrás-hozzárendelések exportálása sikertelen: {{error}}",
+      "exportSuccess": "Az egyéni erőforrás-hozzárendelések exportálása sikerült",
+      "import": "Hozzárendelések importálása",
+      "importError": "Az egyéni erőforrás-hozzárendelések importálása sikertelen: {{error}}",
+      "importSuccess": "Az egyéni erőforrás-hozzárendelések importálása sikerült",
+      "label": "Egyéni erőforrás-hozzárendelések"
+    },
+    "libraries": {
+      "description": "Válassza ki, mely könyvtárak szolgálhatók ki helyben.",
+      "label": "Könyvtárak",
+      "toggleError": "A könyvtár frissítése sikertelen: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "A szűrőlisták importálása sikertelen: {{error}}",
+    "import": "Importálás",
+    "successMessage": "Az egyéni szűrőlisták sikeresen importálva"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "A port, amelyen a PAC-kiszolgáló (proxy automatikus konfiguráció) figyel (0 a véletlenszerűhöz).",
+    "helper": "Az 1024 alatti port használata emelt jogosultságokat igényelhet.",
+    "label": "PAC-kiszolgáló port",
+    "setError": "A PAC-kiszolgáló portjának beállítása sikertelen: {{error}}"
+  },
+  "portInput": {
+    "description": "A port, amelyen a proxykiszolgáló figyel (0 a véletlenszerűhöz).",
+    "helper": "Az 1024 alatti port használata emelt jogosultságokat igényelhet.",
+    "label": "Proxy port"
+  },
+  "requestLog": {
+    "emptyState": "Kezdjen el böngészni a blokkolt kérések megtekintéséhez.",
+    "filterName": "Szűrő neve",
+    "local": "Helyi",
+    "localBlocked": "Hiányzó erőforrás blokkolva",
+    "method": "Módszer",
+    "process": "Folyamat",
+    "processName": "Név",
+    "processPath": "Útvonal",
+    "redirectedTo": "Átirányítva ide",
+    "referer": "Hivatkozó",
+    "request": "Kérés",
+    "rule": "Szabály",
+    "rules": "Szabályok",
+    "url": "URL",
+    "version": "Verzió",
+    "versionUpgraded": "A kértnél újabb verzió lett kiszolgálva",
+    "versionDowngraded": "A kértnél régebbi verzió lett kiszolgálva"
+  },
+  "rules": {
+    "help": "Súgó",
+    "placeholder": "Adja hozzá egyéni szabályait itt..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "változásnapló",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Verzió"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Válassza ki a kívánt nyelvet",
+      "label": "Nyelv"
+    },
+    "sections": {
+      "advanced": "Speciális",
+      "app": "Alkalmazás",
+      "localResources": "Helyi erőforrások"
+    },
+    "theme": {
+      "chooseTheme": "Téma kiválasztása",
+      "dark": "Sötét",
+      "light": "Világos",
+      "system": "Rendszertéma követése"
+    },
+    "updates": {
+      "automaticUpdates": "Frissítések automatikus letöltése",
+      "description": "Ha be van kapcsolva, a Zen automatikusan ellenőrzi a frissítéseket",
+      "disableError": "Az automatikus frissítések kikapcsolása sikertelen: {{error}}",
+      "enableError": "Az automatikus frissítések bekapcsolása sikertelen: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Indítás",
+    "startError": "A proxy indítása sikertelen: {{error}}",
+    "stop": "Leállítás",
+    "stopError": "A proxy leállítása sikertelen: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

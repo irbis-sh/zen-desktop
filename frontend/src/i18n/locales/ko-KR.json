@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "프록시가 활성화되어 있지 않습니다. 아래 버튼을 클릭하여 활성화하세요.",
+      "inactive": "프록시를 활성화하면 차단된 요청을 볼 수 있습니다"
+    },
+    "tabs": {
+      "filterLists": "필터 목록",
+      "home": "홈",
+      "rules": "규칙",
+      "settings": "설정"
+    },
+    "update": {
+      "restart": "다시 시작",
+      "restartFailed": "앱을 다시 시작하지 못했습니다: {{error}}",
+      "updateAvailable": "새로운 버전의 Zen을 사용할 수 있습니다."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "앱 추가",
+    "allowlistMode": "선택한 앱만 프록시 사용",
+    "blocklistMode": "선택한 앱을 제외한 모든 앱이 프록시 사용",
+    "description": "Zen 프록시를 사용할 앱을 선택하세요.",
+    "emptyAllowlistWarning": "선택된 앱이 없습니다. 모든 트래픽이 Zen을 우회합니다.",
+    "label": "앱 라우팅",
+    "removeApp": "앱 제거",
+    "saveError": "앱 라우팅 설정을 저장하지 못했습니다: {{error}}",
+    "selectError": "앱을 선택하지 못했습니다: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "스크립트와 스타일을 주입하기 위해 내부 에셋 서버가 사용하는 포트입니다.",
+    "helper": "1024 미만의 포트를 사용하려면 관리자 권한이 필요할 수 있습니다.",
+    "label": "에셋 서버 포트",
+    "setError": "에셋 서버 포트를 설정하지 못했습니다: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "로그인 시 Zen 자동 시작",
+    "disableError": "자동 시작을 비활성화하지 못했습니다: {{error}}",
+    "enableError": "자동 시작을 활성화하지 못했습니다: {{error}}",
+    "label": "자동 시작"
+  },
+  "common": {
+    "stopProxyToAddFilter": "새 필터 목록을 추가하려면 프록시를 중지하세요",
+    "stopProxyToDeleteFilter": "이 필터 목록을 삭제하려면 프록시를 중지하세요",
+    "stopProxyToEditRules": "사용자 지정 규칙을 수정하려면 프록시를 중지하세요",
+    "stopProxyToModify": "이 설정을 변경하려면 프록시를 중지하세요",
+    "stopProxyToToggleFilter": "이 필터 목록을 켜거나 끄려면 프록시를 중지하세요"
+  },
+  "createFilterList": {
+    "addError": "필터 목록을 추가하지 못했습니다: {{error}}",
+    "addList": "필터 목록 추가",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "후원하기",
+  "exportDebugDataButton": {
+    "error": "디버그 데이터를 내보내지 못했습니다: {{error}}",
+    "label": "디버그 데이터 내보내기",
+    "success": "디버그 데이터가 클립보드에 복사되었습니다",
+    "tooltip": "디버그 정보를 클립보드에 복사"
+  },
+  "exportFilterList": {
+    "errorMessage": "필터 목록을 내보내지 못했습니다: {{error}}",
+    "export": "내보내기",
+    "successMessage": "사용자 지정 필터 목록을 성공적으로 내보냈습니다"
+  },
+  "exportLogsButton": {
+    "label": "로그 내보내기",
+    "openError": "로그 디렉터리를 열지 못했습니다: {{error}}",
+    "tooltip": "로그 디렉터리 열기"
+  },
+  "filterLists": {
+    "copied": "복사됨",
+    "copy": "링크 복사",
+    "delete": "삭제",
+    "goTo": "브라우저에서 열기",
+    "more": "더 보기",
+    "removeError": "필터 목록을 제거하지 못했습니다: {{error}}",
+    "toggleError": "필터 목록을 전환하지 못했습니다: {{error}}",
+    "trusted": "신뢰됨",
+    "whatIsThis": "이게 무엇인가요"
+  },
+  "filterTypes": {
+    "ads": "광고",
+    "custom": "사용자 지정",
+    "digitalWellbeing": "디지털 웰빙",
+    "general": "일반",
+    "malware": "악성코드",
+    "privacy": "개인정보 보호",
+    "regional": "지역별"
+  },
+  "ignoredHostsInput": {
+    "description": "프록시에서 제외할 호스트입니다. 인증서 고정 서비스나 프록시로 인해 문제가 생기는 서비스에 사용하세요.",
+    "helper": "한 줄에 호스트 하나를 입력하세요.",
+    "label": "무시할 호스트"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "활성화하면 번들된 로컬 복사본이 없는 알려진 CDN 도메인에 대한 요청이 전달되지 않고 차단됩니다.",
+      "label": "누락된 리소스 차단",
+      "setError": "누락된 리소스 차단 설정을 업데이트하지 못했습니다: {{error}}"
+    },
+    "counter": {
+      "label": "로컬로 제공된 리소스",
+      "perLibrary": "라이브러리별",
+      "reset": "카운터 재설정",
+      "resetError": "카운터를 재설정하지 못했습니다: {{error}}",
+      "sinceInstall": "설치 이후",
+      "sinceReset": "마지막 재설정 이후",
+      "perCDN": "CDN별",
+      "cacheNote": "캐시된 리소스는 브라우저가 제공하며 캐시를 지운 후에만 집계됩니다.",
+      "total": "합계",
+      "filterListHits": "필터 목록 적중",
+      "filter": "필터",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "사용자 지정 리소스 매핑이 참조하는 파일이 있는 디렉터리입니다.",
+      "helper": "사용자 지정 리소스를 비활성화하려면 비워 두세요.",
+      "label": "사용자 지정 리소스 디렉터리",
+      "setError": "사용자 지정 리소스 디렉터리를 설정하지 못했습니다: {{error}}"
+    },
+    "enable": {
+      "description": "원격 CDN에서 다운로드하는 대신 인기 있는 CDN 라이브러리의 번들 복사본을 제공합니다.",
+      "label": "로컬 리소스 엔진",
+      "setError": "로컬 리소스 엔진 설정을 업데이트하지 못했습니다: {{error}}"
+    },
+    "importExport": {
+      "export": "매핑 내보내기",
+      "exportError": "사용자 지정 리소스 매핑을 내보내지 못했습니다: {{error}}",
+      "exportSuccess": "사용자 지정 리소스 매핑을 내보냈습니다",
+      "import": "매핑 가져오기",
+      "importError": "사용자 지정 리소스 매핑을 가져오지 못했습니다: {{error}}",
+      "importSuccess": "사용자 지정 리소스 매핑을 가져왔습니다",
+      "label": "사용자 지정 리소스 매핑"
+    },
+    "libraries": {
+      "description": "로컬로 제공할 수 있는 라이브러리를 선택하세요.",
+      "label": "라이브러리",
+      "toggleError": "라이브러리를 업데이트하지 못했습니다: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "필터 목록을 가져오지 못했습니다: {{error}}",
+    "import": "가져오기",
+    "successMessage": "사용자 지정 필터 목록을 성공적으로 가져왔습니다"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "PAC(프록시 자동 구성) 서버가 수신 대기하는 포트입니다(0은 임의).",
+    "helper": "1024 미만의 포트를 사용하려면 관리자 권한이 필요할 수 있습니다.",
+    "label": "PAC 서버 포트",
+    "setError": "PAC 서버 포트를 설정하지 못했습니다: {{error}}"
+  },
+  "portInput": {
+    "description": "프록시 서버가 수신 대기하는 포트입니다(0은 임의).",
+    "helper": "1024 미만의 포트를 사용하려면 관리자 권한이 필요할 수 있습니다.",
+    "label": "프록시 포트"
+  },
+  "requestLog": {
+    "emptyState": "브라우징을 시작하면 차단된 요청이 표시됩니다.",
+    "filterName": "필터 이름",
+    "local": "로컬",
+    "localBlocked": "누락된 리소스 차단됨",
+    "method": "메서드",
+    "process": "프로세스",
+    "processName": "이름",
+    "processPath": "경로",
+    "redirectedTo": "리디렉션 대상",
+    "referer": "리퍼러",
+    "request": "요청",
+    "rule": "규칙",
+    "rules": "규칙",
+    "url": "URL",
+    "version": "버전",
+    "versionUpgraded": "요청한 버전보다 최신 버전을 제공했습니다",
+    "versionDowngraded": "요청한 버전보다 이전 버전을 제공했습니다"
+  },
+  "rules": {
+    "help": "도움말",
+    "placeholder": "여기에 사용자 지정 규칙을 추가하세요..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "변경 로그",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "버전"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "선호하는 언어를 선택하세요",
+      "label": "언어"
+    },
+    "sections": {
+      "advanced": "고급",
+      "app": "앱",
+      "localResources": "로컬 리소스"
+    },
+    "theme": {
+      "chooseTheme": "테마 선택",
+      "dark": "어두운",
+      "light": "밝은",
+      "system": "시스템 테마 따르기"
+    },
+    "updates": {
+      "automaticUpdates": "업데이트 자동 다운로드",
+      "description": "활성화하면 Zen이 업데이트를 자동으로 확인합니다",
+      "disableError": "자동 업데이트를 비활성화하지 못했습니다: {{error}}",
+      "enableError": "자동 업데이트를 활성화하지 못했습니다: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "시작",
+    "startError": "프록시를 시작하지 못했습니다: {{error}}",
+    "stop": "중지",
+    "stopError": "프록시를 중지하지 못했습니다: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

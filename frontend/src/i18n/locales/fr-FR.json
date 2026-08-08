@@ -93,6 +93,52 @@
     "helper": "Entrez un domaine par ligne.",
     "label": "Domaines à ignorer"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "Lorsqu'elle est activée, les requêtes vers des domaines CDN connus sans copie locale groupée sont bloquées au lieu d'être transférées.",
+      "label": "Bloquer les ressources manquantes",
+      "setError": "Impossible de mettre à jour le paramètre de blocage des ressources manquantes : {{error}}"
+    },
+    "counter": {
+      "label": "Ressources servies localement",
+      "perLibrary": "Par bibliothèque",
+      "reset": "Réinitialiser le compteur",
+      "resetError": "Impossible de réinitialiser le compteur : {{error}}",
+      "sinceInstall": "Depuis l'installation",
+      "sinceReset": "Depuis la dernière réinitialisation",
+      "perCDN": "Par CDN",
+      "cacheNote": "Les ressources en cache sont servies par le navigateur et ne comptent qu’après la vidange du cache.",
+      "total": "Total",
+      "filterListHits": "Correspondances des listes de filtres",
+      "filter": "Filtre",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Dossier contenant les fichiers référencés par les mappages de ressources personnalisés.",
+      "helper": "Laissez vide pour désactiver les ressources personnalisées.",
+      "label": "Dossier des ressources personnalisées",
+      "setError": "Impossible de définir le dossier des ressources personnalisées : {{error}}"
+    },
+    "enable": {
+      "description": "Servir des copies groupées de bibliothèques CDN populaires au lieu de les télécharger depuis des CDN distants.",
+      "label": "Moteur de ressources locales",
+      "setError": "Impossible de mettre à jour le paramètre du moteur de ressources locales : {{error}}"
+    },
+    "importExport": {
+      "export": "Exporter les mappages",
+      "exportError": "Impossible d'exporter les mappages de ressources personnalisés : {{error}}",
+      "exportSuccess": "Mappages de ressources personnalisés exportés avec succès",
+      "import": "Importer les mappages",
+      "importError": "Impossible d'importer les mappages de ressources personnalisés : {{error}}",
+      "importSuccess": "Mappages de ressources personnalisés importés avec succès",
+      "label": "Mappages de ressources personnalisés"
+    },
+    "libraries": {
+      "description": "Choisissez les bibliothèques pouvant être servies localement.",
+      "label": "Bibliothèques",
+      "toggleError": "Impossible de mettre à jour la bibliothèque : {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Échec de l'importation des listes de filtres : {{error}}",
     "import": "Importer",
@@ -137,6 +183,8 @@
     "label": "Port du proxy"
   },
   "requestLog": {
+    "local": "Local",
+    "localBlocked": "Ressource manquante bloquée",
     "emptyState": "Commencez à naviguer pour voir des requêtes bloquées.",
     "filterName": "Nom du filtre",
     "method": "Méthode",
@@ -148,7 +196,10 @@
     "request": "Requête",
     "rule": "Règle",
     "rules": "Règles",
-    "url": "URL"
+    "url": "URL",
+    "version": "Version",
+    "versionUpgraded": "Version plus récente que celle demandée",
+    "versionDowngraded": "Version plus ancienne que celle demandée"
   },
   "rules": {
     "help": "Aide",
@@ -179,6 +230,7 @@
       "label": "Langue"
     },
     "sections": {
+      "localResources": "Ressources locales",
       "advanced": "Avancé",
       "app": "Application"
     },

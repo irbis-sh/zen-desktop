@@ -93,6 +93,52 @@
     "helper": "Her satıra bir host girin.",
     "label": "Yoksayılan hostlar"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "Etkinleştirildiğinde, bilinen CDN alan adlarına yapılan ve yerel bir kopyası bulunmayan istekler iletilmek yerine engellenir.",
+      "label": "Eksik kaynakları engelle",
+      "setError": "Eksik kaynakları engelleme ayarı güncellenemedi: {{error}}"
+    },
+    "counter": {
+      "label": "Yerel olarak sunulan kaynaklar",
+      "perLibrary": "Kütüphane başına",
+      "reset": "Sayacı sıfırla",
+      "resetError": "Sayaç sıfırlanamadı: {{error}}",
+      "sinceInstall": "Kurulumdan bu yana",
+      "sinceReset": "Son sıfırlamadan bu yana",
+      "perCDN": "CDN başına",
+      "cacheNote": "Önbelleğe alınan kaynaklar tarayıcı tarafından sunulur ve yalnızca önbellek temizlendikten sonra sayılır.",
+      "total": "Toplam",
+      "filterListHits": "Filtre listesi isabetleri",
+      "filter": "Filtre",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Özel kaynak eşlemelerinin başvurduğu dosyaları içeren dizin.",
+      "helper": "Özel kaynakları devre dışı bırakmak için boş bırakın.",
+      "label": "Özel kaynak dizini",
+      "setError": "Özel kaynak dizini ayarlanamadı: {{error}}"
+    },
+    "enable": {
+      "description": "Popüler CDN kitaplıklarını uzak CDN'lerden indirmek yerine yerel kopyalarını sunun.",
+      "label": "Yerel Kaynak Motoru",
+      "setError": "Yerel kaynak motoru ayarı güncellenemedi: {{error}}"
+    },
+    "importExport": {
+      "export": "Eşlemeleri dışa aktar",
+      "exportError": "Özel kaynak eşlemeleri dışa aktarılamadı: {{error}}",
+      "exportSuccess": "Özel kaynak eşlemeleri dışa aktarıldı",
+      "import": "Eşlemeleri içe aktar",
+      "importError": "Özel kaynak eşlemeleri içe aktarılamadı: {{error}}",
+      "importSuccess": "Özel kaynak eşlemeleri içe aktarıldı",
+      "label": "Özel kaynak eşlemeleri"
+    },
+    "libraries": {
+      "description": "Yerel olarak sunulabilecek kitaplıkları seçin.",
+      "label": "Kütüphaneler",
+      "toggleError": "Kütüphane güncellenemedi: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Filtre listeleri içe aktarılamadı: {{error}}",
     "import": "İçe aktar",
@@ -137,6 +183,8 @@
     "label": "Proxy portu"
   },
   "requestLog": {
+    "local": "Yerel",
+    "localBlocked": "Eksik kaynak engellendi",
     "emptyState": "Engellenen istekleri görmek için gezinmeye başlayın.",
     "filterName": "Filtre adı",
     "method": "Yöntem",
@@ -148,7 +196,10 @@
     "request": "İstek",
     "rule": "Kural",
     "rules": "Kurallar",
-    "url": "URL"
+    "url": "URL",
+    "version": "Sürüm",
+    "versionUpgraded": "İstenenden daha yeni bir sürüm sunuldu",
+    "versionDowngraded": "İstenenden daha eski bir sürüm sunuldu"
   },
   "rules": {
     "help": "Yardım",
@@ -179,6 +230,7 @@
       "label": "Dil"
     },
     "sections": {
+      "localResources": "Yerel Kaynaklar",
       "advanced": "Gelişmiş",
       "app": "Uygulama"
     },

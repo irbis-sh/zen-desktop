@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Проксито не е активно. Щракнете върху бутона по-долу, за да го активирате.",
+      "inactive": "Активирайте проксито, за да видите блокираните заявки"
+    },
+    "tabs": {
+      "filterLists": "Списъци с филтри",
+      "home": "Начало",
+      "rules": "Правила",
+      "settings": "Настройки"
+    },
+    "update": {
+      "restart": "Рестартиране",
+      "restartFailed": "Неуспешно рестартиране на приложението: {{error}}",
+      "updateAvailable": "Налична е нова версия на Zen."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Добавяне на приложение",
+    "allowlistMode": "Само избраните приложения използват прокси",
+    "blocklistMode": "Всички приложения, освен избраните, използват прокси",
+    "description": "Изберете кои приложения да използват проксито на Zen.",
+    "emptyAllowlistWarning": "Няма избрани приложения. Целият трафик ще заобиколи Zen.",
+    "label": "Маршрутизиране на приложения",
+    "removeApp": "Премахване на приложение",
+    "saveError": "Неуспешно запазване на настройките за маршрутизиране: {{error}}",
+    "selectError": "Неуспешен избор на приложение: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Портът, който вътрешният сървър за ресурси използва за инжектиране на скриптове и стилове.",
+    "helper": "Използването на порт под 1024 може да изисква повишени права.",
+    "label": "Порт на сървъра за ресурси",
+    "setError": "Неуспешно задаване на порта на сървъра за ресурси: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Стартиране на Zen автоматично при влизане",
+    "disableError": "Неуспешно изключване на автоматичното стартиране: {{error}}",
+    "enableError": "Неуспешно включване на автоматичното стартиране: {{error}}",
+    "label": "Автоматично стартиране"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Спрете проксито, за да добавите нов списък с филтри",
+    "stopProxyToDeleteFilter": "Спрете проксито, за да изтриете този списък с филтри",
+    "stopProxyToEditRules": "Спрете проксито, за да промените персонализираните правила",
+    "stopProxyToModify": "Спрете проксито, за да промените тази настройка",
+    "stopProxyToToggleFilter": "Спрете проксито, за да включите/изключите този списък с филтри"
+  },
+  "createFilterList": {
+    "addError": "Неуспешно добавяне на списък с филтри: {{error}}",
+    "addList": "Добавяне на списък с филтри",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Дарете",
+  "exportDebugDataButton": {
+    "error": "Неуспешен експорт на данните за отстраняване на грешки: {{error}}",
+    "label": "Експорт на данни за отстраняване на грешки",
+    "success": "Данните за отстраняване на грешки са копирани в клипборда",
+    "tooltip": "Копиране на информация за отстраняване на грешки в клипборда"
+  },
+  "exportFilterList": {
+    "errorMessage": "Неуспешен експорт на списъците с филтри: {{error}}",
+    "export": "Експорт",
+    "successMessage": "Персонализираните списъци с филтри са експортирани успешно"
+  },
+  "exportLogsButton": {
+    "label": "Експорт на журнали",
+    "openError": "Неуспешно отваряне на папката с журнали: {{error}}",
+    "tooltip": "Отваряне на папката с журнали"
+  },
+  "filterLists": {
+    "copied": "Копирано",
+    "copy": "Копиране на връзка",
+    "delete": "Изтриване",
+    "goTo": "Отваряне в браузъра",
+    "more": "Още",
+    "removeError": "Неуспешно премахване на списъка с филтри: {{error}}",
+    "toggleError": "Неуспешно превключване на списъка с филтри: {{error}}",
+    "trusted": "Доверен",
+    "whatIsThis": "Какво е това"
+  },
+  "filterTypes": {
+    "ads": "Реклами",
+    "custom": "Персонализиран",
+    "digitalWellbeing": "Цифрово благополучие",
+    "general": "Общ",
+    "malware": "Зловреден софтуер",
+    "privacy": "Поверителност",
+    "regional": "Регионален"
+  },
+  "ignoredHostsInput": {
+    "description": "Хостове, изключени от проксито. Използвайте за услуги с фиксирани сертификати или такива, нарушавани от проксито.",
+    "helper": "Въведете по един хост на ред.",
+    "label": "Игнорирани хостове"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Когато е активирано, заявките към известни CDN домейни без вградено локално копие се блокират, вместо да се препращат.",
+      "label": "Блокиране на липсващи ресурси",
+      "setError": "Неуспешно обновяване на настройката за блокиране на липсващи ресурси: {{error}}"
+    },
+    "counter": {
+      "label": "Локално обслужени ресурси",
+      "perLibrary": "По библиотеки",
+      "reset": "Нулиране на брояча",
+      "resetError": "Неуспешно нулиране на брояча: {{error}}",
+      "sinceInstall": "От инсталирането",
+      "sinceReset": "От последното нулиране",
+      "perCDN": "По CDN",
+      "cacheNote": "Кешираните ресурси се обслужват от браузъра и се отчитат едва след изчистване на кеша.",
+      "total": "Общо",
+      "filterListHits": "Попадения на списъците с филтри",
+      "filter": "Филтър",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Директория, съдържаща файловете, посочени от персонализираните съпоставяния на ресурси.",
+      "helper": "Оставете празно, за да деактивирате персонализираните ресурси.",
+      "label": "Директория за персонализирани ресурси",
+      "setError": "Неуспешно задаване на директорията за персонализирани ресурси: {{error}}"
+    },
+    "enable": {
+      "description": "Обслужва вградени копия на популярни CDN библиотеки, вместо да ги изтегля от отдалечени CDN.",
+      "label": "Двигател за локални ресурси",
+      "setError": "Неуспешно обновяване на настройката на двигателя за локални ресурси: {{error}}"
+    },
+    "importExport": {
+      "export": "Експортиране на съпоставяния",
+      "exportError": "Неуспешно експортиране на персонализирани съпоставяния на ресурси: {{error}}",
+      "exportSuccess": "Персонализираните съпоставяния на ресурси са експортирани",
+      "import": "Импортиране на съпоставяния",
+      "importError": "Неуспешно импортиране на персонализирани съпоставяния на ресурси: {{error}}",
+      "importSuccess": "Персонализираните съпоставяния на ресурси са импортирани",
+      "label": "Персонализирани съпоставяния на ресурси"
+    },
+    "libraries": {
+      "description": "Изберете кои библиотеки могат да се обслужват локално.",
+      "label": "Библиотеки",
+      "toggleError": "Неуспешно обновяване на библиотеката: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Неуспешен импорт на списъците с филтри: {{error}}",
+    "import": "Импорт",
+    "successMessage": "Персонализираните списъци с филтри са импортирани успешно"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Портът, на който слуша PAC сървърът (автоматична конфигурация на прокси) (0 за произволен).",
+    "helper": "Използването на порт под 1024 може да изисква повишени права.",
+    "label": "Порт на PAC сървъра",
+    "setError": "Неуспешно задаване на порта на PAC сървъра: {{error}}"
+  },
+  "portInput": {
+    "description": "Портът, на който слуша прокси сървърът (0 за произволен).",
+    "helper": "Използването на порт под 1024 може да изисква повишени права.",
+    "label": "Порт на проксито"
+  },
+  "requestLog": {
+    "emptyState": "Започнете да сърфирате, за да видите блокираните заявки.",
+    "filterName": "Име на филтъра",
+    "local": "Локално",
+    "localBlocked": "Липсващият ресурс е блокиран",
+    "method": "Метод",
+    "process": "Процес",
+    "processName": "Име",
+    "processPath": "Път",
+    "redirectedTo": "Пренасочено към",
+    "referer": "Реферер",
+    "request": "Заявка",
+    "rule": "Правило",
+    "rules": "Правила",
+    "url": "URL",
+    "version": "Версия",
+    "versionUpgraded": "Предоставена е по-нова версия от поисканата",
+    "versionDowngraded": "Предоставена е по-стара версия от поисканата"
+  },
+  "rules": {
+    "help": "Помощ",
+    "placeholder": "Добавете персонализираните си правила тук..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "списък на промените",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Версия"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Изберете предпочитания език",
+      "label": "Език"
+    },
+    "sections": {
+      "advanced": "Разширени",
+      "app": "Приложение",
+      "localResources": "Локални ресурси"
+    },
+    "theme": {
+      "chooseTheme": "Избор на тема",
+      "dark": "Тъмна",
+      "light": "Светла",
+      "system": "Следване на системната тема"
+    },
+    "updates": {
+      "automaticUpdates": "Автоматично изтегляне на актуализации",
+      "description": "Когато е включено, Zen автоматично ще проверява за актуализации",
+      "disableError": "Неуспешно изключване на автоматичните актуализации: {{error}}",
+      "enableError": "Неуспешно включване на автоматичните актуализации: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Старт",
+    "startError": "Неуспешно стартиране на проксито: {{error}}",
+    "stop": "Стоп",
+    "stopError": "Неуспешно спиране на проксито: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "El proxy no està actiu. Feu clic al botó de sota per activar-lo.",
+      "inactive": "Activeu el proxy per veure les sol·licituds bloquejades"
+    },
+    "tabs": {
+      "filterLists": "Llistes de filtres",
+      "home": "Inici",
+      "rules": "Regles",
+      "settings": "Configuració"
+    },
+    "update": {
+      "restart": "Reinicia",
+      "restartFailed": "No s'ha pogut reiniciar l'aplicació: {{error}}",
+      "updateAvailable": "Hi ha una versió nova del Zen disponible."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Afegeix una aplicació",
+    "allowlistMode": "Només les aplicacions seleccionades fan servir el proxy",
+    "blocklistMode": "Totes les aplicacions excepte les seleccionades fan servir el proxy",
+    "description": "Trieu quines aplicacions han d'utilitzar el proxy del Zen.",
+    "emptyAllowlistWarning": "No hi ha cap aplicació seleccionada. Tot el trànsit evitarà el Zen.",
+    "label": "Encaminament d'aplicacions",
+    "removeApp": "Elimina l'aplicació",
+    "saveError": "No s'han pogut desar els ajustos d'encaminament: {{error}}",
+    "selectError": "No s'ha pogut seleccionar l'aplicació: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "El port que el servidor de recursos intern fa servir per injectar scripts i estils.",
+    "helper": "Fer servir un port per sota de 1024 pot requerir privilegis elevats.",
+    "label": "Port del servidor de recursos",
+    "setError": "No s'ha pogut establir el port del servidor de recursos: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Inicia el Zen automàticament en iniciar la sessió",
+    "disableError": "No s'ha pogut desactivar l'inici automàtic: {{error}}",
+    "enableError": "No s'ha pogut activar l'inici automàtic: {{error}}",
+    "label": "Inici automàtic"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Atureu el proxy per afegir una llista de filtres nova",
+    "stopProxyToDeleteFilter": "Atureu el proxy per suprimir aquesta llista de filtres",
+    "stopProxyToEditRules": "Atureu el proxy per modificar les regles personalitzades",
+    "stopProxyToModify": "Atureu el proxy per modificar aquest ajust",
+    "stopProxyToToggleFilter": "Atureu el proxy per activar/desactivar aquesta llista de filtres"
+  },
+  "createFilterList": {
+    "addError": "No s'ha pogut afegir la llista de filtres: {{error}}",
+    "addList": "Afegeix una llista de filtres",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Doneu",
+  "exportDebugDataButton": {
+    "error": "No s'han pogut exportar les dades de depuració: {{error}}",
+    "label": "Exporta les dades de depuració",
+    "success": "Les dades de depuració s'han copiat al porta-retalls",
+    "tooltip": "Copia la informació de depuració al porta-retalls"
+  },
+  "exportFilterList": {
+    "errorMessage": "No s'han pogut exportar les llistes de filtres: {{error}}",
+    "export": "Exporta",
+    "successMessage": "Les llistes de filtres personalitzades s'han exportat correctament"
+  },
+  "exportLogsButton": {
+    "label": "Exporta els registres",
+    "openError": "No s'ha pogut obrir la carpeta de registres: {{error}}",
+    "tooltip": "Obre la carpeta de registres"
+  },
+  "filterLists": {
+    "copied": "Copiat",
+    "copy": "Copia l'enllaç",
+    "delete": "Suprimeix",
+    "goTo": "Obre al navegador",
+    "more": "Més",
+    "removeError": "No s'ha pogut eliminar la llista de filtres: {{error}}",
+    "toggleError": "No s'ha pogut canviar la llista de filtres: {{error}}",
+    "trusted": "De confiança",
+    "whatIsThis": "Què és això"
+  },
+  "filterTypes": {
+    "ads": "Anuncis",
+    "custom": "Personalitzat",
+    "digitalWellbeing": "Benestar digital",
+    "general": "General",
+    "malware": "Programari maliciós",
+    "privacy": "Privadesa",
+    "regional": "Regional"
+  },
+  "ignoredHostsInput": {
+    "description": "Amfitrions exclosos del proxy. Feu servir per a serveis amb fixació de certificats o que es veuen afectats pel proxy.",
+    "helper": "Introduïu un amfitrió per línia.",
+    "label": "Amfitrions ignorats"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Quan està activat, les sol·licituds a dominis CDN coneguts sense una còpia local inclosa es bloquegen en lloc de reenviar-se.",
+      "label": "Bloqueja els recursos que falten",
+      "setError": "No s'ha pogut actualitzar la configuració de bloqueig de recursos que falten: {{error}}"
+    },
+    "counter": {
+      "label": "Recursos servits localment",
+      "perLibrary": "Per biblioteca",
+      "reset": "Restableix el comptador",
+      "resetError": "No s'ha pogut restablir el comptador: {{error}}",
+      "sinceInstall": "Des de la instal·lació",
+      "sinceReset": "Des de l'últim restabliment",
+      "perCDN": "Per CDN",
+      "cacheNote": "Els recursos a la memòria cau els serveix el navegador i només compten després d’esborrar la memòria cau.",
+      "total": "Total",
+      "filterListHits": "Encerts de les llistes de filtres",
+      "filter": "Filtre",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Directori que conté els fitxers a què fan referència els mapatges de recursos personalitzats.",
+      "helper": "Deixa-ho buit per desactivar els recursos personalitzats.",
+      "label": "Directori de recursos personalitzats",
+      "setError": "No s'ha pogut establir el directori de recursos personalitzats: {{error}}"
+    },
+    "enable": {
+      "description": "Serveix còpies incloses de biblioteques CDN populars en lloc de baixar-les de CDN remots.",
+      "label": "Motor de recursos locals",
+      "setError": "No s'ha pogut actualitzar la configuració del motor de recursos locals: {{error}}"
+    },
+    "importExport": {
+      "export": "Exporta mapatges",
+      "exportError": "No s'han pogut exportar els mapatges de recursos personalitzats: {{error}}",
+      "exportSuccess": "S'han exportat els mapatges de recursos personalitzats",
+      "import": "Importa mapatges",
+      "importError": "No s'han pogut importar els mapatges de recursos personalitzats: {{error}}",
+      "importSuccess": "S'han importat els mapatges de recursos personalitzats",
+      "label": "Mapatges de recursos personalitzats"
+    },
+    "libraries": {
+      "description": "Tria quines biblioteques es poden servir localment.",
+      "label": "Biblioteques",
+      "toggleError": "No s'ha pogut actualitzar la biblioteca: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "No s'han pogut importar les llistes de filtres: {{error}}",
+    "import": "Importa",
+    "successMessage": "Les llistes de filtres personalitzades s'han importat correctament"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "El port on escolta el servidor PAC (configuració automàtica de proxy) (0 per a aleatori).",
+    "helper": "Fer servir un port per sota de 1024 pot requerir privilegis elevats.",
+    "label": "Port del servidor PAC",
+    "setError": "No s'ha pogut establir el port del servidor PAC: {{error}}"
+  },
+  "portInput": {
+    "description": "El port on escolta el servidor de proxy (0 per a aleatori).",
+    "helper": "Fer servir un port per sota de 1024 pot requerir privilegis elevats.",
+    "label": "Port del proxy"
+  },
+  "requestLog": {
+    "emptyState": "Comenceu a navegar per veure les sol·licituds bloquejades.",
+    "filterName": "Nom del filtre",
+    "local": "Local",
+    "localBlocked": "Recurs que falta bloquejat",
+    "method": "Mètode",
+    "process": "Procés",
+    "processName": "Nom",
+    "processPath": "Ruta",
+    "redirectedTo": "Redirigit a",
+    "referer": "Referent",
+    "request": "Sol·licitud",
+    "rule": "Regla",
+    "rules": "Regles",
+    "url": "URL",
+    "version": "Versió",
+    "versionUpgraded": "S'ha servit una versió més nova que la sol·licitada",
+    "versionDowngraded": "S'ha servit una versió més antiga que la sol·licitada"
+  },
+  "rules": {
+    "help": "Ajuda",
+    "placeholder": "Afegiu aquí les vostres regles personalitzades..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "registre de canvis",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Versió"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Seleccioneu el vostre idioma preferit",
+      "label": "Idioma"
+    },
+    "sections": {
+      "advanced": "Avançat",
+      "app": "Aplicació",
+      "localResources": "Recursos locals"
+    },
+    "theme": {
+      "chooseTheme": "Trieu un tema",
+      "dark": "Fosc",
+      "light": "Clar",
+      "system": "Segueix el tema del sistema"
+    },
+    "updates": {
+      "automaticUpdates": "Baixa les actualitzacions automàticament",
+      "description": "Quan està activat, el Zen comprovarà automàticament si hi ha actualitzacions",
+      "disableError": "No s'han pogut desactivar les actualitzacions automàtiques: {{error}}",
+      "enableError": "No s'han pogut activar les actualitzacions automàtiques: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Inicia",
+    "startError": "No s'ha pogut iniciar el proxy: {{error}}",
+    "stop": "Atura",
+    "stopError": "No s'ha pogut aturar el proxy: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

@@ -93,6 +93,52 @@
     "helper": "1 行に 1 つのホストを入力してください。",
     "label": "無視するホスト"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "有効にすると、既知のCDNドメインへのリクエストのうち、バンドルされたローカルコピーがないものは転送されずにブロックされます。",
+      "label": "不足しているリソースをブロック",
+      "setError": "不足しているリソースのブロック設定を更新できませんでした: {{error}}"
+    },
+    "counter": {
+      "label": "ローカルで配信されたリソース",
+      "perLibrary": "ライブラリ別",
+      "reset": "カウンターをリセット",
+      "resetError": "カウンターをリセットできませんでした: {{error}}",
+      "sinceInstall": "インストール以降",
+      "sinceReset": "最後のリセット以降",
+      "perCDN": "CDN 別",
+      "cacheNote": "キャッシュされたリソースはブラウザから配信されるため、キャッシュを消去するまでカウントされません。",
+      "total": "合計",
+      "filterListHits": "フィルターリストのヒット",
+      "filter": "フィルター",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "カスタムリソースマッピングが参照するファイルを含むディレクトリ。",
+      "helper": "空のままにするとカスタムリソースが無効になります。",
+      "label": "カスタムリソースディレクトリ",
+      "setError": "カスタムリソースディレクトリを設定できませんでした: {{error}}"
+    },
+    "enable": {
+      "description": "リモートCDNからダウンロードする代わりに、人気のCDNライブラリのバンドルされたコピーを配信します。",
+      "label": "ローカルリソースエンジン",
+      "setError": "ローカルリソースエンジンの設定を更新できませんでした: {{error}}"
+    },
+    "importExport": {
+      "export": "マッピングをエクスポート",
+      "exportError": "カスタムリソースマッピングをエクスポートできませんでした: {{error}}",
+      "exportSuccess": "カスタムリソースマッピングをエクスポートしました",
+      "import": "マッピングをインポート",
+      "importError": "カスタムリソースマッピングをインポートできませんでした: {{error}}",
+      "importSuccess": "カスタムリソースマッピングをインポートしました",
+      "label": "カスタムリソースマッピング"
+    },
+    "libraries": {
+      "description": "ローカルで配信できるライブラリを選択します。",
+      "label": "ライブラリ",
+      "toggleError": "ライブラリを更新できませんでした: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "フィルターリストのインポートに失敗しました: {{error}}",
     "import": "インポート",
@@ -137,6 +183,8 @@
     "label": "プロキシのポート"
   },
   "requestLog": {
+    "local": "ローカル",
+    "localBlocked": "不足しているリソースをブロック",
     "emptyState": "ブラウジングを開始すると、ブロックされたリクエストが表示されます。",
     "filterName": "フィルター名",
     "method": "メソッド",
@@ -148,7 +196,10 @@
     "request": "リクエスト",
     "rule": "ルール",
     "rules": "ルール",
-    "url": "URL"
+    "url": "URL",
+    "version": "バージョン",
+    "versionUpgraded": "リクエストより新しいバージョンを配信しました",
+    "versionDowngraded": "リクエストより古いバージョンを配信しました"
   },
   "rules": {
     "help": "ヘルプ",
@@ -179,6 +230,7 @@
       "label": "言語"
     },
     "sections": {
+      "localResources": "ローカルリソース",
       "advanced": "詳細設定",
       "app": "アプリ"
     },

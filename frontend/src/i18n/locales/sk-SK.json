@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxy nie je aktívne. Kliknutím na tlačidlo nižšie ho aktivujete.",
+      "inactive": "Aktivujte proxy, aby ste videli zablokované požiadavky"
+    },
+    "tabs": {
+      "filterLists": "Zoznamy filtrov",
+      "home": "Domov",
+      "rules": "Pravidlá",
+      "settings": "Nastavenia"
+    },
+    "update": {
+      "restart": "Reštartovať",
+      "restartFailed": "Reštart aplikácie zlyhal: {{error}}",
+      "updateAvailable": "Je dostupná nová verzia Zen."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Pridať aplikáciu",
+    "allowlistMode": "Proxy len pre vybrané aplikácie",
+    "blocklistMode": "Proxy pre všetky aplikácie okrem vybraných",
+    "description": "Vyberte, ktoré aplikácie majú používať proxy Zen.",
+    "emptyAllowlistWarning": "Nie je vybratá žiadna aplikácia. Všetka prevádzka obíde Zen.",
+    "label": "Smerovanie aplikácií",
+    "removeApp": "Odstrániť aplikáciu",
+    "saveError": "Uloženie nastavení smerovania zlyhalo: {{error}}",
+    "selectError": "Výber aplikácie zlyhal: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Port, ktorý používa interný server prostriedkov na vkladanie skriptov a štýlov.",
+    "helper": "Použitie portu pod 1024 môže vyžadovať zvýšené oprávnenia.",
+    "label": "Port servera prostriedkov",
+    "setError": "Nastavenie portu servera prostriedkov zlyhalo: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Spúšťať Zen automaticky po prihlásení",
+    "disableError": "Vypnutie automatického spúšťania zlyhalo: {{error}}",
+    "enableError": "Zapnutie automatického spúšťania zlyhalo: {{error}}",
+    "label": "Automatické spúšťanie"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Zastavte proxy, aby ste pridali nový zoznam filtrov",
+    "stopProxyToDeleteFilter": "Zastavte proxy, aby ste odstránili tento zoznam filtrov",
+    "stopProxyToEditRules": "Zastavte proxy, aby ste upravili vlastné pravidlá",
+    "stopProxyToModify": "Zastavte proxy, aby ste upravili toto nastavenie",
+    "stopProxyToToggleFilter": "Zastavte proxy, aby ste zapol/vypol tento zoznam filtrov"
+  },
+  "createFilterList": {
+    "addError": "Pridanie zoznamu filtrov zlyhalo: {{error}}",
+    "addList": "Pridať zoznam filtrov",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Prispieť",
+  "exportDebugDataButton": {
+    "error": "Export ladiacich údajov zlyhal: {{error}}",
+    "label": "Exportovať ladiace údaje",
+    "success": "Ladiace údaje boli skopírované do schránky",
+    "tooltip": "Skopírovať ladiace informácie do schránky"
+  },
+  "exportFilterList": {
+    "errorMessage": "Export zoznamov filtrov zlyhal: {{error}}",
+    "export": "Exportovať",
+    "successMessage": "Vlastné zoznamy filtrov boli úspešne exportované"
+  },
+  "exportLogsButton": {
+    "label": "Exportovať protokoly",
+    "openError": "Otvorenie priečinka protokolov zlyhalo: {{error}}",
+    "tooltip": "Otvoriť priečinok protokolov"
+  },
+  "filterLists": {
+    "copied": "Skopírované",
+    "copy": "Kopírovať odkaz",
+    "delete": "Odstrániť",
+    "goTo": "Otvoriť v prehliadači",
+    "more": "Viac",
+    "removeError": "Odstránenie zoznamu filtrov zlyhalo: {{error}}",
+    "toggleError": "Prepnutie zoznamu filtrov zlyhalo: {{error}}",
+    "trusted": "Dôveryhodný",
+    "whatIsThis": "Čo to je"
+  },
+  "filterTypes": {
+    "ads": "Reklama",
+    "custom": "Vlastný",
+    "digitalWellbeing": "Digitálna pohoda",
+    "general": "Všeobecný",
+    "malware": "Malvér",
+    "privacy": "Súkromie",
+    "regional": "Regionálny"
+  },
+  "ignoredHostsInput": {
+    "description": "Hostitelia vylúčení z proxy. Použite pri službách s pripnutými certifikátmi alebo pri tých, ktorým proxy škodí.",
+    "helper": "Zadajte jedného hostiteľa na riadok.",
+    "label": "Ignorovaní hostitelia"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Ak je zapnuté, požiadavky na známe CDN domény bez priloženej lokálnej kópie sa blokujú namiesto preposlania.",
+      "label": "Blokovať chýbajúce zdroje",
+      "setError": "Nepodarilo sa aktualizovať nastavenie blokovania chýbajúcich zdrojov: {{error}}"
+    },
+    "counter": {
+      "label": "Lokálne obslúžené zdroje",
+      "perLibrary": "Podľa knižnice",
+      "reset": "Vynulovať počítadlo",
+      "resetError": "Počítadlo sa nepodarilo vynulovať: {{error}}",
+      "sinceInstall": "Od inštalácie",
+      "sinceReset": "Od posledného vynulovania",
+      "perCDN": "Podľa CDN",
+      "cacheNote": "Ukladané prostriedky obsluhuje prehliadač a počítajú sa až po vyčistení vyrovnávacej pamäte.",
+      "total": "Celkom",
+      "filterListHits": "Zásahy zoznamov filtrov",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Adresár so súbormi, na ktoré odkazujú vlastné mapovania zdrojov.",
+      "helper": "Nechajte prázdne, aby ste vypol vlastné zdroje.",
+      "label": "Adresár vlastných zdrojov",
+      "setError": "Nepodarilo sa nastaviť adresár vlastných zdrojov: {{error}}"
+    },
+    "enable": {
+      "description": "Poskytovať priložené kópie populárnych CDN knižníc namiesto sťahovania zo vzdialených CDN.",
+      "label": "Modul lokálnych zdrojov",
+      "setError": "Nepodarilo sa aktualizovať nastavenie modulu lokálnych zdrojov: {{error}}"
+    },
+    "importExport": {
+      "export": "Exportovať mapovania",
+      "exportError": "Nepodarilo sa exportovať vlastné mapovania zdrojov: {{error}}",
+      "exportSuccess": "Vlastné mapovania zdrojov boli exportované",
+      "import": "Importovať mapovania",
+      "importError": "Nepodarilo sa importovať vlastné mapovania zdrojov: {{error}}",
+      "importSuccess": "Vlastné mapovania zdrojov boli importované",
+      "label": "Vlastné mapovania zdrojov"
+    },
+    "libraries": {
+      "description": "Vyberte, ktoré knižnice možno obsluhovať lokálne.",
+      "label": "Knižnice",
+      "toggleError": "Nepodarilo sa aktualizovať knižnicu: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Import zoznamov filtrov zlyhal: {{error}}",
+    "import": "Importovať",
+    "successMessage": "Vlastné zoznamy filtrov boli úspešne importované"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Port, na ktorom počúva PAC server (automatická konfigurácia proxy) (0 pre náhodný).",
+    "helper": "Použitie portu pod 1024 môže vyžadovať zvýšené oprávnenia.",
+    "label": "Port PAC servera",
+    "setError": "Nastavenie portu PAC servera zlyhalo: {{error}}"
+  },
+  "portInput": {
+    "description": "Port, na ktorom počúva proxy server (0 pre náhodný).",
+    "helper": "Použitie portu pod 1024 môže vyžadovať zvýšené oprávnenia.",
+    "label": "Port proxy"
+  },
+  "requestLog": {
+    "emptyState": "Začnite prehliadať web, aby ste videli zablokované požiadavky.",
+    "filterName": "Názov filtra",
+    "local": "Lokálne",
+    "localBlocked": "Chýbajúci prostriedok bol zablokovaný",
+    "method": "Metóda",
+    "process": "Proces",
+    "processName": "Názov",
+    "processPath": "Cesta",
+    "redirectedTo": "Presmerované na",
+    "referer": "Odkazujúca stránka",
+    "request": "Požiadavka",
+    "rule": "Pravidlo",
+    "rules": "Pravidlá",
+    "url": "URL",
+    "version": "Verzia",
+    "versionUpgraded": "Poskytnutá novšia verzia, než bola požadovaná",
+    "versionDowngraded": "Poskytnutá staršia verzia, než bola požadovaná"
+  },
+  "rules": {
+    "help": "Pomocník",
+    "placeholder": "Sem pridajte vlastné pravidlá..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "zoznam zmien",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Verzia"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Vyberte preferovaný jazyk",
+      "label": "Jazyk"
+    },
+    "sections": {
+      "advanced": "Rozšírené",
+      "app": "Aplikácia",
+      "localResources": "Lokálne zdroje"
+    },
+    "theme": {
+      "chooseTheme": "Vyberte motív",
+      "dark": "Tmavý",
+      "light": "Svetlý",
+      "system": "Podľa systému"
+    },
+    "updates": {
+      "automaticUpdates": "Automaticky sťahovať aktualizácie",
+      "description": "Po zapnutí bude Zen automaticky kontrolovať dostupnosť aktualizácií",
+      "disableError": "Vypnutie automatických aktualizácií zlyhalo: {{error}}",
+      "enableError": "Zapnutie automatických aktualizácií zlyhalo: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Spustiť",
+    "startError": "Spustenie proxy zlyhalo: {{error}}",
+    "stop": "Zastaviť",
+    "stopError": "Zastavenie proxy zlyhalo: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

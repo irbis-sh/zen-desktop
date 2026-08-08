@@ -93,6 +93,52 @@
     "helper": "Geben Sie einen Host pro Zeile ein.",
     "label": "Ignorierte Hosts"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "Wenn aktiviert, werden Anfragen an bekannte CDN-Domains ohne gebündelte lokale Kopie blockiert, statt weitergeleitet zu werden.",
+      "label": "Fehlende Ressourcen blockieren",
+      "setError": "Einstellung „Fehlende Ressourcen blockieren“ konnte nicht aktualisiert werden: {{error}}"
+    },
+    "counter": {
+      "label": "Lokal bereitgestellte Ressourcen",
+      "perLibrary": "Pro Bibliothek",
+      "reset": "Zähler zurücksetzen",
+      "resetError": "Zähler konnte nicht zurückgesetzt werden: {{error}}",
+      "sinceInstall": "Seit Installation",
+      "sinceReset": "Seit letztem Zurücksetzen",
+      "perCDN": "Pro CDN",
+      "cacheNote": "Zwischengespeicherte Ressourcen werden vom Browser ausgeliefert und zählen erst nach dem Leeren des Caches.",
+      "total": "Gesamt",
+      "filterListHits": "Treffer durch Filterlisten",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Verzeichnis mit Dateien, auf die benutzerdefinierte Ressourcenzuordnungen verweisen.",
+      "helper": "Leer lassen, um benutzerdefinierte Ressourcen zu deaktivieren.",
+      "label": "Verzeichnis für benutzerdefinierte Ressourcen",
+      "setError": "Verzeichnis für benutzerdefinierte Ressourcen konnte nicht festgelegt werden: {{error}}"
+    },
+    "enable": {
+      "description": "Gebündelte Kopien beliebter CDN-Bibliotheken bereitstellen, statt sie von entfernten CDNs herunterzuladen.",
+      "label": "Engine für lokale Ressourcen",
+      "setError": "Einstellung der Engine für lokale Ressourcen konnte nicht aktualisiert werden: {{error}}"
+    },
+    "importExport": {
+      "export": "Zuordnungen exportieren",
+      "exportError": "Benutzerdefinierte Ressourcenzuordnungen konnten nicht exportiert werden: {{error}}",
+      "exportSuccess": "Benutzerdefinierte Ressourcenzuordnungen erfolgreich exportiert",
+      "import": "Zuordnungen importieren",
+      "importError": "Benutzerdefinierte Ressourcenzuordnungen konnten nicht importiert werden: {{error}}",
+      "importSuccess": "Benutzerdefinierte Ressourcenzuordnungen erfolgreich importiert",
+      "label": "Benutzerdefinierte Ressourcenzuordnungen"
+    },
+    "libraries": {
+      "description": "Wählen Sie aus, welche Bibliotheken lokal bereitgestellt werden dürfen.",
+      "label": "Bibliotheken",
+      "toggleError": "Bibliothek konnte nicht aktualisiert werden: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Filterliste kann nicht importiert werden: {{error}}",
     "import": "Importieren",
@@ -137,6 +183,8 @@
     "label": "Proxy-Port"
   },
   "requestLog": {
+    "local": "Lokal",
+    "localBlocked": "Fehlende Ressource blockiert",
     "emptyState": "Beginnen Sie mit dem Surfen, um blockierte Anfragen zu sehen.",
     "filterName": "Filtername",
     "method": "Methode",
@@ -148,7 +196,10 @@
     "request": "Anfrage",
     "rule": "Regel",
     "rules": "Regeln",
-    "url": "URL"
+    "url": "URL",
+    "version": "Version",
+    "versionUpgraded": "Neuere Version als angefordert ausgeliefert",
+    "versionDowngraded": "Ältere Version als angefordert ausgeliefert"
   },
   "rules": {
     "help": "Hilfe",
@@ -179,6 +230,7 @@
       "label": "Sprache"
     },
     "sections": {
+      "localResources": "Lokale Ressourcen",
       "advanced": "Erweitert",
       "app": "Anwendung"
     },

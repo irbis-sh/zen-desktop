@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxyen er ikke aktiv. Klik på knappen nedenfor for at aktivere den.",
+      "inactive": "Aktivér proxyen for at se blokerede anmodninger"
+    },
+    "tabs": {
+      "filterLists": "Filterlister",
+      "home": "Hjem",
+      "rules": "Regler",
+      "settings": "Indstillinger"
+    },
+    "update": {
+      "restart": "Genstart",
+      "restartFailed": "Kunne ikke genstarte appen: {{error}}",
+      "updateAvailable": "Der er en ny version af Zen tilgængelig."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Tilføj app",
+    "allowlistMode": "Kun valgte apps bruger proxyen",
+    "blocklistMode": "Alle apps undtagen valgte bruger proxyen",
+    "description": "Vælg, hvilke apps der skal bruge Zens proxy.",
+    "emptyAllowlistWarning": "Ingen apps er valgt. Al trafik omgår Zen.",
+    "label": "App-routing",
+    "removeApp": "Fjern app",
+    "saveError": "Kunne ikke gemme app-routingindstillinger: {{error}}",
+    "selectError": "Kunne ikke vælge app: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Porten, som den interne asset-server bruger til at indsætte scripts og styles.",
+    "helper": "Brug af en port under 1024 kan kræve forhøjede rettigheder.",
+    "label": "Asset-serverport",
+    "setError": "Kunne ikke angive asset-serverporten: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Start Zen automatisk, når du logger ind",
+    "disableError": "Kunne ikke deaktivere autostart: {{error}}",
+    "enableError": "Kunne ikke aktivere autostart: {{error}}",
+    "label": "Autostart"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Stop proxyen for at tilføje en ny filterliste",
+    "stopProxyToDeleteFilter": "Stop proxyen for at slette denne filterliste",
+    "stopProxyToEditRules": "Stop proxyen for at ændre brugerdefinerede regler",
+    "stopProxyToModify": "Stop proxyen for at ændre denne indstilling",
+    "stopProxyToToggleFilter": "Stop proxyen for at aktivere/deaktivere denne filterliste"
+  },
+  "createFilterList": {
+    "addError": "Kunne ikke tilføje filterliste: {{error}}",
+    "addList": "Tilføj filterliste",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Donér",
+  "exportDebugDataButton": {
+    "error": "Kunne ikke eksportere fejlfindingsdata: {{error}}",
+    "label": "Eksporter fejlfindingsdata",
+    "success": "Fejlfindingsdata kopieret til udklipsholderen",
+    "tooltip": "Kopiér fejlfindingsoplysninger til udklipsholderen"
+  },
+  "exportFilterList": {
+    "errorMessage": "Kunne ikke eksportere filterlister: {{error}}",
+    "export": "Eksportér",
+    "successMessage": "Brugerdefinerede filterlister eksporteret"
+  },
+  "exportLogsButton": {
+    "label": "Eksportér logfiler",
+    "openError": "Kunne ikke åbne logmappen: {{error}}",
+    "tooltip": "Åbn logmappen"
+  },
+  "filterLists": {
+    "copied": "Kopieret",
+    "copy": "Kopiér link",
+    "delete": "Slet",
+    "goTo": "Åbn i browser",
+    "more": "Mere",
+    "removeError": "Kunne ikke fjerne filterliste: {{error}}",
+    "toggleError": "Kunne ikke skifte filterliste: {{error}}",
+    "trusted": "Pålidelig",
+    "whatIsThis": "Hvad er dette"
+  },
+  "filterTypes": {
+    "ads": "Annoncer",
+    "custom": "Brugerdefineret",
+    "digitalWellbeing": "Digital trivsel",
+    "general": "Generelt",
+    "malware": "Malware",
+    "privacy": "Privatliv",
+    "regional": "Regional"
+  },
+  "ignoredHostsInput": {
+    "description": "Værter, der er undtaget fra proxyen. Brug dette til tjenester med certifikat-pinning eller dem, der forstyrres af proxyen.",
+    "helper": "Indtast én vært pr. linje.",
+    "label": "Ignorerede værter"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Når aktiveret, blokeres anmodninger til kendte CDN-domæner uden en medfølgende lokal kopi i stedet for at blive videresendt.",
+      "label": "Bloker manglende ressourcer",
+      "setError": "Kunne ikke opdatere indstillingen for blokering af manglende ressourcer: {{error}}"
+    },
+    "counter": {
+      "label": "Lokalt serverede ressourcer",
+      "perLibrary": "Pr. bibliotek",
+      "reset": "Nulstil tæller",
+      "resetError": "Kunne ikke nulstille tælleren: {{error}}",
+      "sinceInstall": "Siden installation",
+      "sinceReset": "Siden sidste nulstilling",
+      "perCDN": "Pr. CDN",
+      "cacheNote": "Cachelagrede ressourcer leveres af browseren og tæller først, efter at cachen er ryddet.",
+      "total": "I alt",
+      "filterListHits": "Filterlistetræf",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Mappe med filer, som de brugerdefinerede ressourcekortlægninger henviser til.",
+      "helper": "Lad være tom for at deaktivere brugerdefinerede ressourcer.",
+      "label": "Mappe til brugerdefinerede ressourcer",
+      "setError": "Kunne ikke angive mappen til brugerdefinerede ressourcer: {{error}}"
+    },
+    "enable": {
+      "description": "Server indbyggede kopier af populære CDN-biblioteker i stedet for at downloade dem fra eksterne CDN'er.",
+      "label": "Lokal ressourcermotor",
+      "setError": "Kunne ikke opdatere indstillingen for den lokale ressourcermotor: {{error}}"
+    },
+    "importExport": {
+      "export": "Eksporter kortlægninger",
+      "exportError": "Kunne ikke eksportere brugerdefinerede ressourcekortlægninger: {{error}}",
+      "exportSuccess": "Brugerdefinerede ressourcekortlægninger eksporteret",
+      "import": "Importer kortlægninger",
+      "importError": "Kunne ikke importere brugerdefinerede ressourcekortlægninger: {{error}}",
+      "importSuccess": "Brugerdefinerede ressourcekortlægninger importeret",
+      "label": "Brugerdefinerede ressourcekortlægninger"
+    },
+    "libraries": {
+      "description": "Vælg, hvilke biblioteker der kan serveres lokalt.",
+      "label": "Biblioteker",
+      "toggleError": "Kunne ikke opdatere biblioteket: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Kunne ikke importere filterlister: {{error}}",
+    "import": "Importér",
+    "successMessage": "Brugerdefinerede filterlister importeret"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Porten, som PAC-serveren (proxy auto-configuration) lytter på (0 for tilfældig).",
+    "helper": "Brug af en port under 1024 kan kræve forhøjede rettigheder.",
+    "label": "PAC-serverport",
+    "setError": "Kunne ikke angive PAC-serverporten: {{error}}"
+  },
+  "portInput": {
+    "description": "Porten, som proxyserveren lytter på (0 for tilfældig).",
+    "helper": "Brug af en port under 1024 kan kræve forhøjede rettigheder.",
+    "label": "Proxyport"
+  },
+  "requestLog": {
+    "emptyState": "Start med at browse for at se blokerede anmodninger.",
+    "filterName": "Filternavn",
+    "local": "Lokal",
+    "localBlocked": "Manglende ressource blokeret",
+    "method": "Metode",
+    "process": "Proces",
+    "processName": "Navn",
+    "processPath": "Sti",
+    "redirectedTo": "Videresendt til",
+    "referer": "Referer",
+    "request": "Anmodning",
+    "rule": "Regel",
+    "rules": "Regler",
+    "url": "URL",
+    "version": "Version",
+    "versionUpgraded": "Nyere version leveret end anmodet",
+    "versionDowngraded": "Ældre version leveret end anmodet"
+  },
+  "rules": {
+    "help": "Hjælp",
+    "placeholder": "Tilføj dine brugerdefinerede regler her..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "ændringslog",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Version"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Vælg dit foretrukne sprog",
+      "label": "Sprog"
+    },
+    "sections": {
+      "advanced": "Avanceret",
+      "app": "App",
+      "localResources": "Lokale ressourcer"
+    },
+    "theme": {
+      "chooseTheme": "Vælg et tema",
+      "dark": "Mørk",
+      "light": "Lys",
+      "system": "Følg systemtemaet"
+    },
+    "updates": {
+      "automaticUpdates": "Download opdateringer automatisk",
+      "description": "Når aktiveret, vil Zen automatisk tjekke for opdateringer",
+      "disableError": "Kunne ikke deaktivere automatiske opdateringer: {{error}}",
+      "enableError": "Kunne ikke aktivere automatiske opdateringer: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Start",
+    "startError": "Kunne ikke starte proxyen: {{error}}",
+    "stop": "Stop",
+    "stopError": "Kunne ikke stoppe proxyen: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

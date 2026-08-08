@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "الخادم الوسيط غير نشط. انقر فوق الزر أدناه لتنشيطه.",
+      "inactive": "فعّل الخادم الوسيط لعرض الطلبات المحظورة"
+    },
+    "tabs": {
+      "filterLists": "قوائم التصفية",
+      "home": "الرئيسية",
+      "rules": "القواعد",
+      "settings": "الإعدادات"
+    },
+    "update": {
+      "restart": "إعادة التشغيل",
+      "restartFailed": "تعذّرت إعادة تشغيل التطبيق: {{error}}",
+      "updateAvailable": "يتوفر إصدار جديد من Zen."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "إضافة تطبيق",
+    "allowlistMode": "استخدام الخادم الوسيط للتطبيقات المحددة فقط",
+    "blocklistMode": "استخدام الخادم الوسيط لجميع التطبيقات باستثناء المحددة",
+    "description": "اختر التطبيقات التي يجب أن تستخدم خادم Zen الوسيط.",
+    "emptyAllowlistWarning": "لم يتم تحديد أي تطبيق. سيتجاوز كل حركة المرور Zen.",
+    "label": "توجيه التطبيقات",
+    "removeApp": "إزالة التطبيق",
+    "saveError": "تعذّر حفظ إعدادات التوجيه: {{error}}",
+    "selectError": "تعذّر تحديد التطبيق: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "المنفذ الذي يستخدمه خادم الأصول الداخلي لحقن البرامج النصية والأنماط.",
+    "helper": "قد يتطلب استخدام منفذ أقل من 1024 صلاحيات مرتفعة.",
+    "label": "منفذ خادم الأصول",
+    "setError": "تعذّر تعيين منفذ خادم الأصول: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "تشغيل Zen تلقائيًا عند تسجيل الدخول",
+    "disableError": "تعذّر إيقاف التشغيل التلقائي: {{error}}",
+    "enableError": "تعذّر تشغيل التشغيل التلقائي: {{error}}",
+    "label": "التشغيل التلقائي"
+  },
+  "common": {
+    "stopProxyToAddFilter": "أوقف الخادم الوسيط لإضافة قائمة تصفية جديدة",
+    "stopProxyToDeleteFilter": "أوقف الخادم الوسيط لحذف قائمة التصفية هذه",
+    "stopProxyToEditRules": "أوقف الخادم الوسيط لتعديل القواعد المخصصة",
+    "stopProxyToModify": "أوقف الخادم الوسيط لتعديل هذا الإعداد",
+    "stopProxyToToggleFilter": "أوقف الخادم الوسيط لتفعيل/إيقاف قائمة التصفية هذه"
+  },
+  "createFilterList": {
+    "addError": "تعذّرت إضافة قائمة التصفية: {{error}}",
+    "addList": "إضافة قائمة تصفية",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "تبرع",
+  "exportDebugDataButton": {
+    "error": "تعذّر تصدير بيانات تصحيح الأخطاء: {{error}}",
+    "label": "تصدير بيانات تصحيح الأخطاء",
+    "success": "تم نسخ بيانات تصحيح الأخطاء إلى الحافظة",
+    "tooltip": "نسخ معلومات تصحيح الأخطاء إلى الحافظة"
+  },
+  "exportFilterList": {
+    "errorMessage": "تعذّر تصدير قوائم التصفية: {{error}}",
+    "export": "تصدير",
+    "successMessage": "تم تصدير قوائم التصفية المخصصة بنجاح"
+  },
+  "exportLogsButton": {
+    "label": "تصدير السجلات",
+    "openError": "تعذّر فتح مجلد السجلات: {{error}}",
+    "tooltip": "فتح مجلد السجلات"
+  },
+  "filterLists": {
+    "copied": "تم النسخ",
+    "copy": "نسخ الرابط",
+    "delete": "حذف",
+    "goTo": "فتح في المتصفح",
+    "more": "المزيد",
+    "removeError": "تعذّرت إزالة قائمة التصفية: {{error}}",
+    "toggleError": "تعذّر تبديل قائمة التصفية: {{error}}",
+    "trusted": "موثوق",
+    "whatIsThis": "ما هذا"
+  },
+  "filterTypes": {
+    "ads": "الإعلانات",
+    "custom": "مخصص",
+    "digitalWellbeing": "الرفاهية الرقمية",
+    "general": "عام",
+    "malware": "البرمجيات الخبيثة",
+    "privacy": "الخصوصية",
+    "regional": "إقليمي"
+  },
+  "ignoredHostsInput": {
+    "description": "المضيفات المستثناة من الخادم الوسيط. استخدمها للخدمات ذات تثبيت الشهادات أو المتأثرة بالخادم الوسيط.",
+    "helper": "أدخل مضيفًا واحدًا في كل سطر.",
+    "label": "المضيفات المتجاهلة"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "عند التفعيل، يتم حظر الطلبات إلى نطاقات CDN المعروفة التي لا تحتوي على نسخة محلية مرفوعة بدلاً من إعادة توجيهها.",
+      "label": "حظر الموارد المفقودة",
+      "setError": "تعذّر تحديث إعداد حظر الموارد المفقودة: {{error}}"
+    },
+    "counter": {
+      "label": "الموارد المقدَّمة محليًا",
+      "perLibrary": "حسب المكتبة",
+      "reset": "إعادة تعيين العداد",
+      "resetError": "تعذّرت إعادة تعيين العداد: {{error}}",
+      "sinceInstall": "منذ التثبيت",
+      "sinceReset": "منذ آخر إعادة تعيين",
+      "perCDN": "حسب CDN",
+      "cacheNote": "يتم تقديم الموارد المخزنة مؤقتًا بواسطة المتصفح ولا تُحتسب إلا بعد مسح ذاكرة التخزين المؤقت.",
+      "total": "الإجمالي",
+      "filterListHits": "إصابات قوائم التصفية",
+      "filter": "المرشح",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "الدليل الذي يحتوي على الملفات التي تشير إليها تعيينات الموارد المخصصة.",
+      "helper": "اتركه فارغًا لتعطيل الموارد المخصصة.",
+      "label": "دليل الموارد المخصصة",
+      "setError": "تعذّر تعيين دليل الموارد المخصصة: {{error}}"
+    },
+    "enable": {
+      "description": "تقديم نسخ مرفوعة من مكتبات CDN الشائعة بدلاً من تنزيلها من شبكات CDN البعيدة.",
+      "label": "محرك الموارد المحلية",
+      "setError": "تعذّر تحديث إعداد محرك الموارد المحلية: {{error}}"
+    },
+    "importExport": {
+      "export": "تصدير التعيينات",
+      "exportError": "تعذّر تصدير تعيينات الموارد المخصصة: {{error}}",
+      "exportSuccess": "تم تصدير تعيينات الموارد المخصصة بنجاح",
+      "import": "استيراد التعيينات",
+      "importError": "تعذّر استيراد تعيينات الموارد المخصصة: {{error}}",
+      "importSuccess": "تم استيراد تعيينات الموارد المخصصة بنجاح",
+      "label": "تعيينات الموارد المخصصة"
+    },
+    "libraries": {
+      "description": "اختر المكتبات التي يمكن تقديمها محليًا.",
+      "label": "المكتبات",
+      "toggleError": "تعذّر تحديث المكتبة: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "تعذّر استيراد قوائم التصفية: {{error}}",
+    "import": "استيراد",
+    "successMessage": "تم استيراد قوائم التصفية المخصصة بنجاح"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "المنفذ الذي يستمع عليه خادم PAC (الإعداد التلقائي للخادم الوسيط) (0 لعشوائي).",
+    "helper": "قد يتطلب استخدام منفذ أقل من 1024 صلاحيات مرتفعة.",
+    "label": "منفذ خادم PAC",
+    "setError": "تعذّر تعيين منفذ خادم PAC: {{error}}"
+  },
+  "portInput": {
+    "description": "المنفذ الذي يستمع عليه الخادم الوسيط (0 لعشوائي).",
+    "helper": "قد يتطلب استخدام منفذ أقل من 1024 صلاحيات مرتفعة.",
+    "label": "منفذ الخادم الوسيط"
+  },
+  "requestLog": {
+    "emptyState": "ابدأ التصفح لرؤية الطلبات المحظورة.",
+    "filterName": "اسم المرشح",
+    "local": "محلي",
+    "localBlocked": "تم حظر المورد المفقود",
+    "method": "الطريقة",
+    "process": "العملية",
+    "processName": "الاسم",
+    "processPath": "المسار",
+    "redirectedTo": "تمت إعادة التوجيه إلى",
+    "referer": "المرجع",
+    "request": "الطلب",
+    "rule": "قاعدة",
+    "rules": "القواعد",
+    "url": "URL",
+    "version": "النسخة",
+    "versionUpgraded": "تم تقديم إصدار أحدث من المطلوب",
+    "versionDowngraded": "تم تقديم إصدار أقدم من المطلوب"
+  },
+  "rules": {
+    "help": "مساعدة",
+    "placeholder": "أضف قواعدك المخصصة هنا..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "سجل التغييرات",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "الإصدار"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "اختر لغتك المفضلة",
+      "label": "اللغة"
+    },
+    "sections": {
+      "advanced": "متقدم",
+      "app": "التطبيق",
+      "localResources": "الموارد المحلية"
+    },
+    "theme": {
+      "chooseTheme": "اختر سمة",
+      "dark": "داكن",
+      "light": "فاتح",
+      "system": "اتباع سمة النظام"
+    },
+    "updates": {
+      "automaticUpdates": "تنزيل التحديثات تلقائيًا",
+      "description": "عند التفعيل، سيتحقق Zen تلقائيًا من وجود تحديثات",
+      "disableError": "تعذّر إيقاف التحديثات التلقائية: {{error}}",
+      "enableError": "تعذّر تفعيل التحديثات التلقائية: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "تشغيل",
+    "startError": "تعذّر تشغيل الخادم الوسيط: {{error}}",
+    "stop": "إيقاف",
+    "stopError": "تعذّر إيقاف الخادم الوسيط: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

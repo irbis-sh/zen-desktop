@@ -93,6 +93,52 @@
     "helper": "Inserisci un host per riga.",
     "label": "Host ignorati"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "Se attivata, le richieste a domini CDN noti senza una copia locale inclusa vengono bloccate invece di essere inoltrate.",
+      "label": "Blocca risorse mancanti",
+      "setError": "Impossibile aggiornare l'impostazione di blocco delle risorse mancanti: {{error}}"
+    },
+    "counter": {
+      "label": "Risorse servite localmente",
+      "perLibrary": "Per libreria",
+      "reset": "Reimposta contatore",
+      "resetError": "Impossibile reimpostare il contatore: {{error}}",
+      "sinceInstall": "Dall'installazione",
+      "sinceReset": "Dall'ultimo ripristino",
+      "perCDN": "Per CDN",
+      "cacheNote": "Le risorse in cache vengono servite dal browser e contano solo dopo lo svuotamento della cache.",
+      "total": "Totale",
+      "filterListHits": "Riscontri delle liste di filtri",
+      "filter": "Filtri",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Directory contenente i file referenziati dai mapping delle risorse personalizzate.",
+      "helper": "Lasciare vuoto per disabilitare le risorse personalizzate.",
+      "label": "Directory risorse personalizzate",
+      "setError": "Impossibile impostare la directory delle risorse personalizzate: {{error}}"
+    },
+    "enable": {
+      "description": "Servi copie incluse di librerie CDN popolari invece di scaricarle da CDN remoti.",
+      "label": "Motore risorse locali",
+      "setError": "Impossibile aggiornare l'impostazione del motore risorse locali: {{error}}"
+    },
+    "importExport": {
+      "export": "Esporta mapping",
+      "exportError": "Impossibile esportare i mapping delle risorse personalizzate: {{error}}",
+      "exportSuccess": "Mapping delle risorse personalizzate esportati",
+      "import": "Importa mapping",
+      "importError": "Impossibile importare i mapping delle risorse personalizzate: {{error}}",
+      "importSuccess": "Mapping delle risorse personalizzate importati",
+      "label": "Mapping risorse personalizzate"
+    },
+    "libraries": {
+      "description": "Scegli quali librerie possono essere servite localmente.",
+      "label": "Librerie",
+      "toggleError": "Impossibile aggiornare la libreria: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Impossibile importare le liste di filtri: {{error}}",
     "import": "Importa",
@@ -137,6 +183,8 @@
     "label": "Porta del proxy"
   },
   "requestLog": {
+    "local": "Locale",
+    "localBlocked": "Risorsa mancante bloccata",
     "emptyState": "Inizia a navigare per vedere le richieste bloccate.",
     "filterName": "Nome filtro",
     "method": "Metodo",
@@ -148,7 +196,10 @@
     "request": "Richiesta",
     "rule": "Regola",
     "rules": "Regole",
-    "url": "URL"
+    "url": "URL",
+    "version": "Versione",
+    "versionUpgraded": "Servita una versione più recente di quella richiesta",
+    "versionDowngraded": "Servita una versione più vecchia di quella richiesta"
   },
   "rules": {
     "help": "Aiuto",
@@ -179,6 +230,7 @@
       "label": "Lingua"
     },
     "sections": {
+      "localResources": "Risorse locali",
       "advanced": "Avanzate",
       "app": "App"
     },

@@ -93,6 +93,52 @@
     "helper": "每行一個主機名稱。",
     "label": "忽略的主機"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "啟用後，對沒有本地內建副本的已知 CDN 網域的請求將被封鎖，而不會轉發。",
+      "label": "封鎖缺失的資源",
+      "setError": "更新封鎖缺失資源設定失敗：{{error}}"
+    },
+    "counter": {
+      "label": "本地提供的資源",
+      "perLibrary": "依程式庫統計",
+      "reset": "重設計數器",
+      "resetError": "重設計數器失敗：{{error}}",
+      "sinceInstall": "自安裝以來",
+      "sinceReset": "自上次重設以來",
+      "perCDN": "依 CDN 統計",
+      "cacheNote": "已快取的資源由瀏覽器提供，清除快取後才會被計數。",
+      "total": "總計",
+      "filterListHits": "過濾清單命中",
+      "filter": "過濾",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "包含自訂資源對應所參照檔案的目錄。",
+      "helper": "留空以停用自訂資源。",
+      "label": "自訂資源目錄",
+      "setError": "設定自訂資源目錄失敗：{{error}}"
+    },
+    "enable": {
+      "description": "提供熱門 CDN 程式庫的內建副本，而非從遠端 CDN 下載。",
+      "label": "本地資源引擎",
+      "setError": "更新本地資源引擎設定失敗：{{error}}"
+    },
+    "importExport": {
+      "export": "匯出對應",
+      "exportError": "匯出自訂資源對應失敗：{{error}}",
+      "exportSuccess": "已成功匯出自訂資源對應",
+      "import": "匯入對應",
+      "importError": "匯入自訂資源對應失敗：{{error}}",
+      "importSuccess": "已成功匯入自訂資源對應",
+      "label": "自訂資源對應"
+    },
+    "libraries": {
+      "description": "選擇可在本地提供的程式庫。",
+      "label": "程式庫",
+      "toggleError": "更新程式庫失敗：{{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "匯入過濾清單失敗：{{error}}",
     "import": "匯入",
@@ -137,6 +183,8 @@
     "label": "代理伺服器連接埠"
   },
   "requestLog": {
+    "local": "本地",
+    "localBlocked": "已封鎖缺失的資源",
     "emptyState": "開始瀏覽以檢視被攔截的請求。",
     "filterName": "過濾器名稱",
     "method": "方法",
@@ -148,7 +196,10 @@
     "request": "請求",
     "rule": "規則",
     "rules": "規則",
-    "url": "網址"
+    "url": "網址",
+    "version": "版本",
+    "versionUpgraded": "提供了比請求更新的版本",
+    "versionDowngraded": "提供了比請求更舊的版本"
   },
   "rules": {
     "help": "說明",
@@ -179,6 +230,7 @@
       "label": "語言"
     },
     "sections": {
+      "localResources": "本地資源",
       "advanced": "進階",
       "app": "應用程式"
     },

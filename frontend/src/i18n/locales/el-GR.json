@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Το διακομιστή μεσολάβησης δεν είναι ενεργό. Κάντε κλικ στο κουμπί παρακάτω για να το ενεργοποιήσετε.",
+      "inactive": "Ενεργοποιήστε το διακομιστή μεσολάβησης για να δείτε τις αποκλεισμένες αιτήσεις"
+    },
+    "tabs": {
+      "filterLists": "Λίστες φίλτρων",
+      "home": "Αρχική",
+      "rules": "Κανόνες",
+      "settings": "Ρυθμίσεις"
+    },
+    "update": {
+      "restart": "Επανεκκίνηση",
+      "restartFailed": "Αποτυχία επανεκκίνησης της εφαρμογής: {{error}}",
+      "updateAvailable": "Διατίθεται νέα έκδοση του Zen."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Προσθήκη εφαρμογής",
+    "allowlistMode": "Διακομιστής μεσολάβησης μόνο για τις επιλεγμένες εφαρμογές",
+    "blocklistMode": "Διακομιστής μεσολάβησης για όλες τις εφαρμογές εκτός από τις επιλεγμένες",
+    "description": "Επιλέξτε ποιες εφαρμογές θα χρησιμοποιούν το διακομιστή μεσολάβησης του Zen.",
+    "emptyAllowlistWarning": "Δεν έχει επιλεγεί καμία εφαρμογή. Όλη η κυκλοφορία θα παρακάμψει το Zen.",
+    "label": "Δρομολόγηση εφαρμογών",
+    "removeApp": "Αφαίρεση εφαρμογής",
+    "saveError": "Αποτυχία αποθήκευσης των ρυθμίσεων δρομολόγησης: {{error}}",
+    "selectError": "Αποτυχία επιλογής εφαρμογής: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Η θύρα που χρησιμοποιεί ο εσωτερικός διακομιστής πόρων για την έγχυση σεναρίων και στυλ.",
+    "helper": "Η χρήση θύρας κάτω από το 1024 μπορεί να απαιτεί αυξημένα δικαιώματα.",
+    "label": "Θύρα διακομιστή πόρων",
+    "setError": "Αποτυχία ορισμού της θύρας του διακομιστή πόρων: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Αυτόματη εκκίνηση του Zen κατά τη σύνδεση",
+    "disableError": "Αποτυχία απενεργοποίησης της αυτόματης εκκίνησης: {{error}}",
+    "enableError": "Αποτυχία ενεργοποίησης της αυτόματης εκκίνησης: {{error}}",
+    "label": "Αυτόματη εκκίνηση"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Σταματήστε το διακομιστή μεσολάβησης για να προσθέσετε μια νέα λίστα φίλτρων",
+    "stopProxyToDeleteFilter": "Σταματήστε το διακομιστή μεσολάβησης για να διαγράψετε αυτή τη λίστα φίλτρων",
+    "stopProxyToEditRules": "Σταματήστε το διακομιστή μεσολάβησης για να τροποποιήσετε τους προσαρμοσμένους κανόνες",
+    "stopProxyToModify": "Σταματήστε το διακομιστή μεσολάβησης για να τροποποιήσετε αυτή τη ρύθμιση",
+    "stopProxyToToggleFilter": "Σταματήστε το διακομιστή μεσολάβησης για να ενεργοποιήσετε/απενεργοποιήσετε αυτή τη λίστα φίλτρων"
+  },
+  "createFilterList": {
+    "addError": "Αποτυχία προσθήκης λίστας φίλτρων: {{error}}",
+    "addList": "Προσθήκη λίστας φίλτρων",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Δωρεά",
+  "exportDebugDataButton": {
+    "error": "Αποτυχία εξαγωγής δεδομένων εντοπισμού σφαλμάτων: {{error}}",
+    "label": "Εξαγωγή δεδομένων εντοπισμού σφαλμάτων",
+    "success": "Τα δεδομένα εντοπισμού σφαλμάτων αντιγράφηκαν στο πρόχειρο",
+    "tooltip": "Αντιγραφή πληροφοριών εντοπισμού σφαλμάτων στο πρόχειρο"
+  },
+  "exportFilterList": {
+    "errorMessage": "Αποτυχία εξαγωγής λιστών φίλτρων: {{error}}",
+    "export": "Εξαγωγή",
+    "successMessage": "Οι προσαρμοσμένες λίστες φίλτρων εξήχθησαν επιτυχώς"
+  },
+  "exportLogsButton": {
+    "label": "Εξαγωγή αρχείων καταγραφής",
+    "openError": "Αποτυχία ανοίγματος του φακέλου αρχείων καταγραφής: {{error}}",
+    "tooltip": "Άνοιγμα φακέλου αρχείων καταγραφής"
+  },
+  "filterLists": {
+    "copied": "Αντιγράφηκε",
+    "copy": "Αντιγραφή συνδέσμου",
+    "delete": "Διαγραφή",
+    "goTo": "Άνοιγμα στο πρόγραμμα περιήγησης",
+    "more": "Περισσότερα",
+    "removeError": "Αποτυχία αφαίρεσης λίστας φίλτρων: {{error}}",
+    "toggleError": "Αποτυχία εναλλαγής λίστας φίλτρων: {{error}}",
+    "trusted": "Αξιόπιστη",
+    "whatIsThis": "Τι είναι αυτό"
+  },
+  "filterTypes": {
+    "ads": "Διαφημίσεις",
+    "custom": "Προσαρμοσμένο",
+    "digitalWellbeing": "Ψηφιακή ευεξία",
+    "general": "Γενικό",
+    "malware": "Κακόβουλο λογισμικό",
+    "privacy": "Απόρρητο",
+    "regional": "Περιφερειακό"
+  },
+  "ignoredHostsInput": {
+    "description": "Κεντρικοί υπολογιστές που εξαιρούνται από το διακομιστή μεσολάβησης. Χρησιμοποιήστε το για υπηρεσίες με καρφίτσωμα πιστοποιητικών ή που επηρεάζονται από το διακομιστή μεσολάβησης.",
+    "helper": "Εισάγετε έναν κεντρικό υπολογιστή ανά γραμμή.",
+    "label": "Αγνοούμενοι κεντρικοί υπολογιστές"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Όταν είναι ενεργοποιημένο, τα αιτήματα σε γνωστούς τομείς CDN χωρίς ενσωματωμένο τοπικό αντίγραφο αποκλείονται αντί να προωθούνται.",
+      "label": "Αποκλεισμός πόρων που λείπουν",
+      "setError": "Αποτυχία ενημέρωσης της ρύθμισης αποκλεισμού πόρων που λείπουν: {{error}}"
+    },
+    "counter": {
+      "label": "Πόροι που εξυπηρετήθηκαν τοπικά",
+      "perLibrary": "Ανά βιβλιοθήκη",
+      "reset": "Επαναφορά μετρητή",
+      "resetError": "Αποτυχία επαναφοράς μετρητή: {{error}}",
+      "sinceInstall": "Από την εγκατάσταση",
+      "sinceReset": "Από την τελευταία επαναφορά",
+      "perCDN": "Ανά CDN",
+      "cacheNote": "Οι πόροι στην προσωρινή μνήμη εξυπηρετούνται από το πρόγραμμα περιήγησης και μετρούνται μόνο μετά την εκκαθάριση της μνήμης.",
+      "total": "Σύνολο",
+      "filterListHits": "Χτυπήματα λιστών φίλτρων",
+      "filter": "Φίλτρο",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Κατάλογος με τα αρχεία στα οποία αναφέρονται οι προσαρμοσμένες αντιστοιχίσεις πόρων.",
+      "helper": "Αφήστε κενό για απενεργοποίηση των προσαρμοσμένων πόρων.",
+      "label": "Κατάλογος προσαρμοσμένων πόρων",
+      "setError": "Αποτυχία ορισμού καταλόγου προσαρμοσμένων πόρων: {{error}}"
+    },
+    "enable": {
+      "description": "Εξυπηρέτηση ενσωματωμένων αντιγράφων δημοφιλών βιβλιοθηκών CDN αντί για λήψη τους από απομακρυσμένα CDN.",
+      "label": "Μηχανή τοπικών πόρων",
+      "setError": "Αποτυχία ενημέρωσης της ρύθμισης της μηχανής τοπικών πόρων: {{error}}"
+    },
+    "importExport": {
+      "export": "Εξαγωγή αντιστοιχίσεων",
+      "exportError": "Αποτυχία εξαγωγής προσαρμοσμένων αντιστοιχίσεων πόρων: {{error}}",
+      "exportSuccess": "Οι προσαρμοσμένες αντιστοιχίσεις πόρων εξήχθησαν",
+      "import": "Εισαγωγή αντιστοιχίσεων",
+      "importError": "Αποτυχία εισαγωγής προσαρμοσμένων αντιστοιχίσεων πόρων: {{error}}",
+      "importSuccess": "Οι προσαρμοσμένες αντιστοιχίσεις πόρων εισήχθησαν",
+      "label": "Προσαρμοσμένες αντιστοιχίσεις πόρων"
+    },
+    "libraries": {
+      "description": "Επιλέξτε ποιες βιβλιοθήκες μπορούν να εξυπηρετηθούν τοπικά.",
+      "label": "Βιβλιοθήκες",
+      "toggleError": "Αποτυχία ενημέρωσης βιβλιοθήκης: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Αποτυχία εισαγωγής λιστών φίλτρων: {{error}}",
+    "import": "Εισαγωγή",
+    "successMessage": "Οι προσαρμοσμένες λίστες φίλτρων εισήχθησαν επιτυχώς"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Η θύρα στην οποία ακούει ο διακομιστής PAC (αυτόματη διαμόρφωση διακομιστή μεσολάβησης) (0 για τυχαία).",
+    "helper": "Η χρήση θύρας κάτω από το 1024 μπορεί να απαιτεί αυξημένα δικαιώματα.",
+    "label": "Θύρα διακομιστή PAC",
+    "setError": "Αποτυχία ορισμού της θύρας του διακομιστή PAC: {{error}}"
+  },
+  "portInput": {
+    "description": "Η θύρα στην οποία ακούει ο διακομιστής μεσολάβησης (0 για τυχαία).",
+    "helper": "Η χρήση θύρας κάτω από το 1024 μπορεί να απαιτεί αυξημένα δικαιώματα.",
+    "label": "Θύρα διακομιστή μεσολάβησης"
+  },
+  "requestLog": {
+    "emptyState": "Ξεκινήστε την περιήγηση για να δείτε τις αποκλεισμένες αιτήσεις.",
+    "filterName": "Όνομα φίλτρου",
+    "local": "Τοπικό",
+    "localBlocked": "Ο πόρος που λείπει αποκλείστηκε",
+    "method": "Μέθοδος",
+    "process": "Διεργασία",
+    "processName": "Όνομα",
+    "processPath": "Διαδρομή",
+    "redirectedTo": "Ανακατευθύνθηκε σε",
+    "referer": "Παραπομπέας",
+    "request": "Αίτηση",
+    "rule": "Κανόνας",
+    "rules": "Κανόνες",
+    "url": "URL",
+    "version": "Έκδοση",
+    "versionUpgraded": "Εξυπηρετήθηκε νεότερη έκδοση από την αιτούμενη",
+    "versionDowngraded": "Εξυπηρετήθηκε παλαιότερη έκδοση από την αιτούμενη"
+  },
+  "rules": {
+    "help": "Βοήθεια",
+    "placeholder": "Προσθέστε τους προσαρμοσμένους κανόνες σας εδώ..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "ιστορικό αλλαγών",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Έκδοση"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Επιλέξτε την προτιμώμενη γλώσσα σας",
+      "label": "Γλώσσα"
+    },
+    "sections": {
+      "advanced": "Για προχωρημένους",
+      "app": "Εφαρμογή",
+      "localResources": "Τοπικοί πόροι"
+    },
+    "theme": {
+      "chooseTheme": "Επιλέξτε θέμα",
+      "dark": "Σκοτεινό",
+      "light": "Φωτεινό",
+      "system": "Ακολουθήστε το θέμα του συστήματος"
+    },
+    "updates": {
+      "automaticUpdates": "Αυτόματη λήψη ενημερώσεων",
+      "description": "Όταν είναι ενεργοποιημένο, το Zen θα ελέγχει αυτόματα για ενημερώσεις",
+      "disableError": "Αποτυχία απενεργοποίησης των αυτόματων ενημερώσεων: {{error}}",
+      "enableError": "Αποτυχία ενεργοποίησης των αυτόματων ενημερώσεων: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Εκκίνηση",
+    "startError": "Αποτυχία εκκίνησης του διακομιστή μεσολάβησης: {{error}}",
+    "stop": "Διακοπή",
+    "stopError": "Αποτυχία διακοπής του διακομιστή μεσολάβησης: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxy-a ez dago aktibo. Aktibatzeko, egin klik beheko botoian.",
+      "inactive": "Aktibatu proxya blokeatutako eskaerak ikusteko"
+    },
+    "tabs": {
+      "filterLists": "Iragazki-zerrendak",
+      "home": "Hasiera",
+      "rules": "Arauak",
+      "settings": "Ezarpenak"
+    },
+    "update": {
+      "restart": "Berrabiarazi",
+      "restartFailed": "Ezin izan da aplikazioa berrabiarazi: {{error}}",
+      "updateAvailable": "Zen-en bertsio berri bat dago eskuragarri."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Gehitu aplikazioa",
+    "allowlistMode": "Hautatutako aplikazioek soilik erabiltzen dute proxya",
+    "blocklistMode": "Hautatutakoak izan ezik, aplikazio guztiek erabiltzen dute proxya",
+    "description": "Aukeratu Zeinek erabili behar duten Zen-en proxya.",
+    "emptyAllowlistWarning": "Ez dago aplikaziorik hautatuta. Trafiko guztiak Zen saihestuko du.",
+    "label": "Aplikazioen bideraketa",
+    "removeApp": "Kendu aplikazioa",
+    "saveError": "Ezin izan dira bideraketa-ezarpenak gorde: {{error}}",
+    "selectError": "Ezin izan da aplikazioa hautatu: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Barneko baliabide-zerbitzariak scriptak eta estiloak injektatzeko erabiltzen duen ataka.",
+    "helper": "1024tik beherako ataka erabiltzeak pribilegio altuak eska ditzake.",
+    "label": "Baliabide-zerbitzariaren ataka",
+    "setError": "Ezin izan da baliabide-zerbitzariaren ataka ezarri: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Hasi Zen automatikoki saioa hastean",
+    "disableError": "Ezin izan da autostart-a desaktibatu: {{error}}",
+    "enableError": "Ezin izan da autostart-a aktibatu: {{error}}",
+    "label": "Autostart"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Gelditu proxya iragazki-zerrenda berri bat gehitzeko",
+    "stopProxyToDeleteFilter": "Gelditu proxya iragazki-zerrenda hau ezabatzeko",
+    "stopProxyToEditRules": "Gelditu proxya arau pertsonalizatuak aldatzeko",
+    "stopProxyToModify": "Gelditu proxya ezarpen hau aldatzeko",
+    "stopProxyToToggleFilter": "Gelditu proxya iragazki-zerrenda hau aktibatu/desaktibatzeko"
+  },
+  "createFilterList": {
+    "addError": "Ezin izan da iragazki-zerrenda gehitu: {{error}}",
+    "addList": "Gehitu iragazki-zerrenda",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Eman dohaintza",
+  "exportDebugDataButton": {
+    "error": "Ezin izan dira arazketa-datuak esportatu: {{error}}",
+    "label": "Esportatu arazketa-datuak",
+    "success": "Arazketa-datuak arbelean kopiatu dira",
+    "tooltip": "Kopiatu arazketa-informazioa arbelean"
+  },
+  "exportFilterList": {
+    "errorMessage": "Ezin izan dira iragazki-zerrendak esportatu: {{error}}",
+    "export": "Esportatu",
+    "successMessage": "Iragazki-zerrenda pertsonalizatuak behar bezala esportatu dira"
+  },
+  "exportLogsButton": {
+    "label": "Esportatu erregistroak",
+    "openError": "Ezin izan da erregistroen karpeta ireki: {{error}}",
+    "tooltip": "Ireki erregistroen karpeta"
+  },
+  "filterLists": {
+    "copied": "Kopiatuta",
+    "copy": "Kopiatu esteka",
+    "delete": "Ezabatu",
+    "goTo": "Ireki arakatzailean",
+    "more": "Gehiago",
+    "removeError": "Ezin izan da iragazki-zerrenda kendu: {{error}}",
+    "toggleError": "Ezin izan da iragazki-zerrenda aldatu: {{error}}",
+    "trusted": "Konfiantzazkoa",
+    "whatIsThis": "Zer da hau"
+  },
+  "filterTypes": {
+    "ads": "Iragarkiak",
+    "custom": "Pertsonalizatua",
+    "digitalWellbeing": "Ongizate digitala",
+    "general": "Orokorra",
+    "malware": "Malwarea",
+    "privacy": "Pribatutasuna",
+    "regional": "Eskualdekoa"
+  },
+  "ignoredHostsInput": {
+    "description": "Proxytik kanpo utzitako ostalariak. Erabili ziurtagiriak finkatuta dituzten edo proxya oztopatzen duten zerbitzuetarako.",
+    "helper": "Sartu ostalari bat lerro bakoitzeko.",
+    "label": "Baztertutako ostalariak"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Aktibatuta dagoenean, tokiko kopiarik ez duten CDN domeinu ezagunetarako eskaerak blokeatu egiten dira, birbidali beharrean.",
+      "label": "Blokeatu falta diren baliabideak",
+      "setError": "Ezin izan da falta diren baliabideak blokeatzeko ezarpena eguneratu: {{error}}"
+    },
+    "counter": {
+      "label": "Tokian zerbitzatutako baliabideak",
+      "perLibrary": "Liburutegika",
+      "reset": "Berrezarri kontagailua",
+      "resetError": "Ezin izan da kontagailua berrezarri: {{error}}",
+      "sinceInstall": "Instalaziotik",
+      "sinceReset": "Azken berrezarketatik",
+      "perCDN": "CDN bakoitzeko",
+      "cacheNote": "Cachean dauden baliabideak arakatzaileak ematen ditu eta cachea garbitu ondoren soilik zenbatzen dira.",
+      "total": "Guztira",
+      "filterListHits": "Iragazki-zerrenden kolpeak",
+      "filter": "Iragazkia",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Baliabide pertsonalizatuen mapaketek aipatzen dituzten fitxategiak dituen karpeta.",
+      "helper": "Utzi hutsik baliabide pertsonalizatuak desgaitzeko.",
+      "label": "Baliabide pertsonalizatuen karpeta",
+      "setError": "Ezin izan da baliabide pertsonalizatuen karpeta ezarri: {{error}}"
+    },
+    "enable": {
+      "description": "CDN liburutegi ezagunen kopiak eskaini urrutiko CDNetatik deskargatu beharrean.",
+      "label": "Baliabide lokalaren motorra",
+      "setError": "Ezin izan da baliabide lokalaren motorraren ezarpena eguneratu: {{error}}"
+    },
+    "importExport": {
+      "export": "Esportatu mapaketak",
+      "exportError": "Ezin izan dira baliabide pertsonalizatuen mapaketak esportatu: {{error}}",
+      "exportSuccess": "Baliabide pertsonalizatuen mapaketak esportatu dira",
+      "import": "Inportatu mapaketak",
+      "importError": "Ezin izan dira baliabide pertsonalizatuen mapaketak inportatu: {{error}}",
+      "importSuccess": "Baliabide pertsonalizatuen mapaketak inportatu dira",
+      "label": "Baliabide pertsonalizatuen mapaketak"
+    },
+    "libraries": {
+      "description": "Aukeratu zein liburutegi zerbitzatu daitezkeen tokian.",
+      "label": "Liburutegiak",
+      "toggleError": "Ezin izan da liburutegia eguneratu: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Ezin izan dira iragazki-zerrendak inportatu: {{error}}",
+    "import": "Inportatu",
+    "successMessage": "Iragazki-zerrenda pertsonalizatuak behar bezala inportatu dira"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "PAC zerbitzariak (proxyaren konfigurazio automatikoa) entzuten duen ataka (0 ausazkorako).",
+    "helper": "1024tik beherako ataka erabiltzeak pribilegio altuak eska ditzake.",
+    "label": "PAC zerbitzariaren ataka",
+    "setError": "Ezin izan da PAC zerbitzariaren ataka ezarri: {{error}}"
+  },
+  "portInput": {
+    "description": "Proxy zerbitzariak entzuten duen ataka (0 ausazkorako).",
+    "helper": "1024tik beherako ataka erabiltzeak pribilegio altuak eska ditzake.",
+    "label": "Proxyaren ataka"
+  },
+  "requestLog": {
+    "emptyState": "Hasi arakatzen blokeatutako eskaerak ikusteko.",
+    "filterName": "Iragazkiaren izena",
+    "local": "Tokikoa",
+    "localBlocked": "Falta den baliabidea blokeatu da",
+    "method": "Metodoa",
+    "process": "Prozesua",
+    "processName": "Izena",
+    "processPath": "Bidea",
+    "redirectedTo": "Hemendik birbideratuta",
+    "referer": "Erreferentea",
+    "request": "Eskaera",
+    "rule": "Araua",
+    "rules": "Arauak",
+    "url": "URL",
+    "version": "Bertsioa",
+    "versionUpgraded": "Eskatutakoa baino bertsio berriagoa eman da",
+    "versionDowngraded": "Eskatutakoa baino bertsio zaharragoa eman da"
+  },
+  "rules": {
+    "help": "Laguntza",
+    "placeholder": "Gehitu zure arau pertsonalizatuak hemen..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "aldaketa-egunkaria",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Bertsioa"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Hautatu zure hizkuntza gogokoena",
+      "label": "Hizkuntza"
+    },
+    "sections": {
+      "advanced": "Aurreratua",
+      "app": "Aplikazioa",
+      "localResources": "Baliabide lokalak"
+    },
+    "theme": {
+      "chooseTheme": "Aukeratu gai bat",
+      "dark": "Iluna",
+      "light": "Argia",
+      "system": "Jarraitu sistema-gaiari"
+    },
+    "updates": {
+      "automaticUpdates": "Deskargatu eguneraketak automatikoki",
+      "description": "Aktibatuta dagoenean, Zenek automatikoki egiaztatuko du eguneraketarik dagoen",
+      "disableError": "Ezin izan dira eguneraketa automatikoak desaktibatu: {{error}}",
+      "enableError": "Ezin izan dira eguneraketa automatikoak aktibatu: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Hasi",
+    "startError": "Ezin izan da proxya abiarazi: {{error}}",
+    "stop": "Gelditu",
+    "stopError": "Ezin izan da proxya gelditu: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

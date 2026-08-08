@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxy tidak aktif. Klik tombol di bawah untuk mengaktifkannya.",
+      "inactive": "Aktifkan proxy untuk melihat permintaan yang diblokir"
+    },
+    "tabs": {
+      "filterLists": "Daftar filter",
+      "home": "Beranda",
+      "rules": "Aturan",
+      "settings": "Pengaturan"
+    },
+    "update": {
+      "restart": "Mulai ulang",
+      "restartFailed": "Gagal memulai ulang aplikasi: {{error}}",
+      "updateAvailable": "Versi baru Zen tersedia."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Tambah aplikasi",
+    "allowlistMode": "Hanya aplikasi terpilih yang menggunakan proxy",
+    "blocklistMode": "Semua aplikasi kecuali yang terpilih menggunakan proxy",
+    "description": "Pilih aplikasi yang sebaiknya menggunakan proxy Zen.",
+    "emptyAllowlistWarning": "Tidak ada aplikasi yang dipilih. Semua lalu lintas akan melewati Zen.",
+    "label": "Perutean aplikasi",
+    "removeApp": "Hapus aplikasi",
+    "saveError": "Gagal menyimpan pengaturan perutean: {{error}}",
+    "selectError": "Gagal memilih aplikasi: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Port yang digunakan server aset internal untuk menyuntikkan skrip dan gaya.",
+    "helper": "Menggunakan port di bawah 1024 mungkin memerlukan hak istimewa yang lebih tinggi.",
+    "label": "Port server aset",
+    "setError": "Gagal mengatur port server aset: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Mulai Zen secara otomatis saat masuk",
+    "disableError": "Gagal menonaktifkan mulai otomatis: {{error}}",
+    "enableError": "Gagal mengaktifkan mulai otomatis: {{error}}",
+    "label": "Mulai otomatis"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Hentikan proxy untuk menambahkan daftar filter baru",
+    "stopProxyToDeleteFilter": "Hentikan proxy untuk menghapus daftar filter ini",
+    "stopProxyToEditRules": "Hentikan proxy untuk mengubah aturan kustom",
+    "stopProxyToModify": "Hentikan proxy untuk mengubah pengaturan ini",
+    "stopProxyToToggleFilter": "Hentikan proxy untuk mengaktifkan/menonaktifkan daftar filter ini"
+  },
+  "createFilterList": {
+    "addError": "Gagal menambahkan daftar filter: {{error}}",
+    "addList": "Tambah daftar filter",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Donasi",
+  "exportDebugDataButton": {
+    "error": "Gagal mengekspor data debug: {{error}}",
+    "label": "Ekspor data debug",
+    "success": "Data debug disalin ke clipboard",
+    "tooltip": "Salin informasi debug ke clipboard"
+  },
+  "exportFilterList": {
+    "errorMessage": "Gagal mengekspor daftar filter: {{error}}",
+    "export": "Ekspor",
+    "successMessage": "Daftar filter kustom berhasil diekspor"
+  },
+  "exportLogsButton": {
+    "label": "Ekspor log",
+    "openError": "Gagal membuka folder log: {{error}}",
+    "tooltip": "Buka folder log"
+  },
+  "filterLists": {
+    "copied": "Disalin",
+    "copy": "Salin tautan",
+    "delete": "Hapus",
+    "goTo": "Buka di peramban",
+    "more": "Lainnya",
+    "removeError": "Gagal menghapus daftar filter: {{error}}",
+    "toggleError": "Gagal mengalihkan daftar filter: {{error}}",
+    "trusted": "Tercepercaya",
+    "whatIsThis": "Apa ini"
+  },
+  "filterTypes": {
+    "ads": "Iklan",
+    "custom": "Kustom",
+    "digitalWellbeing": "Kesejahteraan digital",
+    "general": "Umum",
+    "malware": "Malware",
+    "privacy": "Privasi",
+    "regional": "Regional"
+  },
+  "ignoredHostsInput": {
+    "description": "Host yang dikecualikan dari proxy. Gunakan untuk layanan dengan sertifikat pinning atau yang terganggu oleh proxy.",
+    "helper": "Masukkan satu host per baris.",
+    "label": "Host yang diabaikan"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Saat diaktifkan, permintaan ke domain CDN yang dikenal tanpa salinan lokal akan diblokir alih-alih diteruskan.",
+      "label": "Blokir sumber daya yang hilang",
+      "setError": "Gagal memperbarui pengaturan blokir sumber daya yang hilang: {{error}}"
+    },
+    "counter": {
+      "label": "Sumber daya yang disajikan secara lokal",
+      "perLibrary": "Per pustaka",
+      "reset": "Setel ulang penghitung",
+      "resetError": "Gagal menyetel ulang penghitung: {{error}}",
+      "sinceInstall": "Sejak pemasangan",
+      "sinceReset": "Sejak penyetelan ulang terakhir",
+      "perCDN": "Per CDN",
+      "cacheNote": "Sumber daya yang di-cache disajikan oleh peramban dan baru dihitung setelah cache dibersihkan.",
+      "total": "Total",
+      "filterListHits": "Kecocokan daftar filter",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Direktori berisi file yang dirujuk oleh pemetaan sumber daya kustom.",
+      "helper": "Biarkan kosong untuk menonaktifkan sumber daya kustom.",
+      "label": "Direktori sumber daya kustom",
+      "setError": "Gagal mengatur direktori sumber daya kustom: {{error}}"
+    },
+    "enable": {
+      "description": "Sajikan salinan lokal dari pustaka CDN populer alih-alih mengunduhnya dari CDN jarak jauh.",
+      "label": "Mesin Sumber Daya Lokal",
+      "setError": "Gagal memperbarui pengaturan mesin sumber daya lokal: {{error}}"
+    },
+    "importExport": {
+      "export": "Ekspor pemetaan",
+      "exportError": "Gagal mengekspor pemetaan sumber daya kustom: {{error}}",
+      "exportSuccess": "Pemetaan sumber daya kustom berhasil diekspor",
+      "import": "Impor pemetaan",
+      "importError": "Gagal mengimpor pemetaan sumber daya kustom: {{error}}",
+      "importSuccess": "Pemetaan sumber daya kustom berhasil diimpor",
+      "label": "Pemetaan sumber daya kustom"
+    },
+    "libraries": {
+      "description": "Pilih pustaka mana yang dapat disajikan secara lokal.",
+      "label": "Pustaka",
+      "toggleError": "Gagal memperbarui pustaka: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Gagal mengimpor daftar filter: {{error}}",
+    "import": "Impor",
+    "successMessage": "Daftar filter kustom berhasil diimpor"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Port tempat server PAC (konfigurasi otomatis proxy) mendengarkan (0 untuk acak).",
+    "helper": "Menggunakan port di bawah 1024 mungkin memerlukan hak istimewa yang lebih tinggi.",
+    "label": "Port server PAC",
+    "setError": "Gagal mengatur port server PAC: {{error}}"
+  },
+  "portInput": {
+    "description": "Port tempat server proxy mendengarkan (0 untuk acak).",
+    "helper": "Menggunakan port di bawah 1024 mungkin memerlukan hak istimewa yang lebih tinggi.",
+    "label": "Port proxy"
+  },
+  "requestLog": {
+    "emptyState": "Mulai menjelajah untuk melihat permintaan yang diblokir.",
+    "filterName": "Nama filter",
+    "local": "Lokal",
+    "localBlocked": "Sumber daya yang hilang diblokir",
+    "method": "Metode",
+    "process": "Proses",
+    "processName": "Nama",
+    "processPath": "Jalur",
+    "redirectedTo": "Dialihkan ke",
+    "referer": "Perujuk",
+    "request": "Permintaan",
+    "rule": "Aturan",
+    "rules": "Aturan",
+    "url": "URL",
+    "version": "Versi",
+    "versionUpgraded": "Versi lebih baru dari yang diminta telah disajikan",
+    "versionDowngraded": "Versi lebih lama dari yang diminta telah disajikan"
+  },
+  "rules": {
+    "help": "Bantuan",
+    "placeholder": "Tambahkan aturan kustom Anda di sini..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "catatan perubahan",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Versi"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Pilih bahasa pilihan Anda",
+      "label": "Bahasa"
+    },
+    "sections": {
+      "advanced": "Lanjutan",
+      "app": "Aplikasi",
+      "localResources": "Sumber Daya Lokal"
+    },
+    "theme": {
+      "chooseTheme": "Pilih tema",
+      "dark": "Gelap",
+      "light": "Terang",
+      "system": "Ikuti tema sistem"
+    },
+    "updates": {
+      "automaticUpdates": "Unduh pembaruan secara otomatis",
+      "description": "Saat diaktifkan, Zen akan otomatis memeriksa pembaruan",
+      "disableError": "Gagal menonaktifkan pembaruan otomatis: {{error}}",
+      "enableError": "Gagal mengaktifkan pembaruan otomatis: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Mulai",
+    "startError": "Gagal memulai proxy: {{error}}",
+    "stop": "Berhenti",
+    "stopError": "Gagal menghentikan proxy: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

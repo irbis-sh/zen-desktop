@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxy-ul nu este activ. Faceți clic pe butonul de mai jos pentru a-l activa.",
+      "inactive": "Activați proxy-ul pentru a vedea cererile blocate"
+    },
+    "tabs": {
+      "filterLists": "Liste de filtre",
+      "home": "Acasă",
+      "rules": "Reguli",
+      "settings": "Setări"
+    },
+    "update": {
+      "restart": "Repornire",
+      "restartFailed": "Repornirea aplicației a eșuat: {{error}}",
+      "updateAvailable": "Este disponibilă o versiune nouă de Zen."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Adaugă aplicație",
+    "allowlistMode": "Doar aplicațiile selectate folosesc proxy-ul",
+    "blocklistMode": "Toate aplicațiile, cu excepția celor selectate, folosesc proxy-ul",
+    "description": "Alegeți ce aplicații ar trebui să folosească proxy-ul Zen.",
+    "emptyAllowlistWarning": "Nicio aplicație selectată. Tot traficul va ocoli Zen.",
+    "label": "Rutare aplicații",
+    "removeApp": "Elimină aplicația",
+    "saveError": "Salvarea setărilor de rutare a eșuat: {{error}}",
+    "selectError": "Selectarea aplicației a eșuat: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Portul folosit de serverul intern de resurse pentru injectarea scripturilor și stilurilor.",
+    "helper": "Folosirea unui port sub 1024 poate necesita privilegii ridicate.",
+    "label": "Portul serverului de resurse",
+    "setError": "Setarea portului serverului de resurse a eșuat: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Porniți Zen automat la autentificare",
+    "disableError": "Dezactivarea pornirii automate a eșuat: {{error}}",
+    "enableError": "Activarea pornirii automate a eșuat: {{error}}",
+    "label": "Pornire automată"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Opriți proxy-ul pentru a adăuga o nouă listă de filtre",
+    "stopProxyToDeleteFilter": "Opriți proxy-ul pentru a șterge această listă de filtre",
+    "stopProxyToEditRules": "Opriți proxy-ul pentru a modifica regulile personalizate",
+    "stopProxyToModify": "Opriți proxy-ul pentru a modifica această setare",
+    "stopProxyToToggleFilter": "Opriți proxy-ul pentru a activa/dezactiva această listă de filtre"
+  },
+  "createFilterList": {
+    "addError": "Adăugarea listei de filtre a eșuat: {{error}}",
+    "addList": "Adaugă listă de filtre",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Donează",
+  "exportDebugDataButton": {
+    "error": "Exportul datelor de depanare a eșuat: {{error}}",
+    "label": "Exportă date de depanare",
+    "success": "Datele de depanare au fost copiate în clipboard",
+    "tooltip": "Copiază informațiile de depanare în clipboard"
+  },
+  "exportFilterList": {
+    "errorMessage": "Exportul listelor de filtre a eșuat: {{error}}",
+    "export": "Exportă",
+    "successMessage": "Listele de filtre personalizate au fost exportate cu succes"
+  },
+  "exportLogsButton": {
+    "label": "Exportă jurnale",
+    "openError": "Deschiderea folderului de jurnale a eșuat: {{error}}",
+    "tooltip": "Deschide folderul de jurnale"
+  },
+  "filterLists": {
+    "copied": "Copiat",
+    "copy": "Copiază linkul",
+    "delete": "Șterge",
+    "goTo": "Deschide în browser",
+    "more": "Mai mult",
+    "removeError": "Eliminarea listei de filtre a eșuat: {{error}}",
+    "toggleError": "Comutarea listei de filtre a eșuat: {{error}}",
+    "trusted": "De încredere",
+    "whatIsThis": "Ce este aceasta"
+  },
+  "filterTypes": {
+    "ads": "Reclame",
+    "custom": "Personalizat",
+    "digitalWellbeing": "Bunăstare digitală",
+    "general": "General",
+    "malware": "Malware",
+    "privacy": "Confidențialitate",
+    "regional": "Regional"
+  },
+  "ignoredHostsInput": {
+    "description": "Gazde excluse din proxy. Folosiți pentru serviciile cu fixare de certificate sau afectate de proxy.",
+    "helper": "Introduceți o gazdă pe linie.",
+    "label": "Gazde ignorate"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Când este activată, cererile către domenii CDN cunoscute fără o copie locală inclusă sunt blocate în loc să fie redirecționate.",
+      "label": "Blochează resursele lipsă",
+      "setError": "Nu s-a putut actualiza setarea de blocare a resurselor lipsă: {{error}}"
+    },
+    "counter": {
+      "label": "Resurse servite local",
+      "perLibrary": "Pe bibliotecă",
+      "reset": "Resetează contorul",
+      "resetError": "Nu s-a putut reseta contorul: {{error}}",
+      "sinceInstall": "De la instalare",
+      "sinceReset": "De la ultima resetare",
+      "perCDN": "Per CDN",
+      "cacheNote": "Resursele din cache sunt servite de browser și contează doar după golirea cache-ului.",
+      "total": "Total",
+      "filterListHits": "Potriviri ale listelor de filtre",
+      "filter": "Filtre",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Directorul care conține fișierele la care se referă mapările de resurse personalizate.",
+      "helper": "Lasă gol pentru a dezactiva resursele personalizate.",
+      "label": "Directorul resurselor personalizate",
+      "setError": "Nu s-a putut seta directorul resurselor personalizate: {{error}}"
+    },
+    "enable": {
+      "description": "Servește copii incluse ale bibliotecilor CDN populare în loc să le descarce de pe CDN-uri de la distanță.",
+      "label": "Motorul de resurse locale",
+      "setError": "Nu s-a putut actualiza setarea motorului de resurse locale: {{error}}"
+    },
+    "importExport": {
+      "export": "Exportă mapări",
+      "exportError": "Nu s-au putut exporta mapările de resurse personalizate: {{error}}",
+      "exportSuccess": "Mapările de resurse personalizate au fost exportate",
+      "import": "Importă mapări",
+      "importError": "Nu s-au putut importa mapările de resurse personalizate: {{error}}",
+      "importSuccess": "Mapările de resurse personalizate au fost importate",
+      "label": "Mapări de resurse personalizate"
+    },
+    "libraries": {
+      "description": "Alege ce biblioteci pot fi servite local.",
+      "label": "Biblioteci",
+      "toggleError": "Nu s-a putut actualiza biblioteca: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Importul listelor de filtre a eșuat: {{error}}",
+    "import": "Importă",
+    "successMessage": "Listele de filtre personalizate au fost importate cu succes"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Portul pe care ascultă serverul PAC (configurare automată proxy) (0 pentru aleatoriu).",
+    "helper": "Folosirea unui port sub 1024 poate necesita privilegii ridicate.",
+    "label": "Portul serverului PAC",
+    "setError": "Setarea portului serverului PAC a eșuat: {{error}}"
+  },
+  "portInput": {
+    "description": "Portul pe care ascultă serverul proxy (0 pentru aleatoriu).",
+    "helper": "Folosirea unui port sub 1024 poate necesita privilegii ridicate.",
+    "label": "Portul proxy"
+  },
+  "requestLog": {
+    "emptyState": "Începeți să navigați pentru a vedea cererile blocate.",
+    "filterName": "Numele filtrului",
+    "local": "Local",
+    "localBlocked": "Resursă lipsă blocată",
+    "method": "Metodă",
+    "process": "Proces",
+    "processName": "Nume",
+    "processPath": "Cale",
+    "redirectedTo": "Redirecționat către",
+    "referer": "Referrer",
+    "request": "Cerere",
+    "rule": "Regulă",
+    "rules": "Reguli",
+    "url": "URL",
+    "version": "Versiune",
+    "versionUpgraded": "S-a servit o versiune mai nouă decât cea solicitată",
+    "versionDowngraded": "S-a servit o versiune mai veche decât cea solicitată"
+  },
+  "rules": {
+    "help": "Ajutor",
+    "placeholder": "Adăugați aici regulile personalizate..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "jurnal de modificări",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Versiune"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Selectați limba preferată",
+      "label": "Limbă"
+    },
+    "sections": {
+      "advanced": "Avansat",
+      "app": "Aplicație",
+      "localResources": "Resurse locale"
+    },
+    "theme": {
+      "chooseTheme": "Alegeți o temă",
+      "dark": "Întunecat",
+      "light": "Luminos",
+      "system": "Urmează tema sistemului"
+    },
+    "updates": {
+      "automaticUpdates": "Descarcă actualizările automat",
+      "description": "Când este activat, Zen va verifica automat actualizările",
+      "disableError": "Dezactivarea actualizărilor automate a eșuat: {{error}}",
+      "enableError": "Activarea actualizărilor automate a eșuat: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Start",
+    "startError": "Pornirea proxy-ului a eșuat: {{error}}",
+    "stop": "Stop",
+    "stopError": "Oprirea proxy-ului a eșuat: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

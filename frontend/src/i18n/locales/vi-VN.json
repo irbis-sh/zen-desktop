@@ -93,6 +93,52 @@
     "helper": "Nhập một máy chủ trên mỗi dòng.",
     "label": "Máy chủ bị bỏ qua"
   },
+  "localResources": {
+    "blockMissing": {
+      "description": "Khi được bật, các yêu cầu đến các tên miền CDN đã biết không có bản sao cục bộ đi kèm sẽ bị chặn thay vì được chuyển tiếp.",
+      "label": "Chặn tài nguyên bị thiếu",
+      "setError": "Không thể cập nhật cài đặt chặn tài nguyên bị thiếu: {{error}}"
+    },
+    "counter": {
+      "label": "Tài nguyên được phục vụ cục bộ",
+      "perLibrary": "Theo thư viện",
+      "reset": "Đặt lại bộ đếm",
+      "resetError": "Không thể đặt lại bộ đếm: {{error}}",
+      "sinceInstall": "Từ lúc cài đặt",
+      "sinceReset": "Từ lần đặt lại gần nhất",
+      "perCDN": "Theo CDN",
+      "cacheNote": "Các tài nguyên đã lưu trong bộ nhớ đệm do trình duyệt phục vụ và chỉ được tính sau khi xóa bộ nhớ đệm.",
+      "total": "Tổng",
+      "filterListHits": "Lượt khớp của danh sách lọc",
+      "filter": "Lọc",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Thư mục chứa các tệp được ánh xạ tài nguyên tùy chỉnh tham chiếu.",
+      "helper": "Để trống để tắt tài nguyên tùy chỉnh.",
+      "label": "Thư mục tài nguyên tùy chỉnh",
+      "setError": "Không thể đặt thư mục tài nguyên tùy chỉnh: {{error}}"
+    },
+    "enable": {
+      "description": "Phục vụ các bản sao đi kèm của các thư viện CDN phổ biến thay vì tải chúng từ CDN từ xa.",
+      "label": "Công cụ tài nguyên cục bộ",
+      "setError": "Không thể cập nhật cài đặt công cụ tài nguyên cục bộ: {{error}}"
+    },
+    "importExport": {
+      "export": "Xuất ánh xạ",
+      "exportError": "Không thể xuất ánh xạ tài nguyên tùy chỉnh: {{error}}",
+      "exportSuccess": "Đã xuất ánh xạ tài nguyên tùy chỉnh",
+      "import": "Nhập ánh xạ",
+      "importError": "Không thể nhập ánh xạ tài nguyên tùy chỉnh: {{error}}",
+      "importSuccess": "Đã nhập ánh xạ tài nguyên tùy chỉnh",
+      "label": "Ánh xạ tài nguyên tùy chỉnh"
+    },
+    "libraries": {
+      "description": "Chọn thư viện có thể được phục vụ cục bộ.",
+      "label": "Thư viện",
+      "toggleError": "Không thể cập nhật thư viện: {{error}}"
+    }
+  },
   "importFilterList": {
     "errorMessage": "Không thể nhập danh sách bộ lọc: {{error}}",
     "import": "Nhập",
@@ -137,6 +183,8 @@
     "label": "Cổng proxy"
   },
   "requestLog": {
+    "local": "Cục bộ",
+    "localBlocked": "Đã chặn tài nguyên bị thiếu",
     "emptyState": "Bắt đầu duyệt web để xem các yêu cầu bị chặn.",
     "filterName": "Tên bộ lọc",
     "method": "Phương thức",
@@ -148,7 +196,10 @@
     "request": "Yêu cầu",
     "rule": "Quy tắc",
     "rules": "Quy tắc",
-    "url": "URL"
+    "url": "URL",
+    "version": "Phiên bản",
+    "versionUpgraded": "Đã phục vụ phiên bản mới hơn phiên bản yêu cầu",
+    "versionDowngraded": "Đã phục vụ phiên bản cũ hơn phiên bản yêu cầu"
   },
   "rules": {
     "help": "Trợ giúp",
@@ -179,6 +230,7 @@
       "label": "Ngôn ngữ"
     },
     "sections": {
+      "localResources": "Tài nguyên cục bộ",
       "advanced": "Nâng cao",
       "app": "Ứng dụng"
     },

@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "De proxy is niet actief. Klik op de knop hieronder om hem te activeren.",
+      "inactive": "Activeer de proxy om geblokkeerde verzoeken te zien"
+    },
+    "tabs": {
+      "filterLists": "Filterlijsten",
+      "home": "Home",
+      "rules": "Regels",
+      "settings": "Instellingen"
+    },
+    "update": {
+      "restart": "Herstarten",
+      "restartFailed": "App herstarten mislukt: {{error}}",
+      "updateAvailable": "Er is een nieuwe versie van Zen beschikbaar."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "App toevoegen",
+    "allowlistMode": "Alleen geselecteerde apps via de proxy",
+    "blocklistMode": "Alle apps behalve geselecteerde via de proxy",
+    "description": "Kies welke apps de proxy van Zen moeten gebruiken.",
+    "emptyAllowlistWarning": "Geen apps geselecteerd. Al het verkeer omzeilt Zen.",
+    "label": "App-routing",
+    "removeApp": "App verwijderen",
+    "saveError": "App-routinginstellingen opslaan mislukt: {{error}}",
+    "selectError": "App selecteren mislukt: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "De poort die de interne assetserver gebruikt voor het injecteren van scripts en stijlen.",
+    "helper": "Een poort onder 1024 kan verhoogde rechten vereisen.",
+    "label": "Assetserverpoort",
+    "setError": "Assetserverpoort instellen mislukt: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Zen automatisch starten bij inloggen",
+    "disableError": "Autostart uitschakelen mislukt: {{error}}",
+    "enableError": "Autostart inschakelen mislukt: {{error}}",
+    "label": "Autostart"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Stop de proxy om een nieuwe filterlijst toe te voegen",
+    "stopProxyToDeleteFilter": "Stop de proxy om deze filterlijst te verwijderen",
+    "stopProxyToEditRules": "Stop de proxy om aangepaste regels te bewerken",
+    "stopProxyToModify": "Stop de proxy om deze instelling te wijzigen",
+    "stopProxyToToggleFilter": "Stop de proxy om deze filterlijst in/uit te schakelen"
+  },
+  "createFilterList": {
+    "addError": "Filterlijst toevoegen mislukt: {{error}}",
+    "addList": "Filterlijst toevoegen",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Doneren",
+  "exportDebugDataButton": {
+    "error": "Debuggegevens exporteren mislukt: {{error}}",
+    "label": "Debuggegevens exporteren",
+    "success": "Debuggegevens naar klembord gekopieerd",
+    "tooltip": "Debuginformatie naar klembord kopiëren"
+  },
+  "exportFilterList": {
+    "errorMessage": "Filterlijsten exporteren mislukt: {{error}}",
+    "export": "Exporteren",
+    "successMessage": "Aangepaste filterlijsten succesvol geëxporteerd"
+  },
+  "exportLogsButton": {
+    "label": "Logboeken exporteren",
+    "openError": "Logboekmap openen mislukt: {{error}}",
+    "tooltip": "Logboekmap openen"
+  },
+  "filterLists": {
+    "copied": "Gekopieerd",
+    "copy": "Link kopiëren",
+    "delete": "Verwijderen",
+    "goTo": "Openen in browser",
+    "more": "Meer",
+    "removeError": "Filterlijst verwijderen mislukt: {{error}}",
+    "toggleError": "Filterlijst omschakelen mislukt: {{error}}",
+    "trusted": "Vertrouwd",
+    "whatIsThis": "Wat is dit"
+  },
+  "filterTypes": {
+    "ads": "Advertenties",
+    "custom": "Aangepast",
+    "digitalWellbeing": "Digitaal welzijn",
+    "general": "Algemeen",
+    "malware": "Malware",
+    "privacy": "Privacy",
+    "regional": "Regionaal"
+  },
+  "ignoredHostsInput": {
+    "description": "Hosts die van de proxy worden uitgesloten. Gebruik dit voor diensten met certificaatpinning of die worden verstoord door proxying.",
+    "helper": "Voer één host per regel in.",
+    "label": "Genegeerde hosts"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Wanneer ingeschakeld, worden verzoeken aan bekende CDN-domeinen zonder gebundelde lokale kopie geblokkeerd in plaats van doorgestuurd.",
+      "label": "Ontbrekende bronnen blokkeren",
+      "setError": "Instelling voor het blokkeren van ontbrekende bronnen bijwerken mislukt: {{error}}"
+    },
+    "counter": {
+      "label": "Lokaal aangeboden bronnen",
+      "perLibrary": "Per bibliotheek",
+      "reset": "Teller resetten",
+      "resetError": "Teller resetten mislukt: {{error}}",
+      "sinceInstall": "Sinds installatie",
+      "sinceReset": "Sinds laatste reset",
+      "perCDN": "Per CDN",
+      "cacheNote": "In de cache opgeslagen bronnen worden door de browser geleverd en tellen pas mee na het wissen van de cache.",
+      "total": "Totaal",
+      "filterListHits": "Filterlijsttreffers",
+      "filter": "Filter",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Map met bestanden waarnaar aangepaste bronmapping verwijzen.",
+      "helper": "Laat leeg om aangepaste bronnen uit te schakelen.",
+      "label": "Map voor aangepaste bronnen",
+      "setError": "Map voor aangepaste bronnen instellen mislukt: {{error}}"
+    },
+    "enable": {
+      "description": "Bundelkopieën van populaire CDN-bibliotheken aanbieden in plaats van ze van externe CDN's te downloaden.",
+      "label": "Lokale bronnen-engine",
+      "setError": "Instelling van lokale bronnen-engine bijwerken mislukt: {{error}}"
+    },
+    "importExport": {
+      "export": "Mapping exporteren",
+      "exportError": "Aangepaste bronmapping exporteren mislukt: {{error}}",
+      "exportSuccess": "Aangepaste bronmapping geëxporteerd",
+      "import": "Mapping importeren",
+      "importError": "Aangepaste bronmapping importeren mislukt: {{error}}",
+      "importSuccess": "Aangepaste bronmapping geïmporteerd",
+      "label": "Aangepaste bronmapping"
+    },
+    "libraries": {
+      "description": "Kies welke bibliotheken lokaal mogen worden aangeboden.",
+      "label": "Bibliotheken",
+      "toggleError": "Bibliotheek bijwerken mislukt: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Filterlijsten importeren mislukt: {{error}}",
+    "import": "Importeren",
+    "successMessage": "Aangepaste filterlijsten succesvol geïmporteerd"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "De poort waarop de PAC-server (automatische proxyconfiguratie) luistert (0 voor willekeurig).",
+    "helper": "Een poort onder 1024 kan verhoogde rechten vereisen.",
+    "label": "PAC-serverpoort",
+    "setError": "PAC-serverpoort instellen mislukt: {{error}}"
+  },
+  "portInput": {
+    "description": "De poort waarop de proxyserver luistert (0 voor willekeurig).",
+    "helper": "Een poort onder 1024 kan verhoogde rechten vereisen.",
+    "label": "Proxypoort"
+  },
+  "requestLog": {
+    "emptyState": "Begin met browsen om geblokkeerde verzoeken te zien.",
+    "filterName": "Filternaam",
+    "local": "Lokaal",
+    "localBlocked": "Ontbrekende bron geblokkeerd",
+    "method": "Methode",
+    "process": "Proces",
+    "processName": "Naam",
+    "processPath": "Pad",
+    "redirectedTo": "Doorgestuurd naar",
+    "referer": "Referer",
+    "request": "Verzoek",
+    "rule": "Regel",
+    "rules": "Regels",
+    "url": "URL",
+    "version": "Versie",
+    "versionUpgraded": "Nieuwere versie geleverd dan gevraagd",
+    "versionDowngraded": "Oudere versie geleverd dan gevraagd"
+  },
+  "rules": {
+    "help": "Help",
+    "placeholder": "Voeg hier je aangepaste regels toe..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "changelog",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Versie"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Selecteer je voorkeurstaal",
+      "label": "Taal"
+    },
+    "sections": {
+      "advanced": "Geavanceerd",
+      "app": "App",
+      "localResources": "Lokale bronnen"
+    },
+    "theme": {
+      "chooseTheme": "Kies een thema",
+      "dark": "Donker",
+      "light": "Licht",
+      "system": "Systeemthema volgen"
+    },
+    "updates": {
+      "automaticUpdates": "Updates automatisch downloaden",
+      "description": "Wanneer ingeschakeld controleert Zen automatisch op updates",
+      "disableError": "Automatische updates uitschakelen mislukt: {{error}}",
+      "enableError": "Automatische updates inschakelen mislukt: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Start",
+    "startError": "Proxy starten mislukt: {{error}}",
+    "stop": "Stop",
+    "stopError": "Proxy stoppen mislukt: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}

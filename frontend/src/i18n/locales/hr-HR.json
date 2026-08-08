@@ -1,0 +1,258 @@
+{
+  "app": {
+    "proxy": {
+      "description": "Proxy nije aktivan. Kliknite na gumb ispod da biste ga aktivirali.",
+      "inactive": "Aktivirajte proxy da biste vidjeli blokirane zahtjeve"
+    },
+    "tabs": {
+      "filterLists": "Popisi filtara",
+      "home": "Početna",
+      "rules": "Pravila",
+      "settings": "Postavke"
+    },
+    "update": {
+      "restart": "Ponovno pokreni",
+      "restartFailed": "Ponovno pokretanje aplikacije nije uspjelo: {{error}}",
+      "updateAvailable": "Dostupna je nova verzija Zena."
+    }
+  },
+  "appRoutingSettings": {
+    "addApp": "Dodaj aplikaciju",
+    "allowlistMode": "Samo odabrane aplikacije koriste proxy",
+    "blocklistMode": "Sve aplikacije osim odabranih koriste proxy",
+    "description": "Odaberite koje aplikacije trebaju koristiti Zenov proxy.",
+    "emptyAllowlistWarning": "Nije odabrana nijedna aplikacija. Sav promet će zaobići Zen.",
+    "label": "Usmjeravanje aplikacija",
+    "removeApp": "Ukloni aplikaciju",
+    "saveError": "Spremanje postavki usmjeravanja nije uspjelo: {{error}}",
+    "selectError": "Odabir aplikacije nije uspio: {{error}}"
+  },
+  "assetPortInput": {
+    "description": "Priključak koji interni poslužitelj resursa koristi za umetanje skripti i stilova.",
+    "helper": "Korištenje priključka ispod 1024 može zahtijevati povišene ovlasti.",
+    "label": "Priključak poslužitelja resursa",
+    "setError": "Postavljanje priključka poslužitelja resursa nije uspjelo: {{error}}"
+  },
+  "autoStartSwitch": {
+    "description": "Automatski pokreni Zen prilikom prijave",
+    "disableError": "Onemogućavanje automatskog pokretanja nije uspjelo: {{error}}",
+    "enableError": "Omogućavanje automatskog pokretanja nije uspjelo: {{error}}",
+    "label": "Automatsko pokretanje"
+  },
+  "common": {
+    "stopProxyToAddFilter": "Zaustavite proxy da biste dodali novi popis filtara",
+    "stopProxyToDeleteFilter": "Zaustavite proxy da biste izbrisali ovaj popis filtara",
+    "stopProxyToEditRules": "Zaustavite proxy da biste izmijenili prilagođena pravila",
+    "stopProxyToModify": "Zaustavite proxy da biste izmijenili ovu postavku",
+    "stopProxyToToggleFilter": "Zaustavite proxy da biste uključili/isključili ovaj popis filtara"
+  },
+  "createFilterList": {
+    "addError": "Dodavanje popisa filtara nije uspjelo: {{error}}",
+    "addList": "Dodaj popis filtara",
+    "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
+  },
+  "donate": "Doniraj",
+  "exportDebugDataButton": {
+    "error": "Izvoz podataka za ispravljanje pogrešaka nije uspio: {{error}}",
+    "label": "Izvezi podatke za ispravljanje pogrešaka",
+    "success": "Podaci za ispravljanje pogrešaka kopirani su u međuspremnik",
+    "tooltip": "Kopiraj informacije za ispravljanje pogrešaka u međuspremnik"
+  },
+  "exportFilterList": {
+    "errorMessage": "Izvoz popisa filtara nije uspio: {{error}}",
+    "export": "Izvezi",
+    "successMessage": "Prilagođeni popisi filtara uspješno su izvezeni"
+  },
+  "exportLogsButton": {
+    "label": "Izvezi zapise",
+    "openError": "Otvaraanje mape zapisa nije uspjelo: {{error}}",
+    "tooltip": "Otvori mapu zapisa"
+  },
+  "filterLists": {
+    "copied": "Kopirano",
+    "copy": "Kopiraj poveznicu",
+    "delete": "Izbriši",
+    "goTo": "Otvori u pregledniku",
+    "more": "Više",
+    "removeError": "Uklanjanje popisa filtara nije uspjelo: {{error}}",
+    "toggleError": "Prebacivanje popisa filtara nije uspjelo: {{error}}",
+    "trusted": "Pouzdan",
+    "whatIsThis": "Što je ovo"
+  },
+  "filterTypes": {
+    "ads": "Oglasi",
+    "custom": "Prilagođeno",
+    "digitalWellbeing": "Digitalna dobrobit",
+    "general": "Općenito",
+    "malware": "Zlonamjerni softver",
+    "privacy": "Privatnost",
+    "regional": "Regionalno"
+  },
+  "ignoredHostsInput": {
+    "description": "Domaćini isključeni iz proxyja. Koristite za usluge s pričvršćenim certifikatima ili one koje proxy ometa.",
+    "helper": "Unesite jednog domaćina po retku.",
+    "label": "Zanemareni domaćini"
+  },
+  "localResources": {
+    "blockMissing": {
+      "description": "Kada je omogućeno, zahtjevi prema poznatim CDN domenama bez ugrađene lokalne kopije blokiraju se umjesto prosljeđivanja.",
+      "label": "Blokiraj nedostajuće resurse",
+      "setError": "Neuspješno ažuriranje postavke blokiranja nedostajućih resursa: {{error}}"
+    },
+    "counter": {
+      "label": "Lokalno posluženi resursi",
+      "perLibrary": "Po knjižnici",
+      "reset": "Resetiraj brojač",
+      "resetError": "Neuspješno resetiranje brojača: {{error}}",
+      "sinceInstall": "Od instalacije",
+      "sinceReset": "Od posljednjeg resetiranja",
+      "perCDN": "Po CDN-u",
+      "cacheNote": "Predmemorirane resurse isporučuje preglednik i broje se tek nakon čišćenja predmemorije.",
+      "total": "Ukupno",
+      "filterListHits": "Pogodci popisa filtara",
+      "filter": "Filtar",
+      "cdn": "CDN"
+    },
+    "customDir": {
+      "description": "Mapa koja sadrži datoteke na koje upućuju prilagođena mapiranja resursa.",
+      "helper": "Ostavite prazno da biste onemogućili prilagođene resurse.",
+      "label": "Mapa prilagođenih resursa",
+      "setError": "Neuspješno postavljanje mape prilagođenih resursa: {{error}}"
+    },
+    "enable": {
+      "description": "Posluživanje ugrađenih kopija popularnih CDN knjižnica umjesto preuzimanja s udaljenih CDN-ova.",
+      "label": "Motor lokalnih resursa",
+      "setError": "Neuspješno ažuriranje postavke motora lokalnih resursa: {{error}}"
+    },
+    "importExport": {
+      "export": "Izvezi mapiranja",
+      "exportError": "Neuspješan izvoz prilagođenih mapiranja resursa: {{error}}",
+      "exportSuccess": "Prilagođena mapiranja resursa izvezena",
+      "import": "Uvezi mapiranja",
+      "importError": "Neuspješan uvoz prilagođenih mapiranja resursa: {{error}}",
+      "importSuccess": "Prilagođena mapiranja resursa uvezena",
+      "label": "Prilagođena mapiranja resursa"
+    },
+    "libraries": {
+      "description": "Odaberite koje se knjižnice mogu posluživati lokalno.",
+      "label": "Knjižnice",
+      "toggleError": "Neuspješno ažuriranje knjižnice: {{error}}"
+    }
+  },
+  "importFilterList": {
+    "errorMessage": "Uvoz popisa filtara nije uspio: {{error}}",
+    "import": "Uvezi",
+    "successMessage": "Prilagođeni popisi filtara uspješno su uvezeni"
+  },
+  "intro": {
+    "buttons": {
+      "next": "Next",
+      "skip": "Skip introduction"
+    },
+    "connect": {
+      "caNote": "On first start, Zen may prompt you to install a local root CA certificate. This enables HTTPS filtering so Zen can block ads and trackers on all sites. Everything happens locally – <strong>no data ever leaves your device</strong>.<br />See our GitHub for full technical details.",
+      "description": "You're ready to go. Press \"Start\" to enable Zen's comprehensive network protection.",
+      "donateText": "And consider donating on:",
+      "socialText": "If you'd like, check out our socials:",
+      "title": "All set!"
+    },
+    "filterLists": {
+      "description": "To enable ad-blocking and privacy protection, Zen uses <strong>filter lists</strong>. You can also set them up later in the app.",
+      "recommendation": "Based on your locale, we recommend enabling the following filter lists:",
+      "title": "Filter lists"
+    },
+    "settings": {
+      "description": "Review the settings below:",
+      "settingsNote": "You can also change these at any time in the app.",
+      "title": "Settings"
+    },
+    "welcome": {
+      "description": "Select your language:",
+      "title": "Welcome to Zen!"
+    }
+  },
+  "pacPortInput": {
+    "description": "Priključak na kojem sluša PAC poslužitelj (automatska konfiguracija proxyja) (0 za nasumični).",
+    "helper": "Korištenje priključka ispod 1024 može zahtijevati povišene ovlasti.",
+    "label": "Priključak PAC poslužitelja",
+    "setError": "Postavljanje priključka PAC poslužitelja nije uspjelo: {{error}}"
+  },
+  "portInput": {
+    "description": "Priključak na kojem sluša proxy poslužitelj (0 za nasumični).",
+    "helper": "Korištenje priključka ispod 1024 može zahtijevati povišene ovlasti.",
+    "label": "Priključak proxyja"
+  },
+  "requestLog": {
+    "emptyState": "Počnite pregledavati web da biste vidjeli blokirane zahtjeve.",
+    "filterName": "Naziv filtra",
+    "local": "Lokalno",
+    "localBlocked": "Nedostajući resurs blokiran",
+    "method": "Metoda",
+    "process": "Proces",
+    "processName": "Naziv",
+    "processPath": "Put",
+    "redirectedTo": "Preusmjereno na",
+    "referer": "Referent",
+    "request": "Zahtjev",
+    "rule": "Pravilo",
+    "rules": "Pravila",
+    "url": "URL",
+    "version": "Verzija",
+    "versionUpgraded": "Isporučena je novija verzija od zatražene",
+    "versionDowngraded": "Isporučena je starija verzija od zatražene"
+  },
+  "rules": {
+    "help": "Pomoć",
+    "placeholder": "Ovdje dodajte svoja prilagođena pravila..."
+  },
+  "settings": {
+    "about": {
+      "changelog": "popis promjena",
+      "tagline": "Your Comprehensive Ad-Blocker and Privacy Guard",
+      "version": "Verzija"
+    },
+    "ca": {
+      "confirmTitle": "Are you sure you want to uninstall the CA?",
+      "errorMessage": "Failed to uninstall CA: {{error}}",
+      "reasons": {
+        "malfunctioning": "You suspect that your CA installation is malfunctioning. This issue may manifest as a browser error when visiting HTTPS websites, or as other applications being unable to connect to the internet.",
+        "uninstall": "You want to uninstall Zen completely."
+      },
+      "reinstallInfo": "If you start Zen again, a new CA will be installed.",
+      "stopProxyTooltip": "Stop the proxy to uninstall the CA",
+      "successMessage": "CA uninstalled successfully",
+      "uninstallButton": "Uninstall CA",
+      "uninstallConfirm": "Uninstall",
+      "usefulIf": "This can be useful if"
+    },
+    "language": {
+      "helper": "Odaberite željeni jezik",
+      "label": "Jezik"
+    },
+    "sections": {
+      "advanced": "Napredno",
+      "app": "Aplikacija",
+      "localResources": "Lokalni resursi"
+    },
+    "theme": {
+      "chooseTheme": "Odaberite temu",
+      "dark": "Tamna",
+      "light": "Svijetla",
+      "system": "Prati temu sustava"
+    },
+    "updates": {
+      "automaticUpdates": "Automatski preuzimaj ažuriranja",
+      "description": "Kada je omogućeno, Zen će automatski provjeravati ažuriranja",
+      "disableError": "Onemogućavanje automatskih ažuriranja nije uspjelo: {{error}}",
+      "enableError": "Omogućavanje automatskih ažuriranja nije uspjelo: {{error}}"
+    }
+  },
+  "startStopButton": {
+    "start": "Pokreni",
+    "startError": "Pokretanje proxyja nije uspjelo: {{error}}",
+    "stop": "Zaustavi",
+    "stopError": "Zaustavljanje proxyja nije uspjelo: {{error}}",
+    "unsupportedDEGuide": "Automatic system proxy configuration is currently only supported on GNOME and KDE.<br />Please follow <guide-link>this guide</guide-link> to set the proxy on a per-app basis."
+  },
+  "_reviewNotes": "The string groups intro, settings.about.tagline, settings.ca, startStopButton.unsupportedDEGuide and createFilterList.trustedListsWarning are copied from English pending human review. All other keys are translated."
+}
