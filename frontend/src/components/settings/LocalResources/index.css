@@ -1,0 +1,45 @@
+.settings-manager__section--local-resources {
+  border: 1px solid #238551;
+  border-radius: var(--bp-surface-border-radius);
+  margin-bottom: 8px;
+}
+
+.local-resources__counter-stats {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.local-resources__counter-row {
+  align-items: baseline;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.local-resources__counter-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+
+.local-resources__counter-library-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.local-resources__library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
+.local-resources__import-export {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}

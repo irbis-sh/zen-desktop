@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 import { changeLocale, getCurrentLocale, LOCALE_LABELS, LocaleItem } from '@/i18n';
 
+import './index.css';
+
 interface LocaleSelectorProps {
   showLabel?: boolean;
   showHelper?: boolean;
@@ -38,7 +40,7 @@ export function LocaleSelector({ showLabel = true, showHelper = true }: LocaleSe
       onItemSelect={handleLocaleChange}
       itemRenderer={renderItem}
       filterable={false}
-      popoverProps={{ minimal: true }}
+      popoverProps={{ minimal: true, popoverClassName: 'locale-selector__popover' }}
     >
       <Button icon="translate" text={currentLocale.label} endIcon="caret-down" />
     </Select>

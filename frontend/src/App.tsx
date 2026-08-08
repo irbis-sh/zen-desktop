@@ -11,6 +11,7 @@ import { EventsOn } from 'wails/runtime/runtime';
 import { ThemeType, useTheme } from './common/ThemeManager';
 import { AppToaster } from './common/toaster';
 import { AppHeader } from './components/AppHeader';
+import { LocalResourcesSummary } from './components/LocalResourcesSummary';
 import { StartStopButton } from './components/StartStopButton';
 import { useProxyState } from './context/ProxyStateContext';
 import { FilterLists } from './FilterLists';
@@ -102,7 +103,10 @@ function App() {
                   className="request-log__non-ideal-state"
                 />
               ) : (
-                <RequestLog />
+                <>
+                  <LocalResourcesSummary />
+                  <RequestLog />
+                </>
               )}
             </div>
             {activeTab === 'filterLists' && <FilterLists />}

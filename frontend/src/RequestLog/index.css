@@ -109,3 +109,7 @@
 .request-log__card__details__rules td {
   line-break: anywhere;
 }
+.request-log__version-delta {
+  color: #5898f0;
+  font-weight: 600;
+}

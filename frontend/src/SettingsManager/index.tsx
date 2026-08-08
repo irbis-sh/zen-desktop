@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import './index.css';
 
 import { BrowserLink } from '@/common/BrowserLink';
+import { LocalResourcesSection } from '@/components/settings/LocalResources/LocalResourcesSection';
 import { useProxyState } from '@/context/ProxyStateContext';
 import { IsNoSelfUpdate } from 'wails/go/app/App';
 import { GetVersion } from 'wails/go/config/Config';
@@ -65,6 +66,8 @@ export function SettingsManager() {
           </div>
         </div>
       </div>
+
+      <LocalResourcesSection />
 
       <div className="settings-manager__section--advanced">
         <Tag size="large" intent="warning" fill className="settings-manager__section-header">

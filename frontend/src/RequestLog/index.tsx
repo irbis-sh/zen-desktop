@@ -21,6 +21,7 @@ enum FilterActionKind {
   Block = 'block',
   Redirect = 'redirect',
   Modify = 'modify',
+  Local = 'local',
 }
 
 interface FilterAction {
@@ -32,6 +33,11 @@ interface FilterAction {
   referer: string;
   rules: Rule[];
   process: Process;
+  resource?: string;
+  blocked?: boolean;
+  requestedVersion?: string;
+  servedVersion?: string;
+  versionDelta?: string;
   createdAt: Date;
 }
 
@@ -84,6 +90,9 @@ function RequestLogCard({ log }: { log: FilterAction }) {
     case FilterActionKind.Block:
       tagIntent = Intent.DANGER;
       break;
+    case FilterActionKind.Local:
+      tagIntent = log.blocked ? Intent.DANGER : Intent.SUCCESS;
+      break;
     case FilterActionKind.Modify:
       tagIntent = Intent.WARNING;
       break;
@@ -101,9 +110,28 @@ function RequestLogCard({ log }: { log: FilterAction }) {
     <>
       <Card key={log.id} className="request-log__card" interactive onClick={() => setIsOpen(!isOpen)}>
         <div className="request-log__card__summary">
+          {log.kind === FilterActionKind.Local && log.versionDelta && (
+            <span
+              className="request-log__version-delta"
+              title={
+                log.versionDelta === 'upgrade' ? t('requestLog.versionUpgraded') : t('requestLog.versionDowngraded')
+              }
+              aria-label={
+                log.versionDelta === 'upgrade' ? t('requestLog.versionUpgraded') : t('requestLog.versionDowngraded')
+              }
+            >
+              {log.versionDelta === 'upgrade' ? '↑' : '↓'}
+            </span>
+          )}
           <Tag minimal intent={tagIntent}>
             {hostname}
           </Tag>
+          {log.kind === FilterActionKind.Local && (
+            <Tag minimal intent={tagIntent}>
+              {log.blocked ? t('requestLog.localBlocked') : t('requestLog.local')}
+              {log.resource ? ` · ${log.resource}` : ''}
+            </Tag>
+          )}
           <Tag minimal className="request-log__card__process-tag" title={log.process.name}>
             {log.process.name}
           </Tag>
@@ -141,6 +169,14 @@ function RequestLogCard({ log }: { log: FilterAction }) {
                 <div className="request-log__card__details__field request-log__card__details__field--text">
                   <div className="request-log__card__details__label">{t('requestLog.referer')}:</div>
                   <div className="request-log__card__details__value">{log.referer}</div>
+                </div>
+              )}
+              {log.kind === FilterActionKind.Local && log.requestedVersion && log.servedVersion && (
+                <div className="request-log__card__details__field request-log__card__details__field--text">
+                  <div className="request-log__card__details__label">{t('requestLog.version')}:</div>
+                  <div className="request-log__card__details__value">
+                    {log.requestedVersion} → {log.servedVersion}
+                  </div>
                 </div>
               )}
             </div>

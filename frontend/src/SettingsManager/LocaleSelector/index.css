@@ -1,0 +1,4 @@
+.locale-selector__popover .bp6-popover-content {
+  max-height: 320px;
+  overflow-y: auto;
+}
