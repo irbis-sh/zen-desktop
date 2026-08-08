@@ -1,0 +1,35 @@
+/*
+ * Material Icons stylesheet served locally by Zen's Local Resource Engine.
+ *
+ * The MaterialIcons-Regular.woff2 font is licensed under the Apache License
+ * 2.0 (Copyright 2014 Google Inc.). The CSS rules below are original Zen code
+ * and are licensed under the MIT license.
+ *
+ * The font is referenced through fonts.gstatic.com so that browsers fetch it
+ * through Zen's proxy, where the request is intercepted and served locally.
+ */
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/materialicons/v145/MaterialIcons-Regular.woff2) format('woff2');
+  font-display: block;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
