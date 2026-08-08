@@ -60,3 +60,11 @@ tasks:
     desc: Pull the updates from the zen-https-exclusions repository.
     cmds:
       - git subtree pull --prefix=internal/sysproxy/exclusions https://github.com/irbis-sh/zen-https-exclusions master --squash
+
+  localcdn:update-resources:
+    desc: Update the bundled local CDN resources from upstream CDNs.
+    cmds:
+      - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/update-localcdn-resources.ps1
+        platforms: [windows]
+      - cmd: scripts/update-localcdn-resources.sh
+        platforms: [linux, darwin]
