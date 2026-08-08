@@ -28,7 +28,7 @@ type filterActionObserver interface {
 }
 
 type filterListStore interface {
-	Get(ctx context.Context, url string, mode filterliststore.FetchMode) (io.ReadCloser, error)
+	Get(ctx context.Context, url string, mode filterliststore.FetchMode) (io.ReadCloser, filterliststore.Source, error)
 }
 
 type networkRules interface {
@@ -152,7 +152,9 @@ func (f *Filter) AddURL(listURL string, listName string, listTrusted bool) error
 		visited[currentURL] = struct{}{}
 		visitedMu.Unlock()
 
-		contents, err := f.filterListStore.Get(context.Background(), currentURL, filterliststore.ModeDefault)
+		// The source is unused until AddURL grows its outcome contract, which
+		// reports stale serves to the caller.
+		contents, _, err := f.filterListStore.Get(context.Background(), currentURL, filterliststore.ModeDefault)
 		if err != nil {
 			log.Printf("failed to get filter list %q from store: %v", currentURL, err)
 			return

@@ -46,12 +46,20 @@ type cachingReader struct {
 
 	contentLength int64 // from the response; -1 when unknown
 	bytesRead     int64
+
+	// maxSize fails the download when the body exceeds it; 0 disables the
+	// check.
+	maxSize int64
 }
 
 func (r *cachingReader) Read(p []byte) (int, error) {
 	n, err := r.body.Read(p)
 	if n > 0 {
 		r.bytesRead += int64(n)
+		if r.maxSize > 0 && r.bytesRead > r.maxSize {
+			r.abandon()
+			return n, fmt.Errorf("%w: body exceeds %d bytes", errListTooLarge, r.maxSize)
+		}
 		if r.tempFile != nil {
 			if _, werr := r.tempFile.Write(p[:n]); werr != nil {
 				// Caching is best-effort: keep streaming to the caller.

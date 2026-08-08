@@ -17,7 +17,11 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore/diskcache"
 )
 
-const testListContent = "! Title: Test List\n! Expires: 12 hours\n||example.com^\n||ads.example.net^\n"
+const (
+	testListContent = "! Title: Test List\n! Expires: 12 hours\n||example.com^\n||ads.example.net^\n"
+	// staleListContent is what seedStaleEntry installs.
+	staleListContent = "||stale.example.com^\n"
+)
 
 func TestFetchStreamsAndCaches(t *testing.T) {
 	t.Parallel()
@@ -78,7 +82,7 @@ func TestMidBodyDropSurfacesError(t *testing.T) {
 	dir := t.TempDir()
 	store := newTestStore(t, dir)
 
-	reader, err := store.Get(t.Context(), server.URL, ModeDefault)
+	reader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -140,7 +144,7 @@ func TestEmptyBodyNotCached(t *testing.T) {
 	dir := t.TempDir()
 	store := newTestStore(t, dir)
 
-	reader, err := store.Get(t.Context(), server.URL, ModeDefault)
+	reader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -152,6 +156,56 @@ func TestEmptyBodyNotCached(t *testing.T) {
 
 	assertNotCached(t, store, server.URL)
 	assertNoTempFiles(t, dir)
+}
+
+// TestOversizedBodyRejected drives cachingReader directly, like
+// TestIncompleteBodySurfacesStoreError: the real cap is far more data than a
+// unit test should shuttle, so a small maxSize stands in for it.
+func TestOversizedBodyRejected(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	store := newTestStore(t, dir)
+
+	tempFile, err := store.cache.TempFile()
+	if err != nil {
+		t.Fatalf("TempFile: %v", err)
+	}
+	reader := &cachingReader{
+		body:          io.NopCloser(strings.NewReader(strings.Repeat("a", 100))),
+		tempFile:      tempFile,
+		contentLength: -1,
+		maxSize:       50,
+		onComplete: func(*os.File) {
+			t.Error("onComplete called for an oversized body")
+		},
+	}
+
+	_, err = io.ReadAll(reader)
+	reader.Close()
+	if !errors.Is(err, errListTooLarge) {
+		t.Fatalf("got read error %v, want errListTooLarge", err)
+	}
+	assertNoTempFiles(t, dir)
+}
+
+// TestReadIntoMemoryRejectsOversizedContent pins the cap on the in-memory
+// serve path: an oversized cache file must be refused, not allocated.
+func TestReadIntoMemoryRejectsOversizedContent(t *testing.T) {
+	t.Parallel()
+
+	if _, err := readIntoMemory(io.NopCloser(strings.NewReader("0123456789")), 5); !errors.Is(err, errListTooLarge) {
+		t.Fatalf("got %v, want errListTooLarge", err)
+	}
+
+	content, err := readIntoMemory(io.NopCloser(strings.NewReader("0123456789")), 10)
+	if err != nil {
+		t.Fatalf("readIntoMemory within the limit: %v", err)
+	}
+	data, err := io.ReadAll(content)
+	if err != nil || string(data) != "0123456789" {
+		t.Fatalf("got (%q, %v), want the full content", data, err)
+	}
 }
 
 func TestCallerEarlyCloseAbandonsDownload(t *testing.T) {
@@ -166,7 +220,7 @@ func TestCallerEarlyCloseAbandonsDownload(t *testing.T) {
 	dir := t.TempDir()
 	store := newTestStore(t, dir)
 
-	reader, err := store.Get(t.Context(), server.URL, ModeDefault)
+	reader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -202,7 +256,7 @@ func TestHTMLResponseNotCached(t *testing.T) {
 			dir := t.TempDir()
 			store := newTestStore(t, dir)
 
-			if _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
+			if _, _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
 				t.Fatalf("Get accepted a %q response", contentType)
 			}
 
@@ -223,7 +277,7 @@ func TestCacheOnlyMissNeverDials(t *testing.T) {
 
 	store := newTestStore(t, t.TempDir())
 
-	if _, err := store.Get(t.Context(), server.URL, ModeCacheOnly); err == nil {
+	if _, _, err := store.Get(t.Context(), server.URL, ModeCacheOnly); err == nil {
 		t.Fatal("ModeCacheOnly with no cache entry succeeded")
 	}
 	if got := requests.Load(); got != 0 {
@@ -250,12 +304,11 @@ func TestStaleServedByMode(t *testing.T) {
 			}))
 			defer server.Close()
 
-			const stale = "||stale.example.com^\n"
 			store := newTestStore(t, t.TempDir())
-			seedStaleEntry(t, store, server.URL, stale)
+			seedStaleEntry(t, store, server.URL)
 
-			if content := getAndReadAll(t, store, server.URL, tc.mode); content != stale {
-				t.Errorf("got content %q, want %q", content, stale)
+			if content := getAndReadAll(t, store, server.URL, tc.mode); content != staleListContent {
+				t.Errorf("got content %q, want %q", content, staleListContent)
 			}
 			if got := requests.Load(); got != 0 {
 				t.Errorf("got %d requests, want 0", got)
@@ -269,14 +322,19 @@ func TestDefaultModeRefetchesStale(t *testing.T) {
 
 	const fresh = "||fresh.example.com^\n"
 	var requests atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests.Add(1)
+		// The stale entry stores no validators, so there is nothing to
+		// condition the request on.
+		if r.Header.Get("If-None-Match") != "" || r.Header.Get("If-Modified-Since") != "" {
+			t.Error("conditional headers sent without stored validators")
+		}
 		io.WriteString(w, fresh)
 	}))
 	defer server.Close()
 
 	store := newTestStore(t, t.TempDir())
-	seedStaleEntry(t, store, server.URL, "||stale.example.com^\n")
+	seedStaleEntry(t, store, server.URL)
 
 	if content := getAndReadAll(t, store, server.URL, ModeDefault); content != fresh {
 		t.Errorf("got content %q, want refetched %q", content, fresh)
@@ -284,6 +342,257 @@ func TestDefaultModeRefetchesStale(t *testing.T) {
 	if got := requests.Load(); got != 1 {
 		t.Errorf("got %d requests, want 1", got)
 	}
+}
+
+func TestValidatorsCapturedAndRevalidated(t *testing.T) {
+	t.Parallel()
+
+	const etag = `"v1"`
+	const lastModified = "Wed, 21 Oct 2015 07:28:00 GMT"
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if requests.Add(1) == 1 {
+			w.Header().Set("ETag", etag)
+			w.Header().Set("Last-Modified", lastModified)
+			io.WriteString(w, testListContent)
+			return
+		}
+		if got := r.Header.Get("If-None-Match"); got != etag {
+			t.Errorf("got If-None-Match %q, want %q", got, etag)
+		}
+		if got := r.Header.Get("If-Modified-Since"); got != lastModified {
+			t.Errorf("got If-Modified-Since %q, want %q", got, lastModified)
+		}
+		w.WriteHeader(http.StatusNotModified)
+	}))
+	defer server.Close()
+
+	store := newTestStore(t, t.TempDir())
+
+	if content := getAndReadAll(t, store, server.URL, ModeDefault); content != testListContent {
+		t.Fatalf("got content %q, want %q", content, testListContent)
+	}
+
+	// Expire the entry without touching its content or validators, so the
+	// next Get has to revalidate.
+	store.cache.Refresh(server.URL, time.Now().Add(-time.Hour), "", "")
+
+	content, src := getAndReadAllSource(t, store, server.URL, ModeDefault)
+	if content != testListContent {
+		t.Errorf("got content %q, want cached %q", content, testListContent)
+	}
+	if src != SourceCache {
+		t.Errorf("got source %v, want SourceCache (revalidated content is fresh)", src)
+	}
+	if got := requests.Load(); got != 2 {
+		t.Fatalf("got %d requests, want 2", got)
+	}
+
+	// The 304 must have bumped the expiry by the stored TTL: another Get is a
+	// plain cache hit, without a request.
+	if content := getAndReadAll(t, store, server.URL, ModeDefault); content != testListContent {
+		t.Errorf("got content %q, want %q", content, testListContent)
+	}
+	if got := requests.Load(); got != 2 {
+		t.Errorf("got %d requests after revalidation, want 2 (expiry not refreshed)", got)
+	}
+	assertSlotsFree(t, store)
+}
+
+// TestUnsolicited304NotTreatedAsFresh covers a 304 answering a request that
+// carried no validators - a protocol violation seen from misbehaving servers
+// and middleboxes. It confirms nothing, so it must be handled as a failed
+// fetch: stale copy served, expiry left alone.
+func TestUnsolicited304NotTreatedAsFresh(t *testing.T) {
+	t.Parallel()
+
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		if r.Header.Get("If-None-Match") != "" || r.Header.Get("If-Modified-Since") != "" {
+			t.Error("conditional headers sent without stored validators")
+		}
+		w.WriteHeader(http.StatusNotModified)
+	}))
+	defer server.Close()
+
+	store := newFastRetryStore(t, t.TempDir())
+	seedStaleEntry(t, store, server.URL)
+
+	content, src := getAndReadAllSource(t, store, server.URL, ModeDefault)
+	if content != staleListContent {
+		t.Errorf("got content %q, want %q", content, staleListContent)
+	}
+	if src != SourceStaleCache {
+		t.Errorf("got source %v, want SourceStaleCache", src)
+	}
+
+	// The entry must still be stale: a second Get fetches again instead of
+	// serving a bogusly refreshed copy.
+	getAndReadAll(t, store, server.URL, ModeDefault)
+	if got := requests.Load(); got != 2 {
+		t.Errorf("got %d requests, want 2 (rogue 304 refreshed the entry)", got)
+	}
+	assertSlotsFree(t, store)
+}
+
+// TestMissingContentRefetchedUnconditionally covers an entry that still has
+// validators while its content file is gone (OS cache purge, manual cleanup).
+// Confirming freshness for content the store cannot produce would serve
+// nothing, so the request must go out unconditional.
+func TestMissingContentRefetchedUnconditionally(t *testing.T) {
+	t.Parallel()
+
+	const fresh = "||fresh.example.com^\n"
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		if r.Header.Get("If-None-Match") != "" || r.Header.Get("If-Modified-Since") != "" {
+			t.Error("conditional request for content the store cannot produce")
+		}
+		io.WriteString(w, fresh)
+	}))
+	defer server.Close()
+
+	dir := t.TempDir()
+	store := newTestStore(t, dir)
+	seedStaleEntry(t, store, server.URL)
+	store.cache.Refresh(server.URL, time.Now().Add(-time.Hour), `"v1"`, "Wed, 21 Oct 2015 07:28:00 GMT")
+	removeCacheContent(t, dir)
+
+	content, src := getAndReadAllSource(t, store, server.URL, ModeDefault)
+	if content != fresh {
+		t.Errorf("got content %q, want refetched %q", content, fresh)
+	}
+	if src != SourceNetwork {
+		t.Errorf("got source %v, want SourceNetwork", src)
+	}
+	if got := requests.Load(); got != 1 {
+		t.Errorf("got %d requests, want 1", got)
+	}
+}
+
+// TestCancelledFetchNotMaskedByStaleCopy: a Get that fails because the
+// caller's own context ended must report that, not dress the failure up as a
+// successful stale serve - that would defeat the deadline the caller is
+// enforcing.
+func TestCancelledFetchNotMaskedByStaleCopy(t *testing.T) {
+	t.Parallel()
+
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		// Hang until the client gives up.
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	store := newTestStore(t, t.TempDir())
+	seedStaleEntry(t, store, server.URL)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	type outcome struct {
+		src Source
+		err error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		_, src, err := store.Get(ctx, server.URL, ModeDefault)
+		done <- outcome{src: src, err: err}
+	}()
+	waitFor(t, func() bool { return requests.Load() == 1 })
+	cancel()
+
+	select {
+	case got := <-done:
+		if !errors.Is(got.err, context.Canceled) {
+			t.Fatalf("got (source %v, err %v), want context.Canceled", got.src, got.err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Get never returned after cancellation")
+	}
+
+	store.flightMu.Lock()
+	pending := len(store.inflight)
+	store.flightMu.Unlock()
+	if pending != 0 {
+		t.Errorf("%d flights left behind", pending)
+	}
+	assertSlotsFree(t, store)
+}
+
+// TestCacheOnlyContentServedFromMemory proves cache-only serves are read into
+// memory up front: the returned reader keeps working even when the content
+// file disappears mid-parse. The rebuild loop's final cache-only pass counts
+// on a Get that succeeded being unable to taint the parse.
+func TestCacheOnlyContentServedFromMemory(t *testing.T) {
+	t.Parallel()
+
+	const url = "https://filters.example.com/list.txt"
+	dir := t.TempDir()
+	store := newTestStore(t, dir)
+	seedStaleEntry(t, store, url)
+
+	reader, src, err := store.Get(t.Context(), url, ModeCacheOnly)
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	defer reader.Close()
+	if src != SourceStaleCache {
+		t.Errorf("got source %v, want SourceStaleCache", src)
+	}
+
+	// The file vanishing after Get must not affect the read.
+	removeCacheContent(t, dir)
+
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatalf("read after content file removal: %v", err)
+	}
+	if string(content) != staleListContent {
+		t.Errorf("got content %q, want %q", content, staleListContent)
+	}
+}
+
+func TestSourceReflectsOrigin(t *testing.T) {
+	t.Parallel()
+
+	var fail atomic.Bool
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		if fail.Load() {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		io.WriteString(w, testListContent)
+	}))
+	defer server.Close()
+
+	store := newTestStore(t, t.TempDir())
+
+	assertSource := func(mode FetchMode, want Source) {
+		t.Helper()
+		if _, src := getAndReadAllSource(t, store, server.URL, mode); src != want {
+			t.Errorf("got source %v, want %v", src, want)
+		}
+	}
+
+	assertSource(ModeDefault, SourceNetwork)
+	assertSource(ModeDefault, SourceCache)
+
+	// Expire the entry; a mode that tolerates staleness serves it as-is.
+	store.cache.Refresh(server.URL, time.Now().Add(-time.Hour), "", "")
+	assertSource(ModePreferCache, SourceStaleCache)
+
+	// And so does a failed refetch.
+	fail.Store(true)
+	assertSource(ModeDefault, SourceStaleCache)
+
+	if got := requests.Load(); got != 2 {
+		t.Errorf("got %d requests, want 2", got)
+	}
+	assertSlotsFree(t, store)
 }
 
 func TestSlowButMovingBodySucceeds(t *testing.T) {
@@ -332,7 +641,7 @@ func TestStalledBodyKilledByWatchdog(t *testing.T) {
 	store := newTestStore(t, dir)
 	store.stallTimeout = 150 * time.Millisecond
 
-	reader, err := store.Get(t.Context(), server.URL, ModeDefault)
+	reader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -406,7 +715,7 @@ func TestRetriesExhausted(t *testing.T) {
 
 	store := newFastRetryStore(t, t.TempDir())
 
-	if _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
+	if _, _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
 		t.Fatal("Get succeeded against an always-500 server")
 	}
 	if got := requests.Load(); got != 3 {
@@ -415,28 +724,56 @@ func TestRetriesExhausted(t *testing.T) {
 	assertSlotsFree(t, store)
 }
 
-func TestNoRetryWithStaleCopy(t *testing.T) {
+func TestFailedFetchServesStaleWithoutRetry(t *testing.T) {
 	t.Parallel()
 
-	var requests atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		requests.Add(1)
-		w.WriteHeader(http.StatusInternalServerError)
-	}))
-	defer server.Close()
+	for _, tc := range []struct {
+		name   string
+		status int
+	}{
+		{"TransientFailure", http.StatusInternalServerError},
+		{"PermanentFailure", http.StatusNotFound},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	store := newFastRetryStore(t, t.TempDir())
-	seedStaleEntry(t, store, server.URL, "||stale.example.com^\n")
+			var requests atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				requests.Add(1)
+				w.WriteHeader(tc.status)
+			}))
+			defer server.Close()
 
-	// A stale copy caps the damage of a failed fetch, so a single attempt is
-	// enough; the fallback itself arrives in a later stage.
-	if _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
-		t.Fatal("Get succeeded against an always-500 server")
+			dir := t.TempDir()
+			store := newFastRetryStore(t, dir)
+			seedStaleEntry(t, store, server.URL)
+
+			reader, src, err := store.Get(t.Context(), server.URL, ModeDefault)
+			if err != nil {
+				t.Fatalf("Get: %v", err)
+			}
+			defer reader.Close()
+			// The fallback must have been read into memory: deleting the
+			// content file mid-parse must not affect the stream.
+			removeCacheContent(t, dir)
+			content, err := io.ReadAll(reader)
+			if err != nil {
+				t.Fatalf("read: %v", err)
+			}
+			if string(content) != staleListContent {
+				t.Errorf("got content %q, want stale copy %q", content, staleListContent)
+			}
+			if src != SourceStaleCache {
+				t.Errorf("got source %v, want SourceStaleCache", src)
+			}
+			// The fallback makes retrying pointless: a single attempt caps how
+			// long a dead network stalls startup.
+			if got := requests.Load(); got != 1 {
+				t.Errorf("got %d requests, want 1 (no retries with a stale copy)", got)
+			}
+			assertSlotsFree(t, store)
+		})
 	}
-	if got := requests.Load(); got != 1 {
-		t.Errorf("got %d requests, want 1 (no retries with a stale copy)", got)
-	}
-	assertSlotsFree(t, store)
 }
 
 func Test4xxNotRetried(t *testing.T) {
@@ -451,7 +788,7 @@ func Test4xxNotRetried(t *testing.T) {
 
 	store := newFastRetryStore(t, t.TempDir())
 
-	if _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
+	if _, _, err := store.Get(t.Context(), server.URL, ModeDefault); err == nil {
 		t.Fatal("Get succeeded against a 404 server")
 	}
 	if got := requests.Load(); got != 1 {
@@ -497,7 +834,7 @@ func TestSemaphoreReleasedOnAllPaths(t *testing.T) {
 
 	getAndReadAll(t, store, server.URL+"/ok", ModeDefault)
 
-	reader, err := store.Get(t.Context(), server.URL+"/big", ModeDefault)
+	reader, _, err := store.Get(t.Context(), server.URL+"/big", ModeDefault)
 	if err != nil {
 		t.Fatalf("Get /big: %v", err)
 	}
@@ -505,7 +842,7 @@ func TestSemaphoreReleasedOnAllPaths(t *testing.T) {
 	reader.Close()
 
 	for _, path := range []string{"/midbody", "/stall", "/empty"} {
-		reader, err := store.Get(t.Context(), server.URL+path, ModeDefault)
+		reader, _, err := store.Get(t.Context(), server.URL+path, ModeDefault)
 		if err != nil {
 			t.Fatalf("Get %s: %v", path, err)
 		}
@@ -516,7 +853,7 @@ func TestSemaphoreReleasedOnAllPaths(t *testing.T) {
 	}
 
 	for _, path := range []string{"/notfound", "/html"} {
-		if _, err := store.Get(t.Context(), server.URL+path, ModeDefault); err == nil {
+		if _, _, err := store.Get(t.Context(), server.URL+path, ModeDefault); err == nil {
 			t.Fatalf("Get %s succeeded, want an error", path)
 		}
 	}
@@ -545,7 +882,7 @@ func TestNestedIncludeAtCapacityOne(t *testing.T) {
 	store := newTestStore(t, t.TempDir())
 	store.sem = make(chan struct{}, 1)
 
-	parent, err := store.Get(t.Context(), server.URL+"/parent.txt", ModeDefault)
+	parent, _, err := store.Get(t.Context(), server.URL+"/parent.txt", ModeDefault)
 	if err != nil {
 		t.Fatalf("Get parent: %v", err)
 	}
@@ -561,7 +898,7 @@ func TestNestedIncludeAtCapacityOne(t *testing.T) {
 	}
 	childDone := make(chan outcome, 1)
 	go func() {
-		reader, err := store.Get(t.Context(), server.URL+"/child.txt", ModeDefault)
+		reader, _, err := store.Get(t.Context(), server.URL+"/child.txt", ModeDefault)
 		if err != nil {
 			childDone <- outcome{err: err}
 			return
@@ -603,7 +940,7 @@ func TestSingleFlightCollapsesConcurrentFetches(t *testing.T) {
 
 	store := newTestStore(t, t.TempDir())
 
-	leader, err := store.Get(t.Context(), server.URL, ModeDefault)
+	leader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -616,7 +953,7 @@ func TestSingleFlightCollapsesConcurrentFetches(t *testing.T) {
 	}
 	joinerDone := make(chan outcome, 1)
 	go func() {
-		reader, err := store.Get(t.Context(), server.URL, ModeDefault)
+		reader, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 		if err != nil {
 			joinerDone <- outcome{err: err}
 			return
@@ -671,14 +1008,14 @@ func TestSingleFlightLeaderFailureFallsBack(t *testing.T) {
 
 	leaderErr := make(chan error, 1)
 	go func() {
-		_, err := store.Get(t.Context(), server.URL, ModeDefault)
+		_, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 		leaderErr <- err
 	}()
 	waitFor(t, func() bool { return requests.Load() == 1 })
 
 	joinerErr := make(chan error, 1)
 	go func() {
-		_, err := store.Get(t.Context(), server.URL, ModeDefault)
+		_, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 		joinerErr <- err
 	}()
 	// The leader is parked inside its first attempt, so its flight cannot
@@ -714,7 +1051,7 @@ func TestPermanentDoFailuresNotRetried(t *testing.T) {
 
 		store := newFastRetryStore(t, t.TempDir())
 
-		_, err := store.Get(t.Context(), "htp://example.com/list.txt", ModeDefault)
+		_, _, err := store.Get(t.Context(), "htp://example.com/list.txt", ModeDefault)
 		if err == nil || !strings.Contains(err.Error(), "unsupported URL scheme") {
 			t.Fatalf("got %v, want an unsupported-scheme error", err)
 		}
@@ -732,7 +1069,7 @@ func TestPermanentDoFailuresNotRetried(t *testing.T) {
 
 		store := newFastRetryStore(t, t.TempDir())
 
-		_, err := store.Get(t.Context(), server.URL, ModeDefault)
+		_, _, err := store.Get(t.Context(), server.URL, ModeDefault)
 		if !errors.Is(err, errTooManyRedirects) {
 			t.Fatalf("got %v, want errTooManyRedirects", err)
 		}
@@ -762,14 +1099,14 @@ func TestCancelledWhileQueuedForSlot(t *testing.T) {
 	store := newTestStore(t, t.TempDir())
 	store.sem = make(chan struct{}, 1)
 
-	holder, err := store.Get(t.Context(), server.URL+"/hold", ModeDefault)
+	holder, _, err := store.Get(t.Context(), server.URL+"/hold", ModeDefault)
 	if err != nil {
 		t.Fatalf("Get /hold: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
-	if _, err := store.Get(ctx, server.URL+"/queued", ModeDefault); !errors.Is(err, context.Canceled) {
+	if _, _, err := store.Get(ctx, server.URL+"/queued", ModeDefault); !errors.Is(err, context.Canceled) {
 		t.Fatalf("got %v, want context.Canceled", err)
 	}
 
@@ -798,7 +1135,14 @@ func newTestStore(t *testing.T, dir string) *FilterListStore {
 
 func getAndReadAll(t *testing.T, store *FilterListStore, url string, mode FetchMode) string {
 	t.Helper()
-	reader, err := store.Get(t.Context(), url, mode)
+	content, _ := getAndReadAllSource(t, store, url, mode)
+	return content
+}
+
+// getAndReadAllSource is getAndReadAll for tests that also assert the Source.
+func getAndReadAllSource(t *testing.T, store *FilterListStore, url string, mode FetchMode) (string, Source) {
+	t.Helper()
+	reader, src, err := store.Get(t.Context(), url, mode)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -807,18 +1151,19 @@ func getAndReadAll(t *testing.T, store *FilterListStore, url string, mode FetchM
 	if err != nil {
 		t.Fatalf("read filter list: %v", err)
 	}
-	return string(content)
+	return string(content), src
 }
 
-// seedStaleEntry installs an already-expired cache entry for url through the
-// cache's own API, so the tests carry no knowledge of its on-disk format.
-func seedStaleEntry(t *testing.T, store *FilterListStore, url, content string) {
+// seedStaleEntry installs an already-expired cache entry holding
+// staleListContent for url through the cache's own API, so the tests carry no
+// knowledge of its on-disk format.
+func seedStaleEntry(t *testing.T, store *FilterListStore, url string) {
 	t.Helper()
 	tempFile, err := store.cache.TempFile()
 	if err != nil {
 		t.Fatalf("TempFile: %v", err)
 	}
-	if _, err := tempFile.WriteString(content); err != nil {
+	if _, err := tempFile.WriteString(staleListContent); err != nil {
 		t.Fatalf("write temp file: %v", err)
 	}
 	if err := tempFile.Close(); err != nil {
@@ -829,6 +1174,24 @@ func seedStaleEntry(t *testing.T, store *FilterListStore, url, content string) {
 		TTL:       24 * time.Hour,
 	}); err != nil {
 		t.Fatalf("Promote: %v", err)
+	}
+}
+
+// removeCacheContent deletes every cache content file, simulating an OS cache
+// purge that spares the index. The one place tests touch the on-disk naming.
+func removeCacheContent(t *testing.T, dir string) {
+	t.Helper()
+	files, err := filepath.Glob(filepath.Join(dir, "*.cache.txt"))
+	if err != nil {
+		t.Fatalf("glob cache files: %v", err)
+	}
+	if len(files) == 0 {
+		t.Fatal("no cache content files to remove")
+	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			t.Fatalf("remove %s: %v", f, err)
+		}
 	}
 }
 
