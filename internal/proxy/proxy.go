@@ -20,6 +20,14 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
 )
 
+const (
+	dialTimeout           = 60 * time.Second
+	dialKeepAlive         = 30 * time.Second
+	tlsHandshakeTimeout   = 20 * time.Second
+	responseHeaderTimeout = 3 * time.Minute
+	idleConnTimeout       = 90 * time.Second
+)
+
 // certGenerator is an interface capable of generating certificates for the proxy.
 type certGenerator interface {
 	GetCertificate(host string) (*tls.Certificate, error)
@@ -65,19 +73,21 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 	}
 
 	p.netDialer = &net.Dialer{
-		// Such high values are set to avoid timeouts on slow connections.
-		Timeout:   60 * time.Second,
-		KeepAlive: 30 * time.Second,
+		Timeout:   dialTimeout,
+		KeepAlive: dialKeepAlive,
 	}
 	p.requestTransport = &http.Transport{
-		DialContext:         p.netDialer.DialContext,
-		ForceAttemptHTTP2:   true,
-		TLSHandshakeTimeout: 20 * time.Second,
-		MaxIdleConns:        100,
-		IdleConnTimeout:     90 * time.Second,
+		DialContext:           p.netDialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		TLSHandshakeTimeout:   tlsHandshakeTimeout,
+		ResponseHeaderTimeout: responseHeaderTimeout,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       idleConnTimeout,
 	}
 	p.requestClient = &http.Client{
-		Timeout:   60 * time.Second,
+		// Timeout is deliberately unset: it covers the response body read, which would make
+		// it exactly the total budget the timeouts above rule out. Ending a transfer is the
+		// client's call.
 		Transport: p.requestTransport,
 		// Let the client handle any redirects.
 		CheckRedirect: func(*http.Request, []*http.Request) error {
@@ -93,7 +103,9 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 // If Proxy was configured with a port of 0, the actual port will be returned.
 func (p *Proxy) Start() (int, error) {
 	p.server = &http.Server{
-		Handler:           p,
+		Handler: p,
+		// WriteTimeout is deliberately unset: it caps the whole handler, response write
+		// included, and would truncate large downloads and long-lived streams.
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", p.port))
