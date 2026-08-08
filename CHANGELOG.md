@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### What's New
+
+* **Local Resource Interception & Injection Engine**
+  Zen can now serve bundled copies of popular CDN libraries (jQuery,
+  Bootstrap, Font Awesome, React, Vue.js, Axios, Lodash, and more) directly
+  from your device instead of downloading them from remote CDNs. HTML
+  responses are rewritten to strip `integrity` and `crossorigin` attributes so
+  browsers accept the locally served replacements. New settings under
+  Settings > Local Resources let you enable the engine, block requests for
+  missing resources, choose which libraries are active, configure a custom
+  resource directory, and import/export custom resource mappings.
+
+### Migration notes
+
+* Existing configurations are migrated automatically (config migration
+  `v0.26.0`): the Local Resource Engine is enabled by default and the new
+  `localResources` section is added to `config.json`. You can disable it at
+  any time in Settings > Local Resources.
+
 ## v0.24.1
 
 ### What's New
