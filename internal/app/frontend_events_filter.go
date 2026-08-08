@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 
+	"github.com/irbis-sh/zen-desktop/internal/localcdn"
 	nrule "github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 	"github.com/irbis-sh/zen-desktop/internal/process"
 )
@@ -14,6 +15,7 @@ const (
 	filterEventBlock    filterEventKind = "block"
 	filterEventRedirect filterEventKind = "redirect"
 	filterEventModify   filterEventKind = "modify"
+	filterEventLocal    filterEventKind = "local"
 )
 
 type rulePayload struct {
@@ -35,6 +37,17 @@ type filterEvent struct {
 	Referer string          `json:"referer,omitempty"`
 	Rules   []rulePayload   `json:"rules"`
 	Process processPayload  `json:"process"`
+	// Resource is the name of the library served by the local resource engine.
+	Resource string `json:"resource,omitempty"`
+	// Blocked is true when the local resource engine blocked a request for a
+	// missing resource.
+	Blocked bool `json:"blocked,omitempty"`
+	// RequestedVersion is the version requested in the URL.
+	RequestedVersion string `json:"requestedVersion,omitempty"`
+	// ServedVersion is the version of the locally served copy.
+	ServedVersion string `json:"servedVersion,omitempty"`
+	// VersionDelta is "upgrade", "downgrade", or "" (see localcdn.VersionDelta).
+	VersionDelta string `json:"versionDelta,omitempty"`
 }
 
 func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules []nrule.Rule, processInfo process.Info) filterEvent {
@@ -70,13 +83,42 @@ func newFilterEvent(kind filterEventKind, method, url, to, referer string, rules
 }
 
 func (e *frontendEvents) OnFilterBlock(method, url, referer string, rules []nrule.Rule, processInfo process.Info) {
+	if e.recordFilterHit != nil {
+		e.recordFilterHit()
+	}
 	e.emit(filterChannel, newFilterEvent(filterEventBlock, method, url, "", referer, rules, processInfo))
 }
 
 func (e *frontendEvents) OnFilterRedirect(method, url, to, referer string, rules []nrule.Rule, processInfo process.Info) {
+	if e.recordFilterHit != nil {
+		e.recordFilterHit()
+	}
 	e.emit(filterChannel, newFilterEvent(filterEventRedirect, method, url, to, referer, rules, processInfo))
 }
 
 func (e *frontendEvents) OnFilterModify(method, url, referer string, rules []nrule.Rule, processInfo process.Info) {
+	if e.recordFilterHit != nil {
+		e.recordFilterHit()
+	}
 	e.emit(filterChannel, newFilterEvent(filterEventModify, method, url, "", referer, rules, processInfo))
+}
+
+// OnLocalServed emits an event for a request served by the local resource engine.
+func (e *frontendEvents) OnLocalServed(method, url, referer, resource, cdnHost, requestedVersion, servedVersion string, processInfo process.Info) {
+	event := newFilterEvent(filterEventLocal, method, url, "", referer, nil, processInfo)
+	event.Resource = resource
+	event.To = cdnHost
+	event.RequestedVersion = requestedVersion
+	event.ServedVersion = servedVersion
+	event.VersionDelta = localcdn.VersionDelta(requestedVersion, servedVersion)
+	e.emit(filterChannel, event)
+}
+
+// OnLocalBlocked emits an event for a request blocked because no local copy of
+// a known CDN resource exists.
+func (e *frontendEvents) OnLocalBlocked(method, url, referer, cdnHost string, processInfo process.Info) {
+	event := newFilterEvent(filterEventLocal, method, url, "", referer, nil, processInfo)
+	event.Blocked = true
+	event.To = cdnHost
+	e.emit(filterChannel, event)
 }

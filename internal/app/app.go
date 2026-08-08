@@ -20,6 +20,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/filter"
 	"github.com/irbis-sh/zen-desktop/internal/filter/whitelistserver"
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
+	"github.com/irbis-sh/zen-desktop/internal/localcdn"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules"
 	"github.com/irbis-sh/zen-desktop/internal/proxy"
@@ -52,6 +53,8 @@ type App struct {
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
 	assetSrv        *asset.Server
+	localcdnMgr     *localcdn.Manager
+	localEngine     *localcdn.Engine
 }
 
 // NewApp initializes the app.
@@ -87,6 +90,7 @@ func NewApp(name string, appConfig *config.Config, startOnDomReady bool) (*App, 
 		startOnDomReady:    startOnDomReady,
 		systemProxyManager: systemProxyManager,
 		filterListStore:    filterListStore,
+		localcdnMgr:        localcdn.NewManager(appConfig),
 	}, nil
 }
 
@@ -104,7 +108,7 @@ func (a *App) commonStartup(ctx context.Context) {
 	}
 
 	a.systrayMgr = systrayMgr
-	a.frontendEvents = newFrontendEvents(ctx)
+	a.frontendEvents = newFrontendEvents(ctx, a.localcdnMgr.Stats().RecordFilterHit)
 	a.config.RunMigrations()
 	a.systrayMgr.Init(ctx)
 
@@ -213,6 +217,31 @@ func (a *App) StartProxy() (err error) {
 	}
 	a.initFilter(filter)
 
+	localEngine, err := localcdn.NewEngine(localcdn.Options{
+		Settings: a.config.GetLocalResources(),
+		IsExcluded: func(host string) bool {
+			return sysproxy.IsExcludedHost(host, a.config.GetIgnoredHosts())
+		},
+		IsUserExcluded: func(host string) bool {
+			return sysproxy.IsUserExcludedHost(host, a.config.GetIgnoredHosts())
+		},
+		Stats: a.localcdnMgr.Stats(),
+		SaveStats: func(stats config.LocalResourcesStats) error {
+			return a.config.SetLocalResourcesStats(stats)
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("create local resource engine: %v", err)
+	}
+	a.localEngine = localEngine
+	log.Printf("local resource engine enabled: %v", a.config.GetLocalResources().Enabled)
+
+	defer func() {
+		if err != nil {
+			a.localEngine = nil
+		}
+	}()
+
 	if err := whitelistSrv.Start(); err != nil {
 		return fmt.Errorf("start whitelist server: %v", err)
 	}
@@ -229,7 +258,11 @@ func (a *App) StartProxy() (err error) {
 
 	routingPolicy := routing.NewPolicy(a.config.GetRouting())
 
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy)
+	a.proxy, err = proxy.NewProxy(&localcdnFilter{
+		filter: filter,
+		local:  localEngine,
+		events: a.frontendEvents,
+	}, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy)
 	if err != nil {
 		return fmt.Errorf("create proxy: %v", err)
 	}
@@ -244,7 +277,7 @@ func (a *App) StartProxy() (err error) {
 	}
 
 	a.systemProxyManager.SetPACPort(a.config.GetPACPort())
-	if err := a.systemProxyManager.Set(port, a.config.GetIgnoredHosts(), routingPolicy.ShouldProxy); err != nil {
+	if err := a.systemProxyManager.Set(port, a.config.GetIgnoredHosts(), localcdn.CDNHosts(), routingPolicy.ShouldProxy); err != nil {
 		if errors.Is(err, sysproxy.ErrUnsupportedDesktopEnvironment) {
 			a.frontendEvents.OnUnsupportedDE(err)
 		} else {
@@ -303,6 +336,8 @@ func (a *App) StopProxy() (err error) {
 		return fmt.Errorf("stop proxy: %w", err)
 	}
 
+	a.localEngine.Flush()
+
 	if err := a.whitelistSrv.Stop(); err != nil {
 		return fmt.Errorf("stop whitelist server: %w", err)
 	}
@@ -313,6 +348,7 @@ func (a *App) StopProxy() (err error) {
 
 	a.assetSrv = nil
 	a.whitelistSrv = nil
+	a.localEngine = nil
 	a.proxy = nil
 	a.proxyOn = false
 
