@@ -17,9 +17,13 @@ import (
 
 const myRulesFilterName = "My rules"
 
-// filterBuildTimeout bounds the whole build loop. StartProxy holds proxyMu
-// for its duration, so quit and StopProxy block until the loop returns; on a
-// blackholed network the per-fetch budgets alone could stack up to minutes.
+// filterBuildTimeout bounds the network phase of the build: once it expires,
+// remaining passes are forced to cache-only. It is not a hard ceiling on the
+// loop - cache-only work never consults the context and a pass that is
+// already parsing runs to quiescence - so the build can overrun it by parse
+// CPU (seconds), never by network waits, which on a blackholed network could
+// otherwise stack up to minutes. The bound matters because StartProxy holds
+// proxyMu for the build's duration, and quit and StopProxy block on it.
 const filterBuildTimeout = 90 * time.Second
 
 // passModes ladders successive build passes away from the network: a pass
