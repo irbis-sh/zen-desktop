@@ -17,11 +17,9 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/certstore"
 	"github.com/irbis-sh/zen-desktop/internal/config"
 	"github.com/irbis-sh/zen-desktop/internal/constants"
-	"github.com/irbis-sh/zen-desktop/internal/filter"
 	"github.com/irbis-sh/zen-desktop/internal/filter/whitelistserver"
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
-	"github.com/irbis-sh/zen-desktop/internal/networkrules"
 	"github.com/irbis-sh/zen-desktop/internal/proxy"
 	"github.com/irbis-sh/zen-desktop/internal/routing"
 	"github.com/irbis-sh/zen-desktop/internal/selfupdate"
@@ -183,15 +181,12 @@ func (a *App) StartProxy() (err error) {
 		return fmt.Errorf("create cert manager: %v", err)
 	}
 
-	networkRules := networkrules.New()
-	whitelistSrv := whitelistserver.New(networkRules)
-
-	assetPort := a.config.GetAssetPort()
-	assetInjector, err := asset.NewEngine(assetPort)
+	filter, whitelistSrv, assetInjector, err := a.buildFilter()
 	if err != nil {
-		return fmt.Errorf("create asset injector: %v", err)
+		return err
 	}
-	a.assetSrv, err = asset.NewServer(assetPort, assetInjector, certGenerator)
+
+	a.assetSrv, err = asset.NewServer(a.config.GetAssetPort(), assetInjector, certGenerator)
 	if err != nil {
 		return fmt.Errorf("create asset server: %v", err)
 	}
@@ -206,12 +201,6 @@ func (a *App) StartProxy() (err error) {
 			a.assetSrv = nil
 		}
 	}()
-
-	filter, err := filter.NewFilter(networkRules, assetInjector, a.filterListStore, a.frontendEvents, whitelistSrv)
-	if err != nil {
-		return fmt.Errorf("create filter: %v", err)
-	}
-	a.initFilter(context.Background(), filter, filterliststore.ModeDefault)
 
 	if err := whitelistSrv.Start(); err != nil {
 		return fmt.Errorf("start whitelist server: %v", err)
