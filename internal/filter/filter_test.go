@@ -124,6 +124,67 @@ func TestLongLineWithinLimitParses(t *testing.T) {
 	assertRules(t, rules.got(), longRule)
 }
 
+func TestOversizedLineDrainsStreamToEOF(t *testing.T) {
+	t.Parallel()
+
+	content := "||before.example.com^\n" + strings.Repeat("a", maxRuleLength+1) + "\n||after.example.com^\n"
+	store := &fakeStore{entries: map[string]listEntry{
+		"https://example.com/list.txt": {content: content},
+	}}
+	f, _ := newTestFilter(t, store)
+
+	f.AddURL(context.Background(), "https://example.com/list.txt", "test", true, filterliststore.ModeDefault)
+
+	// The store caches a download only at a verified EOF: returning at the
+	// oversized line would leave the list uncacheable, refetched in full at
+	// every startup with no offline copy.
+	if !store.reachedEOF("https://example.com/list.txt") {
+		t.Error("expected the stream to be drained to EOF")
+	}
+}
+
+func TestEmptyBodyMarksFailed(t *testing.T) {
+	t.Parallel()
+
+	store := &fakeStore{entries: map[string]listEntry{
+		"https://example.com/list.txt": {readErr: filterliststore.ErrEmptyBody},
+	}}
+	f, rules := newTestFilter(t, store)
+
+	outcome := f.AddURL(context.Background(), "https://example.com/list.txt", "test", true, filterliststore.ModeDefault)
+
+	if !outcome.Failed {
+		t.Error("expected Failed")
+	}
+	// Deterministic and rule-free: a rebuild would refetch the same emptiness,
+	// so it must not read as truncation.
+	if outcome.Truncated {
+		t.Error("unexpected Truncated")
+	}
+	if !errors.Is(outcome.Err, filterliststore.ErrEmptyBody) {
+		t.Errorf("expected Err to wrap ErrEmptyBody, got %v", outcome.Err)
+	}
+	assertRules(t, rules.got())
+}
+
+func TestListSizeCapIsNotTruncation(t *testing.T) {
+	t.Parallel()
+
+	store := &fakeStore{entries: map[string]listEntry{
+		"https://example.com/list.txt": {content: "||before.example.com^\n", readErr: filterliststore.ErrListTooLarge},
+	}}
+	f, rules := newTestFilter(t, store)
+
+	outcome := f.AddURL(context.Background(), "https://example.com/list.txt", "test", true, filterliststore.ModeDefault)
+
+	// Like an oversized line: the rules up to the cap were applied and a
+	// refetch would break at the same byte, so no taint.
+	if outcome != (Outcome{}) {
+		t.Errorf("expected zero outcome for the deterministic size cap, got %+v", outcome)
+	}
+	assertRules(t, rules.got(), "||before.example.com^")
+}
+
 func TestRootFetchFailureMarksFailed(t *testing.T) {
 	t.Parallel()
 
@@ -344,18 +405,27 @@ type fetchRecord struct {
 }
 
 // fakeStore's entries are fixed at construction and only read afterwards;
-// mu guards just the per-URL fetch records.
+// mu guards just the per-URL fetch and EOF records.
 type fakeStore struct {
 	entries map[string]listEntry
 
 	mu      sync.Mutex
 	fetches map[string]fetchRecord
+	eofs    map[string]bool
 }
 
 func (s *fakeStore) fetched(url string) fetchRecord {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.fetches[url]
+}
+
+// reachedEOF reports whether the reader served for url was consumed to EOF -
+// the fake's stand-in for the store's "verified download, cached" condition.
+func (s *fakeStore) reachedEOF(url string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.eofs[url]
 }
 
 func (s *fakeStore) Get(ctx context.Context, url string, mode filterliststore.FetchMode) (io.ReadCloser, filterliststore.Source, error) {
@@ -381,7 +451,29 @@ func (s *fakeStore) Get(ctx context.Context, url string, mode filterliststore.Fe
 	if e.readErr != nil {
 		r = io.MultiReader(r, iotest.ErrReader(e.readErr))
 	}
+	r = &eofTracker{Reader: r, onEOF: func() {
+		s.mu.Lock()
+		if s.eofs == nil {
+			s.eofs = make(map[string]bool)
+		}
+		s.eofs[url] = true
+		s.mu.Unlock()
+	}}
 	return io.NopCloser(r), src, nil
+}
+
+// eofTracker invokes onEOF when the wrapped reader reports io.EOF.
+type eofTracker struct {
+	io.Reader
+	onEOF func()
+}
+
+func (r *eofTracker) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	if errors.Is(err, io.EOF) {
+		r.onEOF()
+	}
+	return n, err
 }
 
 type fakeNetworkRules struct {

@@ -241,16 +241,35 @@ func (f *Filter) AddURL(ctx context.Context, listURL string, listName string, li
 			addRuleLine(line)
 		}
 		if err := scanner.Err(); err != nil {
-			if errors.Is(err, bufio.ErrTooLong) {
+			switch {
+			case errors.Is(err, bufio.ErrTooLong):
 				// Parser-side and deterministic: a refetch would hit the same
 				// oversized line again, so this must not read as truncation.
 				log.Printf("filter: %q contains a line over %d bytes, skipping the rest of the list", currentURL, maxRuleLength)
-				return
+				// Drain to a verified EOF so the download still gets cached:
+				// abandoning here would refetch the list in full at every
+				// startup and leave it with no offline copy. The store bounds
+				// the drain with its size cap and stall watchdog; if it
+				// breaks, the list is simply not cached, as before.
+				_, _ = io.Copy(io.Discard, contents)
+			case errors.Is(err, filterliststore.ErrEmptyBody):
+				// A property of the response, not a broken stream: zero rules
+				// were contributed, so there is nothing a rebuild could purge,
+				// and a refetch would deliver the same emptiness.
+				log.Printf("filter: %q served an empty body", currentURL)
+				record(Outcome{Failed: true, Err: fmt.Errorf("read %q: %w", currentURL, err)})
+			case errors.Is(err, filterliststore.ErrListTooLarge):
+				// Deterministic like bufio.ErrTooLong: the rules up to the
+				// size cap were applied and a refetch would break at the same
+				// byte, so this must not read as truncation either.
+				log.Printf("filter: %q exceeds the list size cap, skipping the rest of the list", currentURL)
+			default:
+				// Anything else came from the store's reader: the stream
+				// broke mid-body and the rules parsed so far are an
+				// incomplete list.
+				log.Printf("filter: error scanning %q: %v", currentURL, err)
+				record(Outcome{Truncated: true, Err: fmt.Errorf("read %q: %w", currentURL, err)})
 			}
-			// Anything else came from the store's reader: the stream broke
-			// mid-body and the rules parsed so far are an incomplete list.
-			log.Printf("filter: error scanning %q: %v", currentURL, err)
-			record(Outcome{Truncated: true, Err: fmt.Errorf("read %q: %w", currentURL, err)})
 		}
 	}
 

@@ -42,9 +42,10 @@ const (
 	maxListSize = 128 << 20
 )
 
-// errListTooLarge reports content past maxListSize, whether arriving from the
-// network or already sitting in the cache.
-var errListTooLarge = errors.New("filter list too large")
+// ErrListTooLarge reports content past maxListSize, whether arriving from the
+// network or already sitting in the cache. Exported so the parser can classify
+// a mid-stream cap hit as deterministic rather than as a broken stream.
+var ErrListTooLarge = errors.New("filter list too large")
 
 // errTooManyRedirects marks a redirect loop - a server misconfiguration that
 // retrying cannot fix.
@@ -520,7 +521,7 @@ func readIntoMemory(content io.ReadCloser, limit int64) (io.ReadCloser, error) {
 		return nil, err
 	}
 	if int64(len(data)) > limit {
-		return nil, fmt.Errorf("%w: content exceeds %d bytes", errListTooLarge, limit)
+		return nil, fmt.Errorf("%w: content exceeds %d bytes", ErrListTooLarge, limit)
 	}
 	return io.NopCloser(bytes.NewReader(data)), nil
 }

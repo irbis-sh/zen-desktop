@@ -150,8 +150,8 @@ func TestEmptyBodyNotCached(t *testing.T) {
 	}
 	_, err = io.ReadAll(reader)
 	reader.Close()
-	if !errors.Is(err, errEmptyBody) {
-		t.Fatalf("got read error %v, want errEmptyBody", err)
+	if !errors.Is(err, ErrEmptyBody) {
+		t.Fatalf("got read error %v, want ErrEmptyBody", err)
 	}
 
 	assertNotCached(t, store, server.URL)
@@ -183,8 +183,8 @@ func TestOversizedBodyRejected(t *testing.T) {
 
 	_, err = io.ReadAll(reader)
 	reader.Close()
-	if !errors.Is(err, errListTooLarge) {
-		t.Fatalf("got read error %v, want errListTooLarge", err)
+	if !errors.Is(err, ErrListTooLarge) {
+		t.Fatalf("got read error %v, want ErrListTooLarge", err)
 	}
 	assertNoTempFiles(t, dir)
 }
@@ -194,8 +194,8 @@ func TestOversizedBodyRejected(t *testing.T) {
 func TestReadIntoMemoryRejectsOversizedContent(t *testing.T) {
 	t.Parallel()
 
-	if _, err := readIntoMemory(io.NopCloser(strings.NewReader("0123456789")), 5); !errors.Is(err, errListTooLarge) {
-		t.Fatalf("got %v, want errListTooLarge", err)
+	if _, err := readIntoMemory(io.NopCloser(strings.NewReader("0123456789")), 5); !errors.Is(err, ErrListTooLarge) {
+		t.Fatalf("got %v, want ErrListTooLarge", err)
 	}
 
 	content, err := readIntoMemory(io.NopCloser(strings.NewReader("0123456789")), 10)

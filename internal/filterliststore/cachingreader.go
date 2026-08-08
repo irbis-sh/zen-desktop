@@ -18,10 +18,11 @@ import (
 // errors.Is check.
 var errIncompleteBody = fmt.Errorf("incomplete response body: %w", io.ErrUnexpectedEOF)
 
-// errEmptyBody reports a body that ended cleanly without a single byte.
+// ErrEmptyBody reports a body that ended cleanly without a single byte.
 // A filter list is never empty, so this is a broken origin or intermediary;
-// promoting it would install an empty authoritative copy.
-var errEmptyBody = errors.New("empty response body")
+// promoting it would install an empty authoritative copy. Exported so the
+// parser can classify it as deterministic rather than as a broken stream.
+var ErrEmptyBody = errors.New("empty response body")
 
 // cachingReader streams a response body to the caller while copying it to a
 // temporary file. When the body reaches a verified EOF, the completed copy is
@@ -58,7 +59,7 @@ func (r *cachingReader) Read(p []byte) (int, error) {
 		r.bytesRead += int64(n)
 		if r.maxSize > 0 && r.bytesRead > r.maxSize {
 			r.abandon()
-			return n, fmt.Errorf("%w: body exceeds %d bytes", errListTooLarge, r.maxSize)
+			return n, fmt.Errorf("%w: body exceeds %d bytes", ErrListTooLarge, r.maxSize)
 		}
 		if r.tempFile != nil {
 			if _, werr := r.tempFile.Write(p[:n]); werr != nil {
@@ -79,7 +80,7 @@ func (r *cachingReader) Read(p []byte) (int, error) {
 		}
 		if r.bytesRead == 0 {
 			r.abandon()
-			return n, errEmptyBody
+			return n, ErrEmptyBody
 		}
 		if r.tempFile != nil {
 			tempFile := r.tempFile
