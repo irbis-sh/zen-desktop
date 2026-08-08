@@ -132,7 +132,9 @@ type FilterListStore struct {
 
 	// Overridable in tests.
 	stallTimeout time.Duration
-	retryDelays  []time.Duration
+	// retryDelays sets the backoff schedule: each delay buys one retry after
+	// the initial attempt.
+	retryDelays []time.Duration
 }
 
 // flight tracks an in-progress download so concurrent Gets of the same URL
@@ -313,7 +315,7 @@ func (st *FilterListStore) fetch(ctx context.Context, url string, stale *staleEn
 	// pre-body failures are ever retried; once body bytes have reached the
 	// caller, the sole outcome of a broken stream is a truncation error from
 	// the reader.
-	attempts := 3
+	attempts := len(st.retryDelays) + 1
 	if stale != nil {
 		attempts = 1
 	}
@@ -340,11 +342,14 @@ func (st *FilterListStore) fetch(ctx context.Context, url string, stale *staleEn
 		if !transient || attempt >= attempts {
 			break
 		}
-		delay := withJitter(st.retryDelays[min(attempt-1, len(st.retryDelays)-1)])
+		delay := withJitter(st.retryDelays[attempt-1])
 		log.Printf("fetching %q failed (attempt %d of %d), retrying in %v: %v", url, attempt, attempts, delay, err)
-		if !st.backoff(ctx, delay) {
-			// The slot is already released, so finish must not run - exit the
-			// flight directly.
+		// Hand the slot back for the sleep, so a failing URL does not delay
+		// healthy fetches queued behind it.
+		<-st.sem
+		if !sleepCtx(ctx, delay) || !st.acquireSlot(ctx) {
+			// No slot is held here, so finish must not run - exit the flight
+			// directly.
 			st.exitFlight(url)
 			return nil, SourceUnknown, ctx.Err()
 		}
@@ -380,18 +385,6 @@ func (st *FilterListStore) acquireSlot(ctx context.Context) bool {
 	case <-ctx.Done():
 		return false
 	}
-}
-
-// backoff releases the held fetch slot for the duration of a retry sleep, so
-// a failing URL does not delay healthy fetches queued behind it, then
-// re-acquires one. false means ctx ended first; the slot is not held either
-// way.
-func (st *FilterListStore) backoff(ctx context.Context, d time.Duration) bool {
-	<-st.sem
-	if !sleepCtx(ctx, d) {
-		return false
-	}
-	return st.acquireSlot(ctx)
 }
 
 // fetchOnce makes a single fetch attempt. When stale is non-nil the request
