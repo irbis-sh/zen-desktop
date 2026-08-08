@@ -15,9 +15,9 @@ import (
 )
 
 //go:embed errorpage.html
-var errorPageTpl string
+var errorPageHTML string
 
-var errorPageTmpl = template.Must(template.New("errorpage").Parse(errorPageTpl))
+var errorPageTmpl = template.Must(template.New("errorpage").Parse(errorPageHTML))
 
 type errorPageData struct {
 	SharedStyle template.CSS
@@ -46,11 +46,7 @@ func writeUpstreamError(w http.ResponseWriter, req *http.Request, err error) {
 	}
 
 	title, message := classifyUpstreamError(err)
-	writeErrorPage(w, errorPageData{
-		Title:   title,
-		Message: message,
-		Detail:  err.Error(),
-	})
+	writeErrorPage(w, title, message, err.Error())
 }
 
 // writeFilterError responds to an internal filtering failure: a friendly HTML error
@@ -61,11 +57,9 @@ func writeFilterError(w http.ResponseWriter, req *http.Request, err error) {
 		return
 	}
 
-	writeErrorPage(w, errorPageData{
-		Title:   "Something went wrong",
-		Message: "Zen hit an internal error while processing this page. Retrying might help.",
-		Detail:  err.Error(),
-	})
+	writeErrorPage(w, "Something went wrong",
+		"Zen hit an internal error while processing this page. Retrying might help.",
+		err.Error())
 }
 
 // classifyUpstreamError maps an upstream request error to a headline and a
@@ -112,13 +106,17 @@ func errorsIsAny(err error, targets []error) bool {
 	return false
 }
 
-func writeErrorPage(w http.ResponseWriter, data errorPageData) {
-	data.SharedStyle = pagestyle.Shared
-
+func writeErrorPage(w http.ResponseWriter, title, message, detail string) {
 	var buf bytes.Buffer
-	if err := errorPageTmpl.Execute(&buf, data); err != nil {
+	err := errorPageTmpl.Execute(&buf, errorPageData{
+		SharedStyle: pagestyle.Shared,
+		Title:       title,
+		Message:     message,
+		Detail:      detail,
+	})
+	if err != nil {
 		log.Printf("error executing error page template: %v", err)
-		http.Error(w, data.Detail, http.StatusBadGateway)
+		http.Error(w, detail, http.StatusBadGateway)
 		return
 	}
 
