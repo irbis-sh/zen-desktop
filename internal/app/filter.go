@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -22,9 +23,15 @@ const myRulesFilterName = "My rules"
 // loop - cache-only work never consults the context and a pass that is
 // already parsing runs to quiescence - so the build can overrun it by parse
 // CPU (seconds), never by network waits, which on a blackholed network could
-// otherwise stack up to minutes. The bound matters because StartProxy holds
-// proxyMu for the build's duration, and quit and StopProxy block on it.
+// otherwise stack up to minutes. It is not what bounds a stop: StopProxy
+// aborts the build instead of waiting the deadline out (see errBuildAborted).
 const filterBuildTimeout = 90 * time.Second
+
+// errBuildAborted is the cancellation cause StopProxy sets to abandon an
+// in-flight build. It means "the user asked to stop, unwind" and makes
+// runBuildPasses return, unlike deadline expiry, which means "degrade to
+// cache-only and finish".
+var errBuildAborted = errors.New("build aborted")
 
 // passModes ladders successive build passes away from the network: a pass
 // that saw a truncated stream retries under the next mode, and the final
@@ -42,15 +49,25 @@ var passModes = []filterliststore.FetchMode{
 // whitelist server into this pass's rule store, and the asset server must
 // serve this pass's engine.
 func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Engine, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), filterBuildTimeout)
-	defer cancel()
+	// The abort signal lives on a parent of the timeout context: a context
+	// only records its first cancellation cause, so an abort arriving after
+	// the deadline has fired would be invisible on a shared one. An abort
+	// still cancels ctx through parent-child propagation, draining fetches
+	// exactly like deadline expiry does.
+	abortCtx, abort := context.WithCancelCause(context.Background())
+	defer abort(nil)
+	ctx, cancelTimeout := context.WithTimeout(abortCtx, filterBuildTimeout)
+	defer cancelTimeout()
+	a.setBuildAbort(abort)
+	defer a.setBuildAbort(nil)
+	aborted := func() bool { return errors.Is(context.Cause(abortCtx), errBuildAborted) }
 
 	var (
 		f             *filter.Filter
 		whitelistSrv  *whitelistserver.Server
 		assetInjector *asset.Engine
 	)
-	err := runBuildPasses(ctx, func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error) {
+	err := runBuildPasses(ctx, aborted, func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error) {
 		// Reassigning drops the previous pass's tainted structures before
 		// the heavy parsing starts, so peak memory stays bounded by one full
 		// rule tree plus the one being built.
@@ -76,7 +93,8 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 }
 
 // runBuildPasses drives buildPass down the passModes ladder until a pass is
-// accepted or the cap is hit, and stops early on a construction error.
+// accepted or the cap is hit, and stops early on a construction error or an
+// abort.
 //
 // A stream that breaks mid-body leaves partially parsed rules behind -
 // including a possible trailing fragment applied as a rule - so a truncated
@@ -86,8 +104,11 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 // no network and no cache, so they are skipped (populateFilter logs each). The
 // exception is lists the build deadline cut off - they fail before their
 // cached copies are consulted, so one extra cache-only pass recovers them.
-func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error)) error {
+func runBuildPasses(ctx context.Context, aborted func() bool, buildPass func(ctx context.Context, mode filterliststore.FetchMode) (filter.Outcome, error)) error {
 	for pass, mode := range passModes {
+		if aborted() {
+			return errBuildAborted
+		}
 		if ctx.Err() != nil {
 			// The deadline is spent: degrade straight to cache-only, which
 			// never touches the network or consults the context.
@@ -95,6 +116,15 @@ func runBuildPasses(ctx context.Context, buildPass func(ctx context.Context, mod
 		}
 
 		outcome, err := buildPass(ctx, mode)
+		// Checked before err on purpose: a construction failure that
+		// coincides with an abort is still a deliberate stop, not a start
+		// error. And a mid-pass abort must not start a rebuild pass or
+		// accept this one either: StopProxy is already waiting on proxyMu
+		// and would immediately tear down whatever StartProxy went on to
+		// start.
+		if aborted() {
+			return errBuildAborted
+		}
 		if err != nil {
 			return err
 		}

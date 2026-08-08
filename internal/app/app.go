@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	goruntime "runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/irbis-sh/zen-desktop/internal/asset"
@@ -44,7 +45,19 @@ type App struct {
 	proxyOn            bool
 	systemProxyManager *sysproxy.Manager
 	// proxyMu ensures that proxy is only started or stopped once at a time.
-	proxyMu         sync.Mutex
+	proxyMu sync.Mutex
+	// buildAbort cancels the in-flight filter build; nil when no build is
+	// running. proxyMu serialises builds, so buildAbortMu only guards against
+	// StopProxy reading the func while buildFilter sets or clears it.
+	buildAbortMu sync.Mutex
+	buildAbort   context.CancelCauseFunc
+	// stopPending is a best-effort latch for StartProxy calls already queued
+	// on proxyMu when a StopProxy arrives: the abort can only reach the build
+	// in flight, and a queued start winning the mutex ahead of the stop would
+	// otherwise run a fresh build the stop then waits out. Best-effort
+	// because overlapping stops can clear each other's flag; the window this
+	// closes is the common one.
+	stopPending     atomic.Bool
 	certStore       *certstore.DiskCertStore
 	systrayMgr      *systray.Manager
 	filterListStore *filterliststore.FilterListStore
@@ -151,10 +164,13 @@ func (a *App) StartProxy() (err error) {
 	defer func() {
 		// You might see this pattern both in this file and throughout the application.
 		// It is used in functions that get called by the frontend, in which case we cannot log the error at the caller level.
-		if err != nil {
-			log.Printf("error starting proxy: %v", err)
-		} else {
+		switch {
+		case err == nil:
 			log.Println("proxy started successfully")
+		case errors.Is(err, errBuildAborted):
+			log.Println("proxy start aborted")
+		default:
+			log.Printf("error starting proxy: %v", err)
 		}
 	}()
 
@@ -164,15 +180,26 @@ func (a *App) StartProxy() (err error) {
 	if a.proxyOn {
 		return nil
 	}
+	if a.stopPending.Load() {
+		// A StopProxy is already queued behind us; building would only hand
+		// it more to tear down.
+		return errBuildAborted
+	}
 
 	log.Println("starting proxy")
 
 	a.frontendEvents.OnProxyStarting()
 	defer func() {
-		if err != nil {
-			a.frontendEvents.OnProxyStartError(err)
-		} else {
+		switch {
+		case err == nil:
 			a.frontendEvents.OnProxyStarted()
+		case errors.Is(err, errBuildAborted):
+			// A deliberate stop, not a failure: no startError, which the
+			// frontend surfaces as an error toast. The StopProxy that aborted
+			// the build is waiting on proxyMu and emits stopping/stopped as
+			// soon as we return, taking the frontend out of its loading state.
+		default:
+			a.frontendEvents.OnProxyStartError(err)
 		}
 	}()
 
@@ -251,7 +278,8 @@ func (a *App) StartProxy() (err error) {
 	return nil
 }
 
-// StopProxy stops the proxy.
+// StopProxy stops the proxy. When a start is in flight, it aborts the filter
+// build rather than waiting out filterBuildTimeout behind proxyMu.
 func (a *App) StopProxy() (err error) {
 	<-a.startupDone
 	defer func() {
@@ -262,7 +290,11 @@ func (a *App) StopProxy() (err error) {
 		}
 	}()
 
+	a.stopPending.Store(true)
+	a.abortBuild()
+
 	a.proxyMu.Lock()
+	a.stopPending.Store(false)
 	defer a.proxyMu.Unlock()
 
 	log.Println("stopping proxy")
@@ -308,6 +340,20 @@ func (a *App) StopProxy() (err error) {
 	a.systrayMgr.OnProxyStopped()
 
 	return nil
+}
+
+func (a *App) setBuildAbort(abort context.CancelCauseFunc) {
+	a.buildAbortMu.Lock()
+	defer a.buildAbortMu.Unlock()
+	a.buildAbort = abort
+}
+
+func (a *App) abortBuild() {
+	a.buildAbortMu.Lock()
+	defer a.buildAbortMu.Unlock()
+	if a.buildAbort != nil {
+		a.buildAbort(errBuildAborted)
+	}
 }
 
 // UninstallCA uninstalls the CA.

@@ -13,15 +13,19 @@ import (
 func TestRunBuildPasses(t *testing.T) {
 	t.Parallel()
 
+	errCreate := errors.New("create filter: boom")
+
 	tests := []struct {
 		name string
 		// expired marks the build deadline as already spent before pass 1.
 		expired bool
+		// aborted marks the build as aborted before pass 1.
+		aborted bool
 		// script holds one entry per expected pass.
 		script []scriptedPass
 		// wantModes doubles as the expected pass count.
 		wantModes []filterliststore.FetchMode
-		wantErr   bool
+		wantErr   error
 	}{
 		{
 			name:      "clean first pass is accepted",
@@ -85,10 +89,60 @@ func TestRunBuildPasses(t *testing.T) {
 		{
 			name: "construction error aborts the build",
 			script: []scriptedPass{
-				{err: errors.New("create filter: boom")},
+				{err: errCreate},
 			},
 			wantModes: []filterliststore.FetchMode{filterliststore.ModeDefault},
-			wantErr:   true,
+			wantErr:   errCreate,
+		},
+		{
+			// StopProxy is waiting on proxyMu; a rebuild would only prolong
+			// the teardown it is about to perform.
+			name: "abort mid-pass stops the ladder",
+			script: []scriptedPass{
+				{outcome: filter.Outcome{Truncated: true}, abort: true},
+			},
+			wantModes: []filterliststore.FetchMode{filterliststore.ModeDefault},
+			wantErr:   errBuildAborted,
+		},
+		{
+			name:      "abort before the first pass runs nothing",
+			aborted:   true,
+			wantModes: nil,
+			wantErr:   errBuildAborted,
+		},
+		{
+			// Deadline expiry and abort are separate signals precisely so a
+			// late abort is not masked: on a shared context the deadline's
+			// cause would win and the rescue pass would start the proxy the
+			// user just asked to stop.
+			name: "abort after deadline expiry still unwinds",
+			script: []scriptedPass{
+				{outcome: filter.Outcome{Failed: true}, expireDeadline: true},
+				{abort: true},
+			},
+			wantModes: []filterliststore.FetchMode{filterliststore.ModeDefault, filterliststore.ModeCacheOnly},
+			wantErr:   errBuildAborted,
+		},
+		{
+			name: "abort wins over a coinciding construction error",
+			script: []scriptedPass{
+				{err: errCreate, abort: true},
+			},
+			wantModes: []filterliststore.FetchMode{filterliststore.ModeDefault},
+			wantErr:   errBuildAborted,
+		},
+		{
+			// Even a clean final pass must not be accepted after an abort:
+			// StartProxy would go on to start servers the waiting StopProxy
+			// immediately tears down.
+			name: "abort during the final pass beats acceptance",
+			script: []scriptedPass{
+				{outcome: filter.Outcome{Truncated: true}},
+				{outcome: filter.Outcome{Truncated: true}},
+				{abort: true},
+			},
+			wantModes: []filterliststore.FetchMode{filterliststore.ModeDefault, filterliststore.ModePreferCache, filterliststore.ModeCacheOnly},
+			wantErr:   errBuildAborted,
 		},
 	}
 	for _, tt := range tests {
@@ -97,12 +151,13 @@ func TestRunBuildPasses(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+			aborted := tt.aborted
 			if tt.expired {
 				cancel()
 			}
 
 			var gotModes []filterliststore.FetchMode
-			err := runBuildPasses(ctx, func(_ context.Context, mode filterliststore.FetchMode) (filter.Outcome, error) {
+			err := runBuildPasses(ctx, func() bool { return aborted }, func(_ context.Context, mode filterliststore.FetchMode) (filter.Outcome, error) {
 				pass := len(gotModes)
 				gotModes = append(gotModes, mode)
 				if pass >= len(tt.script) {
@@ -112,11 +167,14 @@ func TestRunBuildPasses(t *testing.T) {
 				if step.expireDeadline {
 					cancel()
 				}
+				if step.abort {
+					aborted = true
+				}
 				return step.outcome, step.err
 			})
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("error = %v, want %v", err, tt.wantErr)
 			}
 			if !slices.Equal(gotModes, tt.wantModes) {
 				t.Errorf("pass modes = %v, want %v", gotModes, tt.wantModes)
@@ -131,4 +189,6 @@ type scriptedPass struct {
 	err     error
 	// expireDeadline spends the build deadline while this pass is running.
 	expireDeadline bool
+	// abort aborts the build while this pass is running.
+	abort bool
 }
