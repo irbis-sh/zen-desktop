@@ -43,7 +43,9 @@ var passModes = []filterliststore.FetchMode{
 // pass is not patched: its whole structure is discarded and rebuilt in the
 // next pass, mostly from the copies the previous pass promoted to cache.
 // Failed lists don't trigger a rebuild: refetching cannot help a list with
-// no network and no cache, so they are skipped (initFilter logs each).
+// no network and no cache, so they are skipped (initFilter logs each). The
+// exception is lists the build deadline cut off - they fail before their
+// cached copies are consulted, so one extra cache-only pass recovers them.
 func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Engine, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), filterBuildTimeout)
 	defer cancel()
@@ -76,7 +78,13 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		}
 
 		outcome := a.initFilter(ctx, f, mode)
-		if !outcome.Truncated {
+		// A Failed list normally has neither network nor cache. When the
+		// deadline expired mid-pass, however, Failed can also mean the list
+		// was cut off before reaching its cached copy: Get refuses to dress
+		// caller cancellation up as a stale serve, so the recovery has to
+		// happen here, in the pass forced to cache-only above.
+		deadlineCutOff := outcome.Failed && ctx.Err() != nil && mode != filterliststore.ModeCacheOnly
+		if !outcome.Truncated && !deadlineCutOff {
 			break
 		}
 		if pass == len(passModes)-1 {
@@ -85,7 +93,11 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 			log.Printf("filter lists still truncated after %d passes, continuing with incomplete rules", len(passModes))
 			break
 		}
-		log.Printf("truncated filter list detected on pass %d, rebuilding", pass+1)
+		if outcome.Truncated {
+			log.Printf("truncated filter list detected on pass %d, rebuilding", pass+1)
+		} else {
+			log.Printf("build deadline expired before every filter list was served on pass %d, rebuilding from cache", pass+1)
+		}
 	}
 
 	f.Finalize()
