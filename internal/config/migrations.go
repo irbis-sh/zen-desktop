@@ -358,6 +358,21 @@ var migrations = []migration{
 			return nil
 		})
 	}},
+	{"v0.26.0", func(c *Config) error {
+		// Enable the local resource interception & injection engine for
+		// existing installs. Fresh installs get the same default from
+		// default-config.json.
+		return c.update(func() error {
+			c.LocalResources.Enabled = true
+			if c.LocalResources.Stats.ByLibrary == nil {
+				c.LocalResources.Stats.ByLibrary = make(map[string]int64)
+			}
+			if c.LocalResources.Stats.ByCDN == nil {
+				c.LocalResources.Stats.ByCDN = make(map[string]int64)
+			}
+			return nil
+		})
+	}},
 	{"v0.25.0", func(_ *Config) error {
 		if runtime.GOOS != "linux" {
 			return nil

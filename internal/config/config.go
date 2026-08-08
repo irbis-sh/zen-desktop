@@ -84,6 +84,39 @@ type FilterList struct {
 	Locales []string       `json:"locales"`
 }
 
+// LocalResourcesStats tracks how many resources the local resource engine
+// has served since installation and since the last reset.
+type LocalResourcesStats struct {
+	TotalSinceInstall int64            `json:"totalSinceInstall"`
+	TotalSinceReset   int64            `json:"totalSinceReset"`
+	FilterHits        int64            `json:"filterHits"`
+	ByLibrary         map[string]int64 `json:"byLibrary"`
+	ByCDN             map[string]int64 `json:"byCDN"`
+}
+
+// LocalResourceMapping maps one or more URL patterns to a local file.
+type LocalResourceMapping struct {
+	ID           string   `json:"id"`
+	Library      string   `json:"library"`
+	Version      string   `json:"version"`
+	Patterns     []string `json:"patterns"`
+	File         string   `json:"file"`
+	ContentType  string   `json:"contentType"`
+	VersionRange string   `json:"versionRange,omitempty"`
+	SRI          string   `json:"sri,omitempty"`
+}
+
+// LocalResources stores the user configuration for the local resource
+// interception & injection engine.
+type LocalResources struct {
+	Enabled          bool                   `json:"enabled"`
+	BlockMissing     bool                   `json:"blockMissing"`
+	CustomDir        string                 `json:"customDir"`
+	EnabledLibraries []string               `json:"enabledLibraries"`
+	CustomMappings   []LocalResourceMapping `json:"customMappings"`
+	Stats            LocalResourcesStats    `json:"stats"`
+}
+
 // Config stores and manages the configuration for the application.
 // Although all fields are public, this is only for use by the JSON marshaller.
 // All access to the Config should be done through the exported methods.
@@ -106,7 +139,8 @@ type Config struct {
 		PACPort      int           `json:"pacPort"`
 		Routing      RoutingConfig `json:"routing"`
 	} `json:"proxy"`
-	UpdatePolicy UpdatePolicyType `json:"updatePolicy"`
+	UpdatePolicy   UpdatePolicyType `json:"updatePolicy"`
+	LocalResources LocalResources   `json:"localResources"`
 
 	Locale string `json:"locale"`
 
@@ -209,7 +243,30 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
 	}
 
+	setLocalResourcesDefaults(c, configData)
+
 	return c, nil
+}
+
+// setLocalResourcesDefaults enables the local resource engine for
+// configuration files that predate the feature and therefore have no
+// localResources section. An explicit "enabled": false in the file is
+// still honored.
+func setLocalResourcesDefaults(c *Config, data []byte) {
+	if !localResourcesSectionPresent(data) {
+		c.LocalResources.Enabled = true
+	}
+}
+
+// localResourcesSectionPresent reports whether the config data contains the
+// localResources section.
+func localResourcesSectionPresent(data []byte) bool {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return false
+	}
+	_, ok := raw["localResources"]
+	return ok
 }
 
 // GetFilterLists returns the list of enabled filter lists.
@@ -491,6 +548,99 @@ func (c *Config) GetFirstLaunch() bool {
 	defer c.mu.RUnlock()
 
 	return c.firstLaunch
+}
+
+// GetLocalResources returns a copy of the local resource engine settings.
+func (c *Config) GetLocalResources() LocalResources {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.LocalResources
+}
+
+// SetLocalResourcesEnabled enables or disables the local resource engine.
+func (c *Config) SetLocalResourcesEnabled(enabled bool) error {
+	return c.update(func() error {
+		c.LocalResources.Enabled = enabled
+		return nil
+	})
+}
+
+// SetLocalResourcesBlockMissing enables or disables blocking requests for
+// missing resources on known CDN domains.
+func (c *Config) SetLocalResourcesBlockMissing(blockMissing bool) error {
+	return c.update(func() error {
+		c.LocalResources.BlockMissing = blockMissing
+		return nil
+	})
+}
+
+// SetLocalResourcesCustomDir sets the directory used to resolve custom
+// resource mapping files.
+func (c *Config) SetLocalResourcesCustomDir(dir string) error {
+	return c.update(func() error {
+		c.LocalResources.CustomDir = strings.TrimSpace(dir)
+		return nil
+	})
+}
+
+// SetLocalResourcesLibraryEnabled enables or disables a single library.
+// An empty library key resets the list so that all libraries are enabled.
+func (c *Config) SetLocalResourcesLibraryEnabled(key string, enabled bool) error {
+	return c.update(func() error {
+		if key == "" {
+			c.LocalResources.EnabledLibraries = nil
+			return nil
+		}
+
+		enabledLibraries := make([]string, 0, len(c.LocalResources.EnabledLibraries)+1)
+		for _, existing := range c.LocalResources.EnabledLibraries {
+			if existing != key {
+				enabledLibraries = append(enabledLibraries, existing)
+			}
+		}
+		if enabled {
+			enabledLibraries = append(enabledLibraries, key)
+		}
+		c.LocalResources.EnabledLibraries = enabledLibraries
+		return nil
+	})
+}
+
+// SetLocalResourcesCustomMappings replaces the list of custom resource mappings.
+func (c *Config) SetLocalResourcesCustomMappings(mappings []LocalResourceMapping) error {
+	return c.update(func() error {
+		c.LocalResources.CustomMappings = mappings
+		return nil
+	})
+}
+
+// GetLocalResourcesStats returns a copy of the local resource engine stats.
+func (c *Config) GetLocalResourcesStats() LocalResourcesStats {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.LocalResources.Stats
+}
+
+// SetLocalResourcesStats replaces the persisted local resource engine stats.
+func (c *Config) SetLocalResourcesStats(stats LocalResourcesStats) error {
+	return c.update(func() error {
+		c.LocalResources.Stats = stats
+		return nil
+	})
+}
+
+// ResetLocalResourcesStats zeroes the persisted stats counters.
+func (c *Config) ResetLocalResourcesStats() error {
+	return c.update(func() error {
+		c.LocalResources.Stats = LocalResourcesStats{
+			FilterHits: 0,
+			ByLibrary:  make(map[string]int64),
+			ByCDN:      make(map[string]int64),
+		}
+		return nil
+	})
 }
 
 func GetCacheDir() (string, error) {

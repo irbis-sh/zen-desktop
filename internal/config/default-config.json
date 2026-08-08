@@ -388,5 +388,18 @@
       "appPaths": []
     }
   },
+  "localResources": {
+    "enabled": true,
+    "blockMissing": false,
+    "customDir": "",
+    "enabledLibraries": [],
+    "customMappings": [],
+    "stats": {
+      "totalSinceInstall": 0,
+      "totalSinceReset": 0,
+      "byLibrary": {},
+      "byCDN": {}
+    }
+  },
   "updatePolicy": "automatic"
 }
