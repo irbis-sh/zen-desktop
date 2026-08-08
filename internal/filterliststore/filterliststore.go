@@ -130,7 +130,6 @@ type FilterListStore struct {
 	inflight map[string]flight
 
 	// Overridable in tests.
-	client       *http.Client
 	stallTimeout time.Duration
 	retryDelays  []time.Duration
 }
@@ -154,7 +153,6 @@ func New(cachePath string) (*FilterListStore, error) {
 		cache:        cache,
 		sem:          make(chan struct{}, fetchConcurrency),
 		inflight:     make(map[string]flight),
-		client:       httpClient,
 		stallTimeout: defaultStallTimeout,
 		retryDelays:  []time.Duration{time.Second, 3 * time.Second},
 	}, nil
@@ -431,7 +429,7 @@ func (st *FilterListStore) fetchOnce(ctx context.Context, url string, stale *sta
 		}
 	}
 
-	resp, err := st.client.Do(req) // #nosec G704 -- URL is from configured filter lists, not arbitrary user input
+	resp, err := httpClient.Do(req) // #nosec G704 -- URL is from configured filter lists, not arbitrary user input
 	if err != nil {
 		cancel()
 		// With redirect loops carved out, errors out of Do are network
@@ -486,32 +484,23 @@ func (st *FilterListStore) fetchOnce(ctx context.Context, url string, stale *sta
 	}
 
 	etag, lastModified := resp.Header.Get("ETag"), resp.Header.Get("Last-Modified")
-	reader := &fetchReader{
-		inner: &cachingReader{
-			body:          resp.Body,
-			tempFile:      tempFile,
-			contentLength: resp.ContentLength,
-			maxSize:       maxListSize,
-			onComplete: func(download *os.File) {
-				if err := st.cacheDownload(url, download, etag, lastModified); err != nil {
-					log.Printf("failed to cache %q: %v", url, err)
-				}
-			},
-		},
-		stallTimeout: st.stallTimeout,
-		cancel:       cancel,
-		finish:       finish,
-	}
 	// Headers have arrived: arm the stall watchdog over the body. Arming any
 	// earlier would police the slot-queue/dial/TLS/header phases, which have
 	// their own budgets, and would kill healthy slow requests. If the machine
 	// sleeps mid-download, the watchdog can fire on wake even though the peer
 	// is healthy; the cost is bounded - the stream reads as truncated and the
 	// caller's fallback path recovers.
-	reader.watchdog = time.AfterFunc(st.stallTimeout, func() {
-		reader.stalled.Store(true)
-		cancel()
-	})
+	reader := newFetchReader(&cachingReader{
+		body:          resp.Body,
+		tempFile:      tempFile,
+		contentLength: resp.ContentLength,
+		maxSize:       maxListSize,
+		onComplete: func(download *os.File) {
+			if err := st.cacheDownload(url, download, etag, lastModified); err != nil {
+				log.Printf("failed to cache %q: %v", url, err)
+			}
+		},
+	}, st.stallTimeout, cancel, finish)
 	return reader, false, false, nil
 }
 
@@ -559,9 +548,12 @@ func sleepCtx(ctx context.Context, d time.Duration) bool {
 // list's header is scanned for an "! Expires" directive to determine the
 // entry's TTL. On failure the file is removed.
 func (st *FilterListStore) cacheDownload(url string, download *os.File, etag, lastModified string) error {
-	if _, err := download.Seek(0, io.SeekStart); err != nil {
+	discard := func() {
 		download.Close()
 		os.Remove(download.Name())
+	}
+	if _, err := download.Seek(0, io.SeekStart); err != nil {
+		discard()
 		return fmt.Errorf("rewind temp file: %v", err)
 	}
 	ttl := parseCacheTTL(download)
@@ -572,12 +564,11 @@ func (st *FilterListStore) cacheDownload(url string, download *os.File, etag, la
 	// sync, a crash shortly after promotion could persist the rename and the
 	// index while leaving the content truncated or empty.
 	if err := download.Sync(); err != nil {
-		download.Close()
-		os.Remove(download.Name())
+		discard()
 		return fmt.Errorf("sync temp file: %v", err)
 	}
 	if err := download.Close(); err != nil {
-		os.Remove(download.Name())
+		discard()
 		return fmt.Errorf("close temp file: %v", err)
 	}
 

@@ -30,6 +30,23 @@ type fetchReader struct {
 	finish       func()             // idempotent; frees the fetch slot
 }
 
+// newFetchReader wraps a download in the fetch lifecycle and arms the stall
+// watchdog immediately: call it only once response headers have arrived (see
+// the call site for why).
+func newFetchReader(inner io.ReadCloser, stallTimeout time.Duration, cancel context.CancelFunc, finish func()) *fetchReader {
+	f := &fetchReader{
+		inner:        inner,
+		stallTimeout: stallTimeout,
+		cancel:       cancel,
+		finish:       finish,
+	}
+	f.watchdog = time.AfterFunc(stallTimeout, func() {
+		f.stalled.Store(true)
+		cancel()
+	})
+	return f
+}
+
 func (f *fetchReader) Read(p []byte) (int, error) {
 	n, err := f.inner.Read(p)
 	if n > 0 {
@@ -40,6 +57,8 @@ func (f *fetchReader) Read(p []byte) (int, error) {
 		f.watchdog.Reset(f.stallTimeout)
 	}
 	if err != nil {
+		// A clean EOF is exempt: the watchdog can fire after the last byte was
+		// already buffered, and a completed download must not read as a stall.
 		if f.stalled.Load() && !errors.Is(err, io.EOF) {
 			// Both errors stay matchable: errStalled identifies the watchdog
 			// kill, while the wrapped cause keeps the transport's own chain

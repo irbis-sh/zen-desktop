@@ -229,18 +229,15 @@ func (c *Cache) Load(url string) (io.ReadCloser, *Meta, error) {
 
 	c.entriesMu.Lock()
 	e, ok := c.entries[hash]
-	var meta Meta
-	var persistBump bool
-	if ok {
-		now := time.Now()
-		persistBump = now.Sub(e.LastAccess) > lastAccessFlushInterval
-		e.LastAccess = now
-		meta = e.Meta
-	}
-	c.entriesMu.Unlock()
 	if !ok {
+		c.entriesMu.Unlock()
 		return nil, nil, nil
 	}
+	now := time.Now()
+	persistBump := now.Sub(e.LastAccess) > lastAccessFlushInterval
+	e.LastAccess = now
+	meta := e.Meta
+	c.entriesMu.Unlock()
 
 	if persistBump {
 		// Persist the access-time bump so GC never mistakes a regularly read
@@ -306,20 +303,19 @@ func (c *Cache) Refresh(url string, expiresAt time.Time, etag, lastModified stri
 
 	c.entriesMu.Lock()
 	e, ok := c.entries[hash]
-	if ok {
-		e.ExpiresAt = expiresAt
-		if etag != "" {
-			e.ETag = etag
-		}
-		if lastModified != "" {
-			e.LastModified = lastModified
-		}
-		e.LastAccess = time.Now()
-	}
-	c.entriesMu.Unlock()
 	if !ok {
+		c.entriesMu.Unlock()
 		return
 	}
+	e.ExpiresAt = expiresAt
+	if etag != "" {
+		e.ETag = etag
+	}
+	if lastModified != "" {
+		e.LastModified = lastModified
+	}
+	e.LastAccess = time.Now()
+	c.entriesMu.Unlock()
 
 	if err := c.Flush(); err != nil {
 		log.Printf("error writing cache index: %v", err)
@@ -410,6 +406,8 @@ func renameWithRetry(from, to string) error {
 		if attempt > 0 {
 			time.Sleep(100 * time.Millisecond)
 		}
+		// A missing source is not a sharing violation: retrying cannot make
+		// the file appear, so fail fast.
 		if err = os.Rename(from, to); err == nil || os.IsNotExist(err) {
 			return err
 		}
