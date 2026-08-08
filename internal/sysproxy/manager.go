@@ -45,13 +45,16 @@ func (m *Manager) SetPACPort(pacPort int) {
 	m.pacPort = pacPort
 }
 
-// Set configures the system proxy to use the proxy server listening on the given port.
-func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string, shouldProxy ShouldProxyFunc) error {
+// Set configures the system proxy to use the proxy server listening on the
+// given port. cdnHosts are routed through the proxy unconditionally so that
+// bundled CDN resources can be intercepted even when a parent domain of the
+// CDN is excluded.
+func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string, cdnHosts []string, shouldProxy ShouldProxyFunc) error {
 	if shouldProxy == nil {
 		return fmt.Errorf("shouldProxy is nil")
 	}
 
-	pac := renderPac(proxyPort, userConfiguredExcludedHosts)
+	pac := renderPac(proxyPort, userConfiguredExcludedHosts, cdnHosts)
 
 	actualPort, err := m.makeServer(pac, shouldProxy)
 	if err != nil {
@@ -95,6 +98,9 @@ func (m *Manager) makeServer(pac []byte, shouldProxy ShouldProxyFunc) (int, erro
 		}
 
 		w.Header().Set("Content-Type", "application/x-ns-proxy-autoconfig")
+		// Browsers cache PAC files; a stale cached PAC can keep bypassing Zen
+		// after a restart or a proxy port change. Never cache the PAC.
+		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0")
 		w.WriteHeader(http.StatusOK)
 		w.Write(responsePAC)
 	})
