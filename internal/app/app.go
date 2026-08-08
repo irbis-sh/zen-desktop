@@ -211,7 +211,7 @@ func (a *App) StartProxy() (err error) {
 	if err != nil {
 		return fmt.Errorf("create filter: %v", err)
 	}
-	a.initFilter(filter)
+	a.initFilter(context.Background(), filter, filterliststore.ModeDefault)
 
 	if err := whitelistSrv.Start(); err != nil {
 		return fmt.Errorf("start whitelist server: %v", err)
