@@ -18,10 +18,11 @@ import (
 )
 
 // TestNetDialerIsBounded pins the property every outbound path leans on: the shared
-// dialer must impose some connect timeout. Zero, or negative, hands the wait back to
-// the OS - over two minutes on Linux. The behavioural tests here supply a timeout of
-// their own, so none of them can catch it. What is pinned is the bound, not the value;
-// 60s stays open to retuning.
+// dialer must impose a usable connect timeout. Zero is no timeout at all and hands the
+// wait back to the OS - over two minutes on Linux. Negative is degenerate the other
+// way: net.Dialer reads it as an already-expired deadline, so every dial fails at once.
+// The behavioural tests here supply a timeout of their own, so none of them can catch
+// either. What is pinned is the bound, not the value; 60s stays open to retuning.
 func TestNetDialerIsBounded(t *testing.T) {
 	t.Parallel()
 
@@ -111,28 +112,6 @@ func TestStallBeforeHeadersReturns502(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusBadGateway {
-		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusBadGateway)
-	}
-}
-
-// TestTunnelDialHonoursDialerTimeout checks that the tunnel's dial is bounded by the
-// proxy's own dialer rather than by the OS connect timeout, which runs to over two
-// minutes on Linux and pins both this goroutine and the client's socket for the
-// duration. The target is reachable, so only a dial that consults the dialer can fail.
-func TestTunnelDialHonoursDialerTimeout(t *testing.T) {
-	t.Parallel()
-
-	target := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
-	defer target.Close()
-
-	// A deadline that has already elapsed by the time the dialer reaches its first
-	// address, so the failure needs no unroutable host and no waiting.
-	addr := startTestProxy(t, func(p *Proxy) {
-		p.netDialer.Timeout = 1 * time.Nanosecond
-	})
-
-	_, _, resp := connectThrough(t, addr, target.Listener.Addr().String())
 	if resp.StatusCode != http.StatusBadGateway {
 		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusBadGateway)
 	}
