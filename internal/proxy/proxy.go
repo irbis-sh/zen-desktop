@@ -26,6 +26,9 @@ const (
 	tlsHandshakeTimeout   = 20 * time.Second
 	responseHeaderTimeout = 3 * time.Minute
 	idleConnTimeout       = 90 * time.Second
+
+	maxIdleConns        = 512
+	maxIdleConnsPerHost = 16
 )
 
 // certGenerator is an interface capable of generating certificates for the proxy.
@@ -81,7 +84,8 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 		ForceAttemptHTTP2:     true,
 		TLSHandshakeTimeout:   tlsHandshakeTimeout,
 		ResponseHeaderTimeout: responseHeaderTimeout,
-		MaxIdleConns:          100,
+		MaxIdleConns:          maxIdleConns,
+		MaxIdleConnsPerHost:   maxIdleConnsPerHost,
 		IdleConnTimeout:       idleConnTimeout,
 	}
 	p.requestClient = &http.Client{
