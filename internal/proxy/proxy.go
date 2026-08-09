@@ -130,7 +130,15 @@ func (p *Proxy) Start() (int, error) {
 
 // Stop stops the proxy.
 func (p *Proxy) Stop() error {
-	if err := p.shutdownServer(); err != nil {
+	err := p.shutdownServer()
+
+	// Shutdown only closes inbound connections, and runs first so that requests still in
+	// flight cannot return an upstream connection to the pool after it has been drained.
+	// Left alone, those connections and their read and write goroutines outlive the proxy
+	// until idleConnTimeout.
+	p.requestClient.CloseIdleConnections()
+
+	if err != nil {
 		return fmt.Errorf("shut down server: %v", err)
 	}
 
