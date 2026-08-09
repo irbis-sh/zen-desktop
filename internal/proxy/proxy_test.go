@@ -1,10 +1,12 @@
 package proxy
 
 import (
+	"bufio"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,46 +17,24 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/process"
 )
 
-// TestRequestClientHasNoTotalTimeout is the direct guard for the bug this package
-// used to have: http.Client.Timeout covers the response body read, so setting it
-// caps how long a transfer may take and truncates large downloads and long-lived
-// streams mid-body. No behavioural test can stand in for this one, because any
-// value small enough to exercise in a test would also have to be reintroduced to
-// be observed.
-func TestRequestClientHasNoTotalTimeout(t *testing.T) {
+// TestNetDialerIsBounded pins the property every outbound path leans on: the shared
+// dialer must impose some connect timeout. Zero, or negative, hands the wait back to
+// the OS - over two minutes on Linux. The behavioural tests here supply a timeout of
+// their own, so none of them can catch it. What is pinned is the bound, not the value;
+// 60s stays open to retuning.
+func TestNetDialerIsBounded(t *testing.T) {
 	t.Parallel()
 
 	p := newTestProxy(t)
 
-	if p.requestClient.Timeout != 0 {
-		t.Fatalf("requestClient.Timeout = %v, want 0: a total timeout bounds the body read and truncates long transfers", p.requestClient.Timeout)
+	if p.netDialer.Timeout <= 0 {
+		t.Fatalf("netDialer.Timeout = %v, want > 0: an unbounded dial leaves the wait to the OS connect timeout", p.netDialer.Timeout)
 	}
 }
 
-// TestResponseHeaderTimeoutPreservesOldBudget pins the invariant that makes the
-// removal of the total timeout safe. The header wait replaced a 60s total timeout,
-// so as long as it stays at or above 60s, no request that used to succeed can begin
-// to fail: headers already had to arrive inside the old budget.
-func TestResponseHeaderTimeoutPreservesOldBudget(t *testing.T) {
-	t.Parallel()
-
-	p := newTestProxy(t)
-
-	transport, ok := p.requestTransport.(*http.Transport)
-	if !ok {
-		t.Fatalf("requestTransport is %T, want *http.Transport", p.requestTransport)
-	}
-
-	const previousTotalTimeout = 60 * time.Second
-	if transport.ResponseHeaderTimeout < previousTotalTimeout {
-		t.Fatalf("ResponseHeaderTimeout = %v, want >= %v so that requests which succeeded under the old total timeout still succeed", transport.ResponseHeaderTimeout, previousTotalTimeout)
-	}
-}
-
-// TestBodyOutlastsResponseHeaderTimeout proves the bound that replaced the total
-// timeout did not recreate it: a response body may take arbitrarily longer than the
-// header wait. Without this, the fix could be silently undone by moving the ceiling
-// from one field to another.
+// TestBodyOutlastsResponseHeaderTimeout holds the proxy to the only bound it may impose
+// on a response: the wait for headers. Once headers arrive the body may take as long as
+// it takes, which is what large downloads, SSE and long-lived streams all depend on.
 func TestBodyOutlastsResponseHeaderTimeout(t *testing.T) {
 	t.Parallel()
 
@@ -83,7 +63,10 @@ func TestBodyOutlastsResponseHeaderTimeout(t *testing.T) {
 	}))
 	defer target.Close()
 
-	client := startTestProxy(t, headerTimeout)
+	addr := startTestProxy(t, func(p *Proxy) {
+		transportOf(t, p).ResponseHeaderTimeout = headerTimeout
+	})
+	client := proxyClient(t, addr)
 
 	resp, err := client.Get(target.URL)
 	if err != nil {
@@ -101,9 +84,8 @@ func TestBodyOutlastsResponseHeaderTimeout(t *testing.T) {
 	}
 }
 
-// TestStallBeforeHeadersReturns502 proves the replacement bound actually fires.
-// Without it, TestBodyOutlastsResponseHeaderTimeout would also pass if the header
-// timeout were never applied at all.
+// TestStallBeforeHeadersReturns502 covers the bound itself: a server that accepts the
+// connection and then never answers must not hold the client open indefinitely.
 func TestStallBeforeHeadersReturns502(t *testing.T) {
 	t.Parallel()
 
@@ -118,7 +100,10 @@ func TestStallBeforeHeadersReturns502(t *testing.T) {
 	defer target.Close()
 	defer close(release)
 
-	client := startTestProxy(t, 100*time.Millisecond)
+	addr := startTestProxy(t, func(p *Proxy) {
+		transportOf(t, p).ResponseHeaderTimeout = 100 * time.Millisecond
+	})
+	client := proxyClient(t, addr)
 
 	resp, err := client.Get(target.URL)
 	if err != nil {
@@ -130,6 +115,75 @@ func TestStallBeforeHeadersReturns502(t *testing.T) {
 		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusBadGateway)
 	}
 }
+
+// TestTunnelDialHonoursDialerTimeout checks that the tunnel's dial is bounded by the
+// proxy's own dialer rather than by the OS connect timeout, which runs to over two
+// minutes on Linux and pins both this goroutine and the client's socket for the
+// duration. The target is reachable, so only a dial that consults the dialer can fail.
+func TestTunnelDialHonoursDialerTimeout(t *testing.T) {
+	t.Parallel()
+
+	target := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+	defer target.Close()
+
+	// A deadline that has already elapsed by the time the dialer reaches its first
+	// address, so the failure needs no unroutable host and no waiting.
+	addr := startTestProxy(t, func(p *Proxy) {
+		p.netDialer.Timeout = 1 * time.Nanosecond
+	})
+
+	_, _, resp := connectThrough(t, addr, target.Listener.Addr().String())
+	if resp.StatusCode != http.StatusBadGateway {
+		t.Fatalf("status = %d, want %d", resp.StatusCode, http.StatusBadGateway)
+	}
+}
+
+// TestTunnelForwardsTraffic covers the CONNECT path end to end, so that changes to how
+// the tunnel dials cannot quietly break the tunnel itself. No TLS is involved: httptest
+// listens on 127.0.0.1, and proxyConnect sends bare IPs down the tunnel rather than
+// MITM'ing them.
+func TestTunnelForwardsTraffic(t *testing.T) {
+	t.Parallel()
+
+	const want = "through the tunnel"
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		io.WriteString(w, want)
+	}))
+	defer target.Close()
+
+	addr := startTestProxy(t, nil)
+
+	conn, br, resp := connectThrough(t, addr, target.Listener.Addr().String())
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, target.URL, nil)
+	if err != nil {
+		t.Fatalf("build tunnelled request: %v", err)
+	}
+	if err := req.Write(conn); err != nil {
+		t.Fatalf("write tunnelled request: %v", err)
+	}
+
+	tunnelled, err := http.ReadResponse(br, req)
+	if err != nil {
+		t.Fatalf("read tunnelled response: %v", err)
+	}
+	defer tunnelled.Body.Close()
+
+	body, err := io.ReadAll(tunnelled.Body)
+	if err != nil {
+		t.Fatalf("read tunnelled body: %v", err)
+	}
+	if string(body) != want {
+		t.Fatalf("body = %q, want %q", body, want)
+	}
+}
+
+// backstopTimeout keeps a regression from hanging CI. It sits far above every delay
+// these tests exercise, so it never fires on a healthy path.
+const backstopTimeout = 10 * time.Second
 
 // newTestProxy builds a Proxy without starting it.
 func newTestProxy(t *testing.T) *Proxy {
@@ -143,21 +197,18 @@ func newTestProxy(t *testing.T) *Proxy {
 	return p
 }
 
-// startTestProxy starts a proxy with a shortened response header timeout and returns
-// a client routed through it.
-func startTestProxy(t *testing.T, headerTimeout time.Duration) *http.Client {
+// startTestProxy starts a proxy and returns its address. configure, if non-nil, may
+// shorten timeouts before the proxy begins serving; it has to run there, because the
+// transport and the dialer read their timeout fields without synchronisation and Start
+// is what hands the proxy to serving goroutines.
+func startTestProxy(t *testing.T, configure func(*Proxy)) string {
 	t.Helper()
 
 	p := newTestProxy(t)
 
-	// This must happen before Start. http.Transport reads its timeout fields without
-	// synchronisation, and Start is what hands the proxy to serving goroutines, so
-	// mutating the field afterwards is a data race.
-	transport, ok := p.requestTransport.(*http.Transport)
-	if !ok {
-		t.Fatalf("requestTransport is %T, want *http.Transport", p.requestTransport)
+	if configure != nil {
+		configure(p)
 	}
-	transport.ResponseHeaderTimeout = headerTimeout
 
 	port, err := p.Start()
 	if err != nil {
@@ -169,17 +220,72 @@ func startTestProxy(t *testing.T, headerTimeout time.Duration) *http.Client {
 		}
 	})
 
-	proxyURL, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", port))
+	return fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+// proxyClient returns a client that routes its requests through the proxy at addr.
+func proxyClient(t *testing.T, addr string) *http.Client {
+	t.Helper()
+
+	proxyURL, err := url.Parse("http://" + addr)
 	if err != nil {
 		t.Fatalf("parse proxy url: %v", err)
 	}
 
 	return &http.Client{
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
-		// A backstop so a regression fails the test rather than hanging CI. It sits far
-		// above every delay used here and never fires on the paths being exercised.
-		Timeout: 10 * time.Second,
+		Timeout:   backstopTimeout,
 	}
+}
+
+// connectThrough asks the proxy at proxyAddr to tunnel to target and returns the reply
+// along with the connection and reader it arrived on, so a caller that got a 200 can
+// keep speaking down the tunnel. Read what follows from the returned reader, not from
+// the reply: a 200 to CONNECT carries no body, so everything after the status line has
+// already been buffered here.
+func connectThrough(t *testing.T, proxyAddr, target string) (net.Conn, *bufio.Reader, *http.Response) {
+	t.Helper()
+
+	conn, err := net.DialTimeout("tcp", proxyAddr, backstopTimeout)
+	if err != nil {
+		t.Fatalf("dial proxy: %v", err)
+	}
+	t.Cleanup(func() { conn.Close() })
+	if err := conn.SetDeadline(time.Now().Add(backstopTimeout)); err != nil {
+		t.Fatalf("set deadline: %v", err)
+	}
+
+	req := &http.Request{
+		Method: http.MethodConnect,
+		// Opaque rather than Path: Request.Write only emits the authority form that
+		// CONNECT requires when the URL carries no path.
+		URL:    &url.URL{Opaque: target},
+		Host:   target,
+		Header: make(http.Header),
+	}
+	if err := req.Write(conn); err != nil {
+		t.Fatalf("write CONNECT: %v", err)
+	}
+
+	br := bufio.NewReader(conn)
+	resp, err := http.ReadResponse(br, req)
+	if err != nil {
+		t.Fatalf("read CONNECT response: %v", err)
+	}
+
+	return conn, br, resp
+}
+
+// transportOf returns the proxy's outbound transport, which is held behind an interface.
+func transportOf(t *testing.T, p *Proxy) *http.Transport {
+	t.Helper()
+
+	transport, ok := p.requestTransport.(*http.Transport)
+	if !ok {
+		t.Fatalf("requestTransport is %T, want *http.Transport", p.requestTransport)
+	}
+
+	return transport
 }
 
 // noopFilter passes every request and response through untouched.
