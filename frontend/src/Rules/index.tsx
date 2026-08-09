@@ -8,7 +8,7 @@ import { useProxyState } from '@/context/ProxyStateContext';
 import { GetRules, SetRules } from 'wails/go/config/Config';
 import { BrowserOpenURL } from 'wails/runtime/runtime';
 
-const HELP_URL = 'https://github.com/irbis-sh/zen-desktop/blob/master/docs/external/how-to-rules.md';
+const HELP_URL = 'https://docs.irbis.sh/docs/zen/reference/filter-list-synax/';
 
 export function Rules() {
   const { t } = useTranslation();
