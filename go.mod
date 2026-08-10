@@ -8,10 +8,10 @@ go 1.26.1
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/wailsapp/wails/v2 v2.11.0 // Use one minor version behind latest for stability, unless there are urgently needed features/bugfixes
-	golang.org/x/sys v0.45.0
+	github.com/wailsapp/wails/v2 v2.14.0 // Use one minor version behind latest for stability, unless there are urgently needed features/bugfixes
+	golang.org/x/sys v0.46.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	howett.net/plist v1.0.1
+	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9
 )
 
 require (
@@ -22,10 +22,11 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tdewolff/parse/v2 v2.8.4
-	golang.org/x/net v0.55.0
+	golang.org/x/net v0.56.0
 )
 
 require (
+	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/getlantern/byteexec v0.0.0-20220903142956-e6ed20032cfd // indirect
 	github.com/getlantern/context v0.0.0-20220418194847-3d5e7a086201 // indirect
@@ -65,6 +66,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/text v0.39.0 // indirect
 )
