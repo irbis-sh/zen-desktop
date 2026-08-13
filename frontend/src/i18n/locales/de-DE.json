@@ -27,12 +27,6 @@
     "saveError": "App-Routing-Einstellungen konnten nicht gespeichert werden: {{error}}",
     "selectError": "App konnte nicht ausgewählt werden: {{error}}"
   },
-  "assetPortInput": {
-    "description": "Der Port, der vom internen Asset-Server zum Einfügen von Skripten und Stilen verwendet wird.",
-    "helper": "Die Verwendung eines Ports unter 1024 kann erhöhte Rechte erfordern.",
-    "label": "Asset-Server-Port",
-    "setError": "Asset-Server-Port kann nicht festgelegt werden: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Zen beim Systemstart starten",
     "disableError": "Autostart kann nicht deaktiviert werden: {{error}}",

@@ -27,12 +27,6 @@
     "saveError": "アプリのルーティング設定の保存に失敗しました: {{error}}",
     "selectError": "アプリの選択に失敗しました: {{error}}"
   },
-  "assetPortInput": {
-    "description": "スクリプトやスタイルを注入するために内部アセットサーバーが使用するポートです。",
-    "helper": "1024 未満のポートを使用する場合は、管理者権限が必要になることがあります。",
-    "label": "アセットサーバーのポート",
-    "setError": "アセットサーバーのポートの設定に失敗しました: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "ログイン時に Zen を自動起動します",
     "disableError": "自動起動の無効化に失敗しました: {{error}}",

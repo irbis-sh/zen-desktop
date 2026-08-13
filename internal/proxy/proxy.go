@@ -56,16 +56,25 @@ type Proxy struct {
 	requestClient      *http.Client
 	netDialer          *net.Dialer
 	shouldProxy        ShouldProxyFunc
+	localHost          string
+	localHandler       http.Handler
 	transparentHosts   []string
 	transparentHostsMu sync.RWMutex
 }
 
-func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc) (*Proxy, error) {
+// NewProxy creates a proxy. localHost and localHandler, when set, name a host
+// the proxy answers for itself: requests to it are served by localHandler
+// instead of being forwarded upstream. Both must be set together or both left
+// empty.
+func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc, localHost string, localHandler http.Handler) (*Proxy, error) {
 	if filter == nil {
 		return nil, errors.New("filter is nil")
 	}
 	if certGenerator == nil {
 		return nil, errors.New("certGenerator is nil")
+	}
+	if (localHost == "") != (localHandler == nil) {
+		return nil, errors.New("localHost and localHandler must be set together")
 	}
 
 	p := &Proxy{
@@ -73,6 +82,8 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 		certGenerator: certGenerator,
 		port:          port,
 		shouldProxy:   shouldProxy,
+		localHost:     localHost,
+		localHandler:  localHandler,
 	}
 
 	p.netDialer = &net.Dialer{
@@ -183,6 +194,13 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // proxyHTTP proxies the HTTP request to the remote server.
 func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo process.Info, shouldProxy bool) {
+	if p.isLocalEndpoint(r.URL.Hostname()) {
+		// Nothing references the local endpoint over plain HTTP; served anyway
+		// so the host behaves the same on both schemes.
+		p.localHandler.ServeHTTP(w, r)
+		return
+	}
+
 	if shouldProxy {
 		filterResp, err := p.filter.HandleRequest(r, processInfo)
 		if err != nil {
@@ -287,12 +305,19 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 		return
 	}
 
-	if !shouldProxy {
+	// The local-endpoint check runs before every path that could tunnel:
+	// a tunnel would dial the hostname for real, and nothing out there
+	// answers for it. Checking first also keeps a TLS failure that lands the
+	// host on transparentHosts from silently breaking the endpoint until
+	// restart.
+	isLocal := p.isLocalEndpoint(host)
+
+	if !isLocal && !shouldProxy {
 		p.tunnel(clientConn, connReq)
 		return
 	}
 
-	if !p.shouldMITM(host) || net.ParseIP(host) != nil {
+	if !isLocal && (!p.shouldMITM(host) || net.ParseIP(host) != nil) {
 		// TODO: implement upstream certificate sniffing
 		// https://docs.mitmproxy.org/stable/concepts-howmitmproxyworks/#complication-1-whats-the-remote-hostname
 		p.tunnel(clientConn, connReq)
@@ -321,8 +346,11 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 
 	// Perform the TLS handshake manually so we can capture TLS errors
 	// and add the host to transparentHosts before entering the server loop.
+	// The local endpoint is exempt: an entry for it is dead weight (isLocal
+	// overrides transparentHosts), and because the endpoint never stops being
+	// MITM'd, repeated failures would keep appending it without bound.
 	if err := tlsConn.HandshakeContext(context.Background()); err != nil {
-		if isTLSError(err) {
+		if !isLocal && isTLSError(err) {
 			log.Printf("adding %s to ignored hosts", redacted.Redacted(host))
 			p.addTransparentHost(host)
 		}
@@ -332,8 +360,18 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 
 	ln := newSingleConnListener(tlsConn)
 
+	var handler http.Handler
+	if isLocal {
+		// The local endpoint is served directly, not round-tripped: its
+		// requests deliberately skip the filter, so no filter-list rule can
+		// block Zen's own assets.
+		handler = p.localHandler
+	} else {
+		handler = p.connectHandler(connReq, host, ln, processInfo)
+	}
+
 	srv := &http.Server{
-		Handler:   p.connectHandler(connReq, host, ln, processInfo),
+		Handler:   handler,
 		TLSConfig: tlsConfig,
 		ConnState: func(_ net.Conn, state http.ConnState) {
 			if state == http.StateClosed {
@@ -447,6 +485,11 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 
 		writeResp(w, resp)
 	})
+}
+
+// isLocalEndpoint reports whether host names the proxy's own local endpoint.
+func (p *Proxy) isLocalEndpoint(host string) bool {
+	return p.localHandler != nil && strings.EqualFold(host, p.localHost)
 }
 
 // shouldMITM returns true if the host should be MITM'd.

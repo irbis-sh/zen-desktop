@@ -27,12 +27,6 @@
     "saveError": "儲存應用程式路由設定失敗：{{error}}",
     "selectError": "選擇應用程式失敗：{{error}}"
   },
-  "assetPortInput": {
-    "description": "內部資源伺服器用於注入腳本和樣式的連接埠。",
-    "helper": "使用 1024 以下的連接埠可能需要系統管理員權限。",
-    "label": "資源伺服器連接埠",
-    "setError": "設定資源伺服器連接埠失敗：{{error}}"
-  },
   "autoStartSwitch": {
     "description": "登入時自動啟動 Zen",
     "disableError": "停用自動啟動失敗：{{error}}",

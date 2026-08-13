@@ -27,12 +27,6 @@
     "saveError": "保存应用路由设置失败：{{error}}",
     "selectError": "选择应用失败：{{error}}"
   },
-  "assetPortInput": {
-    "description": "内部资源服务器用于注入脚本和样式的端口。",
-    "helper": "使用 1024 以下的端口可能需要管理员权限。",
-    "label": "资源服务器端口",
-    "setError": "设置资源服务器端口失败：{{error}}"
-  },
   "autoStartSwitch": {
     "description": "登录时自动启动 Zen",
     "disableError": "禁用自动启动失败：{{error}}",

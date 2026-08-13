@@ -62,7 +62,6 @@ type App struct {
 	systrayMgr      *systray.Manager
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
-	assetSrv        *asset.Server
 }
 
 // NewApp initializes the app.
@@ -213,22 +212,6 @@ func (a *App) StartProxy() (err error) {
 		return err
 	}
 
-	a.assetSrv, err = asset.NewServer(a.config.GetAssetPort(), assetInjector, certGenerator)
-	if err != nil {
-		return fmt.Errorf("create asset server: %v", err)
-	}
-	if err := a.assetSrv.ListenAndServe(); err != nil {
-		return fmt.Errorf("start asset server: %v", err)
-	}
-	defer func() {
-		if err != nil {
-			if err := a.assetSrv.Stop(context.TODO()); err != nil {
-				log.Printf("failed to stop asset server: %v", err)
-			}
-			a.assetSrv = nil
-		}
-	}()
-
 	if err := whitelistSrv.Start(); err != nil {
 		return fmt.Errorf("start whitelist server: %v", err)
 	}
@@ -245,7 +228,7 @@ func (a *App) StartProxy() (err error) {
 
 	routingPolicy := routing.NewPolicy(a.config.GetRouting())
 
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy)
+	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector))
 	if err != nil {
 		return fmt.Errorf("create proxy: %v", err)
 	}
@@ -328,11 +311,6 @@ func (a *App) StopProxy() (err error) {
 		return fmt.Errorf("stop whitelist server: %w", err)
 	}
 
-	if err := a.assetSrv.Stop(context.TODO()); err != nil {
-		return fmt.Errorf("stop asset server: %w", err)
-	}
-
-	a.assetSrv = nil
 	a.whitelistSrv = nil
 	a.proxy = nil
 	a.proxyOn = false

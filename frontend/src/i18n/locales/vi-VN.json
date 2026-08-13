@@ -27,12 +27,6 @@
     "saveError": "Không thể lưu cài đặt định tuyến ứng dụng: {{error}}",
     "selectError": "Không thể chọn ứng dụng: {{error}}"
   },
-  "assetPortInput": {
-    "description": "Cổng do máy chủ tài sản nội bộ sử dụng để tiêm mã lệnh và kiểu giao diện.",
-    "helper": "Sử dụng cổng dưới 1024 có thể yêu cầu quyền quản trị.",
-    "label": "Cổng máy chủ tài sản",
-    "setError": "Không thể đặt cổng máy chủ tài sản: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Tự động chạy Zen khi bạn đăng nhập",
     "disableError": "Không thể tắt tính năng tự khởi động: {{error}}",

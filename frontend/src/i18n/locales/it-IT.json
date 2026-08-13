@@ -27,12 +27,6 @@
     "saveError": "Impossibile salvare le impostazioni di instradamento delle app: {{error}}",
     "selectError": "Impossibile selezionare l'app: {{error}}"
   },
-  "assetPortInput": {
-    "description": "La porta utilizzata dal server asset interno per iniettare script e stili.",
-    "helper": "L'uso di una porta inferiore a 1024 potrebbe richiedere privilegi elevati.",
-    "label": "Porta del server asset",
-    "setError": "Impossibile impostare la porta del server asset: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Avvia Zen automaticamente al login",
     "disableError": "Impossibile disattivare l’avvio automatico: {{error}}",

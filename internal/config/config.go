@@ -93,9 +93,12 @@ type Config struct {
 	Filter struct {
 		FilterLists []FilterList `json:"filterLists"`
 		// Deprecated: use Rules.
-		MyRules   []string `json:"myRules"`
-		Rules     []string `json:"rules"`
-		AssetPort int      `json:"assetPort"`
+		MyRules []string `json:"myRules"`
+		Rules   []string `json:"rules"`
+		// Deprecated: assets are served by the proxy itself, under constants.LocalEndpointHost.
+		// omitempty keeps the dead key out of fresh configs; configs stamped by the
+		// v0.17.0 migration carry a non-zero value and keep serialising it.
+		AssetPort int `json:"assetPort,omitempty"`
 	} `json:"filter"`
 	Certmanager struct {
 		CAInstalled bool `json:"caInstalled"`
@@ -430,26 +433,6 @@ func (c *Config) SetPACPort(port int) error {
 
 	return c.update(func() error {
 		c.Proxy.PACPort = port
-		return nil
-	})
-}
-
-// GetAssetPort returns the port the asset server is set to listen on.
-func (c *Config) GetAssetPort() int {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	return c.Filter.AssetPort
-}
-
-// SetAssetPort sets the port the asset server is set to listen on.
-func (c *Config) SetAssetPort(port int) error {
-	if port < 1 || port > 65535 {
-		return fmt.Errorf("port must be between 1 and 65535")
-	}
-
-	return c.update(func() error {
-		c.Filter.AssetPort = port
 		return nil
 	})
 }

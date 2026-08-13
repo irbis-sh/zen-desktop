@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/irbis-sh/zen-desktop/internal/asset"
+	"github.com/irbis-sh/zen-desktop/internal/constants"
 	"github.com/irbis-sh/zen-desktop/internal/filter"
 	"github.com/irbis-sh/zen-desktop/internal/filter/whitelistserver"
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
@@ -46,8 +47,8 @@ var passModes = []filterliststore.FetchMode{
 // buildFilter constructs a fully populated, finalized filter together with
 // the whitelist server and asset engine wired into it. The caller must start
 // and serve exactly these instances: allowlisting inserts rules through the
-// whitelist server into this pass's rule store, and the asset server must
-// serve this pass's engine.
+// whitelist server into this pass's rule store, and the proxy's local
+// endpoint must serve this pass's engine.
 func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Engine, error) {
 	// The abort signal lives on a parent of the timeout context: a context
 	// only records its first cancellation cause, so an abort arriving after
@@ -74,7 +75,7 @@ func (a *App) buildFilter() (*filter.Filter, *whitelistserver.Server, *asset.Eng
 		networkRules := networkrules.New()
 		whitelistSrv = whitelistserver.New(networkRules)
 		var err error
-		assetInjector, err = asset.NewEngine(a.config.GetAssetPort())
+		assetInjector, err = asset.NewEngine(constants.LocalEndpointHost)
 		if err != nil {
 			return filter.Outcome{}, fmt.Errorf("create asset injector: %v", err)
 		}

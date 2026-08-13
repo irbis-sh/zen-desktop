@@ -4,11 +4,21 @@ import (
 	"bytes"
 	_ "embed"
 	"text/template"
+
+	"github.com/irbis-sh/zen-desktop/internal/constants"
 )
 
 var (
+	// The local endpoint check comes before the exclusions so that excluding a
+	// parent domain (e.g. irbis.sh) cannot route it DIRECT, where nothing
+	// answers for it. Its branch also carries no "; DIRECT" fallback: a direct
+	// connection to the endpoint can only fail, and failing fast beats a
+	// doomed dial.
 	pacTemplate = template.Must(
 		template.New("pac").Parse(`function FindProxyForURL(url, host) {
+	if (host == "{{.LocalEndpointHost}}") {
+		return "PROXY 127.0.0.1:{{.ProxyPort}}";
+	}
 	var excludedHosts = [{{range $index, $host := .ExcludedHosts}}{{if $index}},{{end}}"{{$host}}"{{end}}];
 	for (var i = 0; i < excludedHosts.length; i++) {
 		if (dnsDomainIs(host, excludedHosts[i])) {
@@ -27,11 +37,13 @@ var (
 func renderPac(proxyPort int, userConfiguredExcludedHosts []string) []byte {
 	var buf bytes.Buffer
 	pacTemplate.Execute(&buf, struct {
-		ProxyPort     int
-		ExcludedHosts []string
+		ProxyPort         int
+		LocalEndpointHost string
+		ExcludedHosts     []string
 	}{
-		ProxyPort:     proxyPort,
-		ExcludedHosts: buildExcludedHosts(userConfiguredExcludedHosts),
+		ProxyPort:         proxyPort,
+		LocalEndpointHost: constants.LocalEndpointHost,
+		ExcludedHosts:     buildExcludedHosts(userConfiguredExcludedHosts),
 	})
 	return buf.Bytes()
 }

@@ -27,12 +27,6 @@
     "saveError": "Échec de l'enregistrement des paramètres de routage des applications : {{error}}",
     "selectError": "Échec de la sélection de l'application : {{error}}"
   },
-  "assetPortInput": {
-    "description": "Le port utilisé par le serveur d'assets interne pour injecter des scripts et des styles.",
-    "helper": "Utiliser un port inférieur à 1024 nécessitera des privilèges administrateur.",
-    "label": "Port du serveur d'assets",
-    "setError": "Échec de la définition du port du serveur d'assets : {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Démarrer Zen automatiquement lors de la connexion",
     "disableError": "Échec de la désactivation du démarrage automatique : {{error}}",

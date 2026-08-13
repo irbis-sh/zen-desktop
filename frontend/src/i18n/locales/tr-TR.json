@@ -27,12 +27,6 @@
     "saveError": "Uygulama yönlendirme ayarları kaydedilemedi: {{error}}",
     "selectError": "Uygulama seçilemedi: {{error}}"
   },
-  "assetPortInput": {
-    "description": "Script ve stil enjeksiyonu için kullanılan dahili varlık sunucusunun portu.",
-    "helper": "1024'ün altında bir port kullanmak yükseltilmiş ayrıcalıklar gerektirebilir.",
-    "label": "Varlık sunucusu portu",
-    "setError": "Varlık sunucusu portu ayarlanamadı: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Oturum açtığınızda Zen'i otomatik başlat",
     "disableError": "Otomatik başlatma devre dışı bırakılamadı: {{error}}",

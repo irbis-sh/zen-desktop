@@ -2,15 +2,22 @@ package proxy
 
 import (
 	"bufio"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -160,6 +167,154 @@ func TestTunnelForwardsTraffic(t *testing.T) {
 	}
 }
 
+// localTestHost stands in for the local endpoint hostname. It sits under the
+// reserved .test TLD, so a regression that sends it down a real tunnel can only
+// fail resolution, never reach an actual host.
+const localTestHost = "local.test"
+
+// TestLocalEndpointServedOverCONNECT pins the endpoint's happy path: a CONNECT to the
+// local host is MITM'd and answered by the local handler directly, with no upstream
+// round trip involved.
+func TestLocalEndpointServedOverCONNECT(t *testing.T) {
+	t.Parallel()
+
+	_, addr := startLocalEndpointProxy(t, noopFilter{}, nil)
+
+	body := localEndpointGet(t, addr, localTestHost+":443")
+	if body != localEndpointBody {
+		t.Fatalf("body = %q, want %q", body, localEndpointBody)
+	}
+}
+
+// TestLocalEndpointHostIsCaseInsensitive pins that a client sending the authority in a
+// different case still reaches the handler rather than a tunnel.
+func TestLocalEndpointHostIsCaseInsensitive(t *testing.T) {
+	t.Parallel()
+
+	_, addr := startLocalEndpointProxy(t, noopFilter{}, nil)
+
+	body := localEndpointGet(t, addr, "LOCAL.TEST:443")
+	if body != localEndpointBody {
+		t.Fatalf("body = %q, want %q", body, localEndpointBody)
+	}
+}
+
+// TestLocalEndpointWinsOverTransparentHosts guards the check ordering in proxyConnect:
+// a TLS failure elsewhere can land a host on transparentHosts, and for any other host
+// that means tunnelling from then on. The local endpoint must keep being served - a
+// tunnel would dial the hostname for real and break the endpoint until restart.
+func TestLocalEndpointWinsOverTransparentHosts(t *testing.T) {
+	t.Parallel()
+
+	p, addr := startLocalEndpointProxy(t, noopFilter{}, nil)
+	p.addTransparentHost(localTestHost)
+
+	body := localEndpointGet(t, addr, localTestHost+":443")
+	if body != localEndpointBody {
+		t.Fatalf("body = %q, want %q", body, localEndpointBody)
+	}
+}
+
+// TestLocalEndpointServedOverPlainHTTP covers the proxyHTTP path: nothing injects
+// plain-http URLs, but the endpoint behaves the same on both schemes.
+func TestLocalEndpointServedOverPlainHTTP(t *testing.T) {
+	t.Parallel()
+
+	_, addr := startLocalEndpointProxy(t, noopFilter{}, nil)
+
+	if body := localEndpointPlainGet(t, addr); body != localEndpointBody {
+		t.Fatalf("body = %q, want %q", body, localEndpointBody)
+	}
+}
+
+// TestLocalEndpointTLSFailureDoesNotDisableMITM pins the transparentHosts exemption:
+// for any other host a failed MITM handshake records the host and tunnels it from
+// then on, which self-limits the list to one entry per host. The endpoint keeps
+// being MITM'd instead, so without the exemption every failed handshake would
+// append another copy of its name.
+func TestLocalEndpointTLSFailureDoesNotDisableMITM(t *testing.T) {
+	t.Parallel()
+
+	p, addr := startLocalEndpointProxy(t, noopFilter{}, nil)
+
+	conn, _, resp := connectThrough(t, addr, localTestHost+":443")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+	// A verifying client is the production trigger: it rejects the self-signed
+	// leaf with a bad-certificate alert, which the server sees as a TLS error.
+	tlsConn := tls.Client(conn, &tls.Config{ServerName: localTestHost, MinVersion: tls.VersionTLS12})
+	if err := tlsConn.Handshake(); err == nil {
+		t.Fatal("handshake succeeded, want the client to reject the self-signed leaf")
+	}
+	// The client-side failure does not order with the server's bookkeeping;
+	// proxyConnect closing the connection on return does, so drain until then.
+	_, _ = io.Copy(io.Discard, conn)
+
+	p.transparentHostsMu.RLock()
+	got := append([]string(nil), p.transparentHosts...)
+	p.transparentHostsMu.RUnlock()
+	if len(got) != 0 {
+		t.Fatalf("transparentHosts = %q, want empty: a failed local-endpoint handshake must not record the host", got)
+	}
+
+	if body := localEndpointGet(t, addr, localTestHost+":443"); body != localEndpointBody {
+		t.Fatalf("body = %q, want %q", body, localEndpointBody)
+	}
+}
+
+// TestLocalEndpointWinsOverShouldProxyExclusion guards the remaining check ordering
+// in proxyConnect and proxyHTTP: a routing policy that excludes the requesting
+// process tunnels every other host, and a tunnel would dial the endpoint's
+// hostname for real. The consulted flag keeps the test honest - shouldProxy is
+// only reached when the requesting process is identified, so if process lookup
+// ever breaks under test, this fails loudly instead of passing vacuously.
+func TestLocalEndpointWinsOverShouldProxyExclusion(t *testing.T) {
+	t.Parallel()
+
+	var consulted atomic.Bool
+	excludeEverything := func(string) bool {
+		consulted.Store(true)
+		return false
+	}
+	_, addr := startLocalEndpointProxy(t, noopFilter{}, excludeEverything)
+
+	if body := localEndpointGet(t, addr, localTestHost+":443"); body != localEndpointBody {
+		t.Fatalf("CONNECT body = %q, want %q", body, localEndpointBody)
+	}
+
+	if body := localEndpointPlainGet(t, addr); body != localEndpointBody {
+		t.Fatalf("plain-HTTP body = %q, want %q", body, localEndpointBody)
+	}
+
+	if !consulted.Load() {
+		t.Fatal("shouldProxy was never consulted: process lookup did not identify the test process, so the exclusion ordering went unexercised")
+	}
+}
+
+// TestLocalEndpointImmuneToFilter pins that no filter rule can block the endpoint:
+// on the CONNECT path its requests never reach the filter (the local handler
+// replaces the round-tripping one), and on the plain-HTTP path the endpoint check
+// runs before the filter. The blocked.test probe proves the filter is live rather
+// than accidentally disconnected.
+func TestLocalEndpointImmuneToFilter(t *testing.T) {
+	t.Parallel()
+
+	_, addr := startLocalEndpointProxy(t, blockEverythingFilter{}, nil)
+
+	if status, body := mitmGet(t, addr, "blocked.test:443", "blocked.test"); status != http.StatusForbidden || body != blockedBody {
+		t.Fatalf("blocked.test: status = %d, body = %q, want %d, %q", status, body, http.StatusForbidden, blockedBody)
+	}
+
+	if body := localEndpointGet(t, addr, localTestHost+":443"); body != localEndpointBody {
+		t.Fatalf("CONNECT body = %q, want %q", body, localEndpointBody)
+	}
+
+	if body := localEndpointPlainGet(t, addr); body != localEndpointBody {
+		t.Fatalf("plain-HTTP body = %q, want %q", body, localEndpointBody)
+	}
+}
+
 // backstopTimeout keeps a regression from hanging CI. It sits far above every delay
 // these tests exercise, so it never fires on a healthy path.
 const backstopTimeout = 10 * time.Second
@@ -168,12 +323,110 @@ const backstopTimeout = 10 * time.Second
 func newTestProxy(t *testing.T) *Proxy {
 	t.Helper()
 
-	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil)
+	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil, "", nil)
 	if err != nil {
 		t.Fatalf("create proxy: %v", err)
 	}
 
 	return p
+}
+
+// localEndpointBody is what the local endpoint handler installed by
+// startLocalEndpointProxy answers every request with.
+const localEndpointBody = "served locally"
+
+// startLocalEndpointProxy starts a proxy configured to serve a handler on
+// localTestHost and returns it along with its address.
+func startLocalEndpointProxy(t *testing.T, f filter, shouldProxy ShouldProxyFunc) (*Proxy, string) {
+	t.Helper()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		io.WriteString(w, localEndpointBody)
+	})
+	p, err := NewProxy(f, selfSignedCertGenerator{}, 0, shouldProxy, localTestHost, handler)
+	if err != nil {
+		t.Fatalf("create proxy: %v", err)
+	}
+
+	port, err := p.Start()
+	if err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := p.Stop(); err != nil {
+			t.Errorf("stop proxy: %v", err)
+		}
+	})
+
+	return p, fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+// localEndpointGet CONNECTs to target through the proxy at proxyAddr, completes the
+// MITM TLS handshake, and returns the body of a GET / served inside the tunnel.
+func localEndpointGet(t *testing.T, proxyAddr, target string) string {
+	t.Helper()
+
+	_, body := mitmGet(t, proxyAddr, target, localTestHost)
+	return body
+}
+
+// localEndpointPlainGet requests http://localTestHost/ through the proxy at
+// proxyAddr - the proxyHTTP path, no tunnel - and returns the body.
+func localEndpointPlainGet(t *testing.T, proxyAddr string) string {
+	t.Helper()
+
+	resp, err := proxyClient(t, proxyAddr).Get("http://" + localTestHost + "/")
+	if err != nil {
+		t.Fatalf("get through proxy: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	return string(body)
+}
+
+// mitmGet CONNECTs to target through the proxy at proxyAddr, completes the MITM
+// TLS handshake with serverName, and returns the status and body of a GET
+// https://serverName/ served inside the tunnel.
+func mitmGet(t *testing.T, proxyAddr, target, serverName string) (int, string) {
+	t.Helper()
+
+	conn, _, resp := connectThrough(t, proxyAddr, target)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	tlsConn := tls.Client(conn, &tls.Config{
+		ServerName:         serverName,
+		InsecureSkipVerify: true, // #nosec G402 -- the MITM certificate is self-signed on purpose; trust is not under test.
+	})
+	if err := tlsConn.Handshake(); err != nil {
+		t.Fatalf("TLS handshake: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://"+serverName+"/", nil)
+	if err != nil {
+		t.Fatalf("build request: %v", err)
+	}
+	if err := req.Write(tlsConn); err != nil {
+		t.Fatalf("write request: %v", err)
+	}
+
+	tunnelled, err := http.ReadResponse(bufio.NewReader(tlsConn), req)
+	if err != nil {
+		t.Fatalf("read response: %v", err)
+	}
+	defer tunnelled.Body.Close()
+
+	body, err := io.ReadAll(tunnelled.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+
+	return tunnelled.StatusCode, string(body)
 }
 
 // startTestProxy starts a proxy and returns its address. configure, if non-nil, may
@@ -278,6 +531,25 @@ func (noopFilter) HandleResponse(*http.Request, *http.Response, process.Info) er
 	return nil
 }
 
+// blockedBody is what blockEverythingFilter answers every request with.
+const blockedBody = "blocked by test filter"
+
+// blockEverythingFilter blocks every request with a canned response, standing in
+// for a filter list rule that happens to match Zen's own assets.
+type blockEverythingFilter struct{}
+
+func (blockEverythingFilter) HandleRequest(*http.Request, process.Info) (*http.Response, error) {
+	return &http.Response{
+		StatusCode: http.StatusForbidden,
+		Header:     make(http.Header),
+		Body:       io.NopCloser(strings.NewReader(blockedBody)),
+	}, nil
+}
+
+func (blockEverythingFilter) HandleResponse(*http.Request, *http.Response, process.Info) error {
+	return nil
+}
+
 // unusedCertGenerator satisfies NewProxy's non-nil check. Certificates are only
 // generated for MITM'd CONNECT requests, so it is never called on the plain-HTTP
 // path these tests exercise.
@@ -285,4 +557,32 @@ type unusedCertGenerator struct{}
 
 func (unusedCertGenerator) GetCertificate(string) (*tls.Certificate, error) {
 	return nil, errors.New("not implemented")
+}
+
+// selfSignedCertGenerator mints a throwaway self-signed leaf per host, standing in
+// for the CA-backed generator on MITM paths.
+type selfSignedCertGenerator struct{}
+
+func (selfSignedCertGenerator) GetCertificate(host string) (*tls.Certificate, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: host},
+		DNSNames:     []string{host},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tls.Certificate{
+		Certificate: [][]byte{der},
+		PrivateKey:  key,
+	}, nil
 }

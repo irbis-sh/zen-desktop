@@ -27,12 +27,6 @@
     "saveError": "Failed to save app routing settings: {{error}}",
     "selectError": "Failed to select app: {{error}}"
   },
-  "assetPortInput": {
-    "description": "The port used by the internal asset server for injecting scripts and styles.",
-    "helper": "Using a port below 1024 may require elevated privileges.",
-    "label": "Asset server port",
-    "setError": "Failed to set asset server port: {{error}}"
-  },
   "autoStartSwitch": {
     "description": "Start Zen automatically when you log in",
     "disableError": "Failed to disable autostart: {{error}}",
