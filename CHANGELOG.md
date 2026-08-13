@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.25.1
+
+### What's New
+
+* **No more Firefox local network prompts**
+  Firefox recently introduced [local network access control](https://support.mozilla.org/en-US/kb/control-personal-device-local-network-permissions-firefox), which asks for permission when a page connects to a local device. Zen loaded its injected page assets from 127.0.0.1, which triggered the prompt and blamed the site for a connection Zen was actually making. These assets are now served via a fake hostname, so the prompt no longer appears.
+* **Framework upgrade**
+  Upgraded Wails to v2.14.0, fixing a crash on Windows when downloading the WebView2 runtime.
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.25.0...v0.25.1
+
 ## v0.25.0
 
 ### What's New
