@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/irbis-sh/zen-desktop/internal/redacted"
 )
 
 // Handler serves injected page assets. It is mounted on the proxy under
@@ -49,7 +51,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	refererURL, err := url.Parse(raw)
 	if err != nil {
-		log.Printf("asset: invalid referer URL %q: %v", raw, err)
+		// The referer names the page the user is browsing; url.Error embeds it
+		// too, so the whole message is redacted in production builds.
+		log.Printf("asset: invalid referer URL: %v", redacted.Redacted(err))
 		http.Error(w, "invalid referer", http.StatusBadRequest)
 		return
 	}
