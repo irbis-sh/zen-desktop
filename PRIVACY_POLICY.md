@@ -55,7 +55,7 @@ We take several steps to protect the integrity and trustworthiness of Zen – no
 * We enforce strict security on our GitHub organization, including mandatory code reviews.
 * Updates are currently served via a private Cloudflare R2 bucket. While this is secure in practice, we're actively working on a verifiable, cryptographically signed update system.
 
-Want to dive deeper? Read [Zen's Security Architecture on GitHub](https://github.com/irbis-sh/zen-desktop/blob/master/docs/internal/security-architecture.md).
+Want to dive deeper? Read [Zen's Security Architecture on GitHub](https://github.com/irbis-sh/zen-desktop/blob/master/docs/explanation/security-architecture.md).
 
 ---
 

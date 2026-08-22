@@ -30,7 +30,7 @@ Follow [these instructions](https://docs.github.com/en/pull-requests/collaborati
 
 ### Step 2: Set up your development environment
 
-1. Install Go, Node.js with npm, Wails, and optionally Task as described in [requirements.md](requirements.md)
+1. Install Go, Node.js with npm, Wails, and optionally Task as described in [requirements.md](../reference/requirements.md)
 2. In the project root directory, run `wails dev` (or `task` if you have Task installed) to start the development server
 
 ### Step 3: Create a new translation file
@@ -44,16 +44,16 @@ You'll need to modify two files:
 
 1. In [`frontend/i18next.config.ts`](/frontend/i18next.config.ts), add your locale code to the `locales` array:
 
-  ```typescript
-  locales: ['en-US', ..., 'your-locale-code'],
-  ```
+```typescript
+locales: ['en-US', ..., 'your-locale-code'],
+```
 
 2. In [`frontend/src/i18n/index.ts`](/frontend/src/i18n/index.ts):
 
 - Add an import for your translation file:
 
   ```typescript
-  import aaAA from './locales/aa-AA.json'; // Replace aa-AA with your locale code
+  import aaAA from "./locales/aa-AA.json"; // Replace aa-AA with your locale code
   ```
 
 - Add your locale to the `SUPPORTED_LOCALES` array. Since a user's preferred locale [may not include a region code](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language#value), include both the base language and the full locale code:

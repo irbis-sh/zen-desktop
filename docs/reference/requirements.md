@@ -8,6 +8,7 @@
   # run from project root
   go install "github.com/wailsapp/wails/v2/cmd/wails@$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2)"
   ```
+
   - After installation, run `wails doctor` to ensure you have the required dependencies.
 - [Task](https://taskfile.dev/installation/) (optional, but recommended for quick access to common commands).
 - [golangci-lint](https://golangci-lint.run/welcome/install/).

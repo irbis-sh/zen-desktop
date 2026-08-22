@@ -5,8 +5,7 @@ This document describes the file structure of the project.
 - `.github`: GitHub Actions workflows and issue templates.
 - `assets`: Assets used in README.md and other documents (not in source files).
 - `build`: Build configuration and artifacts. Read more in [build/README.md](../../build/README.md).
-- `docs/internal`: Internal documentation for contributors.
-- `docs/external`: External documentation for users.
+- `docs`: Project documentation.
 - `frontend`: Frontend JS/TS code. Read more in [frontend/README.md](../../frontend/README.md).
 - `internal`: Backend Go packages.
 - `scriptlets`: JS/TS functions injected into webpages for advanced content blocking.

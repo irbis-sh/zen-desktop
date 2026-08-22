@@ -1,4 +1,4 @@
-# Zen's Security Architecture
+# Security Architecture
 
 ## General considerations
 
@@ -59,7 +59,6 @@ Zen's releases are immutable. Once a release is published, it – and the associ
 To verify that a release is immutable, check for the "Immutable" label below the title on the release page.
 
 To learn more about immutable releases, see [GitHub's documentation](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/immutable-releases).
-
 
 ### Artifact attestations
 

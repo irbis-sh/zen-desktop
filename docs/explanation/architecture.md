@@ -35,7 +35,7 @@ A leaked key of this kind would let an attacker impersonate any website to this 
 - Sensitive traffic is never proxied. The PAC exclusion list ([`internal/sysproxy/exclusions`](/internal/sysproxy/exclusions)) - banks, government portals, login and identity providers, plus platform-critical hosts (Microsoft, Apple) - routes those hosts `DIRECT`, so Zen never sees or terminates their TLS.
 - When interception fails, Zen ignores the host. An example is certificate pinning - a pinned client rejects Zen's leaf outright. On a TLS error - in the handshake with the client or on the upstream connection - Zen adds the host to an in-memory passthrough set and tunnels it untouched from then on. Literal IP hosts are always tunnelled, since without a hostname there is nothing to put in a certificate.
 
-This doesn't makes interception risk-free - it's a real liability, taken on because there is no other way to intercept HTTPS. Supply-chain security - including immutable releases, provenance attestations, and trust-store handling - is covered in [Security Architecture](internal/security-architecture.md).
+This doesn't makes interception risk-free - it's a real liability, taken on because there is no other way to intercept HTTPS. Supply-chain security - including immutable releases, provenance attestations, and trust-store handling - is covered in [Security Architecture](security-architecture.md).
 
 ## The life of a request
 
@@ -71,7 +71,7 @@ The injected tags point at `https://local.irbis.sh/`, a fake hostname served by 
 
 Rules come from filter lists following the [established syntax](https://docs.irbis.sh/docs/zen/reference/filter-list-synax/), plus hosts lists and the user's own rules. The list store ([`internal/filterliststore`](/internal/filterliststore)) is built so that it comes up even when the network is down or slow.
 
-Lists also carry a notion of trust. Most rules are safe to accept from any list, but raw CSS and raw JavaScript injections, and certain scriptlets are accepted only from a handful of trusted lists and from the user's own rules. The policy for granting a list trusted status lives in [Filter Lists](internal/filter-lists.md).
+Lists also carry a notion of trust. Most rules are safe to accept from any list, but raw CSS and raw JavaScript injections, and certain scriptlets are accepted only from a handful of trusted lists and from the user's own rules. The policy for granting a list trusted status lives in [Filter Lists](filter-lists.md).
 
 ## Self-update
 
