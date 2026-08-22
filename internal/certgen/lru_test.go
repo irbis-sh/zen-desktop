@@ -47,7 +47,7 @@ func TestMultipleCerts(t *testing.T) {
 		cache.Put(fmt.Sprintf("example%d.com", i), expiresAt, certs[i])
 	}
 
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		if cache.Get(fmt.Sprintf("example%d.com", i)) != certs[i] {
 			t.Fatalf("Expected the retrieved certificate to be the same as the one put in. Failure at index %d.", i)
 		}
@@ -80,14 +80,14 @@ func testCheckExpirationForTTL(t *testing.T, cache *certLRUCache, ttl time.Durat
 	}
 
 	<-time.After(ttl / 2)
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		if cache.Get(fmt.Sprintf("%d.%d.example.com", i, ttl)) != certs[i] {
 			t.Fatalf("Expected the certificate to be kept. Failure at index %d.", i)
 		}
 	}
 
 	<-time.After((ttl / 2) + time.Second)
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		if cache.Get(fmt.Sprintf("%d.%d.example.com", i, ttl)) != nil {
 			t.Fatalf("Expected the certificate to be expired. Failure at index %d.", i)
 		}
@@ -126,7 +126,7 @@ func TestLRU(t *testing.T) {
 		cache.Put(fmt.Sprintf("%d.keep.com", i), expiresAt, certsToBeKept[i])
 	}
 
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		cache.Get(fmt.Sprintf("%d.keep.com", i))
 	}
 
@@ -134,13 +134,13 @@ func TestLRU(t *testing.T) {
 		cache.Put(fmt.Sprintf("%d.new.com", i), expiresAt, &tls.Certificate{})
 	}
 
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		if cache.Get(fmt.Sprintf("%d.evict.com", i)) != nil {
 			t.Fatalf("Expected the certificate to be evicted. Failure at index %d.", i)
 		}
 	}
 
-	for _, i := range rand.Perm(1000) {
+	for _, i := range rand.Perm(1000) { // #nosec G404 -- shuffles test lookup order, not used for security purposes
 		if cache.Get(fmt.Sprintf("%d.keep.com", i)) != certsToBeKept[i] {
 			t.Fatalf("Expected the certificate to be kept. Failure at index %d.", i)
 		}
