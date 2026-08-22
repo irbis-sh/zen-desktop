@@ -11,7 +11,7 @@ import { EventsOn } from 'wails/runtime/runtime';
 import './index.css';
 
 const PROXY_CHANNEL = 'proxy:action';
-const LINUX_PROXY_GUIDE_URL = 'https://github.com/irbis-sh/zen-desktop/blob/master/docs/external/linux-proxy-conf.md';
+const LINUX_PROXY_GUIDE_URL = 'https://docs.irbis.sh/docs/zen/how-to/proxy-linux/';
 
 enum ProxyActionKind {
   Starting = 'starting',
