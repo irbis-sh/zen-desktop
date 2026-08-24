@@ -16,6 +16,7 @@ export default {
     commonjs(),
     typescript({
       exclude: ['**/test/*.ts', '**/*.test.ts'],
+      noEmitOnError: true,
     }),
     babel({
       babelHelpers: 'bundled',
@@ -23,9 +24,7 @@ export default {
         [
           '@babel/preset-env',
           {
-            targets: '> 0.2%, not dead',
-            useBuiltIns: 'usage',
-            corejs: '3.49',
+            useBuiltIns: false,
           },
         ],
       ],

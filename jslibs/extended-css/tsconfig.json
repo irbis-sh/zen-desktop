@@ -4,8 +4,8 @@
   "display": "Node 24",
   "_version": "24.0.0",
   "compilerOptions": {
-    "lib": ["ES2024", "DOM"],
-    "target": "ES2024",
+    "lib": ["ES2022", "DOM"],
+    "target": "ES2022",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
