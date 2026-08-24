@@ -90,8 +90,11 @@ func (inj *Injector) GetAsset(hostname string) ([]byte, error) {
 	}
 
 	var injection bytes.Buffer
+	// The wrapping IIFE keeps the bundle's top-level var from becoming a window
+	// property that page scripts could probe for.
+	injection.WriteString("(()=>{")
 	injection.Write(inj.bundle)
-	injection.WriteString("\n(()=>{window.extendedCSS(")
+	injection.WriteString("\nextendedCSS(")
 	injection.Write(encodedRules)
 	injection.WriteString(")})();")
 

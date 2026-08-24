@@ -59,8 +59,10 @@ func (inj *Injector) GetAsset(hostname string) ([]byte, error) {
 	}
 
 	var injection bytes.Buffer
-	injection.Write(inj.bundle)
+	// The wrapping IIFE keeps the bundle's top-level var from becoming a window
+	// property that page scripts could probe for.
 	injection.WriteString("(()=>{")
+	injection.Write(inj.bundle)
 	for _, argLst := range argLists {
 		if err := argLst.GenerateInjection(&injection); err != nil {
 			return nil, fmt.Errorf("generate injection for scriptlet %q: %v", argLst, err)
