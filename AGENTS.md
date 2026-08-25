@@ -8,6 +8,7 @@ This is the source for Zen - a system-wide proxy-based ad-blocker and privacy gu
 
 Use `task` commands when available.
 
+- Run in dev mode: `task dev`
 - Build: `task build-dev`
 - Tests (Go only): `task test`
 - Lint (Go and frontend): `task lint`
@@ -27,6 +28,8 @@ Use `task` commands when available.
 - Run `task lint` after changes
 - Run `task test` after Go changes
 - When committing, follow `.agents/skills/writing-commit-messages/SKILL.md`
+- The app's UI can be driven via a browser (e.g. using MCP) for debugging and testing features, including starting and stopping the proxy, and modifying filter lists or custom rules. When launching in dev mode, watch the output for the log line `Vite Server URL: http://localhost:5173/` and navigate to that URL.
+- In the canonical repo (not a fork), name branches `<github-username>/<description-slug>`. Get the username via `gh api user -q .login` if `gh` is available. No more than 3 words in the slug.
 
 ## Workflow guidelines
 
