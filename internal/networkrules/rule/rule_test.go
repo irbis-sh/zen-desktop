@@ -34,7 +34,7 @@ func TestParseModifiers(t *testing.T) {
 	t.Run("document modifiers set document flag only", func(t *testing.T) {
 		t.Parallel()
 
-		for _, modifier := range []string{"document", "doc"} {
+		for _, modifier := range []string{"document", "doc", "all"} {
 			t.Run(modifier, func(t *testing.T) {
 				t.Parallel()
 
@@ -73,7 +73,6 @@ func TestParseModifiers(t *testing.T) {
 			"remove-js-constant=window.ad",
 			"scramblejs=tracker",
 			"jsonprune=$.ads",
-			"all",
 		})
 		if err != nil {
 			t.Fatalf("ParseModifiers() = %v, want nil", err)
@@ -191,6 +190,19 @@ func TestParseModifiers(t *testing.T) {
 					t.Fatalf("ParseModifiers(%q) error = %q, want unknown modifier", modifier, err)
 				}
 			})
+		}
+	})
+
+	t.Run("rejects negated all", func(t *testing.T) {
+		t.Parallel()
+
+		var r Rule
+		err := r.ParseModifiers([]string{"~all"})
+		if err == nil {
+			t.Fatal(`ParseModifiers("~all") = nil, want unknown modifier error`)
+		}
+		if !strings.Contains(err.Error(), "unknown modifier") {
+			t.Fatalf(`ParseModifiers("~all") error = %q, want unknown modifier`, err)
 		}
 	})
 

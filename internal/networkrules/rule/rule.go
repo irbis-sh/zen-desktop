@@ -83,7 +83,15 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			case "removeparam":
 				modifier = &rulemodifiers.RemoveParamModifier{}
 			case "all":
-				// TODO: should act as "popup" modifier once it gets implemented
+				// No engine defines ~all; cutModifierName strips the ~, so reject it
+				// explicitly rather than silently treating it as all.
+				if m[0] == '~' {
+					return fmt.Errorf("unknown modifier %q", m)
+				}
+				// A rule with no content-type condition modifiers already matches every
+				// request type, so lifting the navigation gate is all "all" needs.
+				// TODO: also set the popup flag once popup blocking gets implemented.
+				rm.Document = true
 				continue
 			default:
 				return fmt.Errorf("unknown modifier %q", m)

@@ -381,6 +381,77 @@ func TestExceptionRules(t *testing.T) {
 	})
 }
 
+func TestAllModifier(t *testing.T) {
+	t.Parallel()
+
+	navigationHeaders := func() http.Header {
+		return http.Header{
+			"Sec-Fetch-User": []string{"?1"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+	}
+
+	t.Run("blocks user navigation", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$all`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		if !shouldBlock {
+			t.Fatal("expected $all rule to block user navigation")
+		}
+	})
+
+	t.Run("blocks subresource request", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$all`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{"Sec-Fetch-Dest": []string{"script"}}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/script.js", headers))
+		if !shouldBlock {
+			t.Fatal("expected $all rule to block subresource request")
+		}
+	})
+
+	t.Run("rule without all does not block user navigation", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		if shouldBlock {
+			t.Fatal("expected bare rule not to block user navigation")
+		}
+	})
+
+	t.Run("all exception cancels all primary for navigation", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$all`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com^$all`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		if shouldBlock {
+			t.Fatal("expected $all exception to cancel $all primary rule for navigation")
+		}
+	})
+}
+
 func newTestRequest(t *testing.T, rawURL string, headers http.Header) *http.Request {
 	t.Helper()
 
