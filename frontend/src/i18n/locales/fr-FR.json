@@ -13,6 +13,7 @@
     "update": {
       "restart": "Redémarrer",
       "restartFailed": "Échec du redémarrage",
+      "restarting": "Redémarrage...",
       "updateAvailable": "Mise à jour disponible"
     }
   },

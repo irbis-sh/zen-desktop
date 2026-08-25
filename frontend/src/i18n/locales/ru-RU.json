@@ -13,6 +13,7 @@
     "update": {
       "restart": "Перезапустить",
       "restartFailed": "Не удалось перезапустить приложение: {{error}}",
+      "restarting": "Перезапуск...",
       "updateAvailable": "Доступна новая версия Zen."
     }
   },

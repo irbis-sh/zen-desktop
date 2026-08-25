@@ -13,6 +13,7 @@
     "update": {
       "restart": "Restart",
       "restartFailed": "Failed to restart app: {{error}}",
+      "restarting": "Restarting...",
       "updateAvailable": "A new version of Zen is available."
     }
   },

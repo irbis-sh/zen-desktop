@@ -13,6 +13,7 @@
     "update": {
       "restart": "再起動",
       "restartFailed": "アプリの再起動に失敗しました: {{error}}",
+      "restarting": "再起動しています...",
       "updateAvailable": "Zen の新しいバージョンが利用可能です。"
     }
   },

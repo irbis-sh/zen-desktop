@@ -13,6 +13,7 @@
     "update": {
       "restart": "Riavvia",
       "restartFailed": "Impossibile riavviare l'app: {{error}}",
+      "restarting": "Riavvio in corso...",
       "updateAvailable": "È disponibile una nuova versione di Zen."
     }
   },

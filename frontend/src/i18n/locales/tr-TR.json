@@ -13,6 +13,7 @@
     "update": {
       "restart": "Yeniden başlat",
       "restartFailed": "Uygulama yeniden başlatılamadı: {{error}}",
+      "restarting": "Yeniden başlatılıyor...",
       "updateAvailable": "Zen'in yeni bir sürümü mevcut."
     }
   },

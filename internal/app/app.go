@@ -62,6 +62,10 @@ type App struct {
 	systrayMgr      *systray.Manager
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
+	restartMu       sync.Mutex
+	// pendingRestart records an armed restart.
+	pendingRestart      bool
+	pendingRestartStart bool
 }
 
 // NewApp initializes the app.
@@ -137,6 +141,8 @@ func (a *App) commonStartup(ctx context.Context) {
 	close(a.startupDone)
 }
 
+// BeforeClose runs when the user asks to quit. Returning true prevents the
+// window from closing.
 func (a *App) BeforeClose(ctx context.Context) bool {
 	log.Println("shutting down")
 	if err := a.StopProxy(); err != nil {
@@ -151,7 +157,15 @@ func (a *App) BeforeClose(ctx context.Context) bool {
 		if err != nil {
 			return false
 		}
-		return dialog != "Yes"
+		if dialog != "Yes" {
+			// The quit was cancelled; don't leave a relaunch armed for a
+			// later normal quit.
+			a.restartMu.Lock()
+			a.pendingRestart = false
+			a.restartMu.Unlock()
+			return true
+		}
+		return false
 	}
 	a.systrayMgr.Quit()
 	return false
@@ -487,11 +501,46 @@ func parseLaunchArgs(args []string) (start, hidden bool) {
 	return start, hidden
 }
 
+// RestartApplication schedules a relaunch of the application and quits.
+// The replacement process is spawned by [App.RunPendingRestart] only after the
+// Wails runtime has shut down: spawning it here would race the
+// single-instance lock, which this process holds until it exits, making the
+// new process hand its arguments to this dying one and exit instead of
+// starting up. A failure to spawn the replacement is logged, not surfaced
+// to the caller.
 func (a *App) RestartApplication() error {
-	cmd := exec.Command(os.Args[0], os.Args[1:]...) // #nosec G204 G702 -- restarting the app with the same arguments is ok
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("restart application: %w", err)
-	}
+	a.proxyMu.Lock()
+	proxyOn := a.proxyOn
+	a.proxyMu.Unlock()
+
+	a.restartMu.Lock()
+	a.pendingRestart, a.pendingRestartStart = true, proxyOn
+	a.restartMu.Unlock()
+
 	runtime.Quit(a.ctx)
 	return nil
+}
+
+// RunPendingRestart spawns the replacement process recorded by
+// [App.RestartApplication], if any. It must only be called after wails.Run has
+// returned, when this process is about to release the single-instance lock.
+func (a *App) RunPendingRestart() {
+	a.restartMu.Lock()
+	pending, start := a.pendingRestart, a.pendingRestartStart
+	a.restartMu.Unlock()
+	if !pending {
+		return
+	}
+
+	// --hidden is deliberately not carried over: a restart is user-initiated,
+	// so the window must be visible. Any flag added in future is dropped on
+	// restart unless it is handled here.
+	var args []string
+	if start {
+		args = []string{"--start"}
+	}
+	cmd := exec.Command(os.Args[0], args...) // #nosec G204 G702 -- re-executing our own binary with a fixed argv is ok
+	if err := cmd.Start(); err != nil {
+		log.Printf("failed to restart application: %v", err)
+	}
 }

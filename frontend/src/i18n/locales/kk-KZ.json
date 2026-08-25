@@ -11,8 +11,9 @@
       "settings": "Баптаулар"
     },
     "update": {
-      "restart": "Қайта бастау",
-      "restartFailed": "Қосымшаны қайта бастау сәтсіз аяқталды: {{error}}",
+      "restart": "Қайта жүктеу",
+      "restartFailed": "Қосымшаны қайта жүктеу сәтсіз аяқталды: {{error}}",
+      "restarting": "Қайта жүктелуде...",
       "updateAvailable": "Zen-нің жаңа нұсқасы бар."
     }
   },
