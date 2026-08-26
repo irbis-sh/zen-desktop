@@ -190,6 +190,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "Aucun magasin de certificats système n'a été trouvé sur cet appareil (courant sur NixOS), le certificat racine de Zen a donc été ajouté uniquement aux bases de certificats de vos navigateurs. D'autres applications peuvent afficher des erreurs de certificat.<br />Consultez <guide-link>ce guide</guide-link> pour plus de détails.",
     "start": "Démarrer",
     "startError": "Échec du démarrage du proxy : {{error}}",
     "stop": "Arrêter",

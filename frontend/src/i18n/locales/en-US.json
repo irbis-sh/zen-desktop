@@ -190,6 +190,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "No system certificate trust store was found on this device (common on NixOS), so Zen's CA was added to your browsers' certificate databases only. Other applications may show certificate errors.<br />See <guide-link>this guide</guide-link> for details.",
     "start": "Start",
     "startError": "Failed to start proxy: {{error}}",
     "stop": "Stop",

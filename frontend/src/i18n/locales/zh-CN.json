@@ -190,6 +190,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "未在此设备上找到系统证书信任库（常见于 NixOS），因此 Zen 的 CA 证书仅添加到了浏览器的证书数据库中。其他应用程序可能会显示证书错误。<br />详情请参阅 <guide-link>此指南</guide-link>。",
     "start": "启动",
     "startError": "启动代理失败：{{error}}",
     "stop": "停止",

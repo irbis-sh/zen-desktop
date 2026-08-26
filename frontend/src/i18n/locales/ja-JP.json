@@ -190,6 +190,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "このデバイスにはシステム証明書ストアが見つからなかったため（NixOS でよくあります）、Zen の CA 証明書はブラウザーの証明書データベースにのみ追加されました。他のアプリケーションでは証明書エラーが表示される場合があります。<br />詳しくは<guide-link>こちらのガイド</guide-link>をご覧ください。",
     "start": "開始",
     "startError": "プロキシの開始に失敗しました: {{error}}",
     "stop": "停止",
