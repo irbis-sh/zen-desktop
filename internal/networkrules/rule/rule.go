@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/irbis-sh/zen-desktop/internal/fetchmeta"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rulemodifiers"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rulemodifiers/removejsconstant"
 )
@@ -166,7 +167,7 @@ func cutModifierName(modifier string) (name string, negated, hasValue bool) {
 
 // ShouldMatchReq returns true if the rule should match the request.
 func (rm *Rule) ShouldMatchReq(req *http.Request) bool {
-	if req.Header.Get("Sec-Fetch-User") == "?1" && req.Header.Get("Sec-Fetch-Dest") == "document" && !rm.Document {
+	if fetchmeta.IsUserNavigation(req) && !rm.Document {
 		return false
 	}
 

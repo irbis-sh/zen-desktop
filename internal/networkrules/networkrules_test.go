@@ -435,6 +435,44 @@ func TestAllModifier(t *testing.T) {
 		}
 	})
 
+	// Script-initiated navigations (location.href, JS redirects) carry
+	// Sec-Fetch-Mode: navigate without Sec-Fetch-User.
+	t.Run("blocks script-initiated navigation", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^$all`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{
+			"Sec-Fetch-Mode": []string{"navigate"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", headers))
+		if !shouldBlock {
+			t.Fatal("expected $all rule to block script-initiated navigation")
+		}
+	})
+
+	t.Run("rule without all does not block script-initiated navigation", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com^`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		headers := http.Header{
+			"Sec-Fetch-Mode": []string{"navigate"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", headers))
+		if shouldBlock {
+			t.Fatal("expected bare rule not to block script-initiated navigation")
+		}
+	})
+
 	t.Run("all exception cancels all primary for navigation", func(t *testing.T) {
 		t.Parallel()
 
