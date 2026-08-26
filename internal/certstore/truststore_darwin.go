@@ -78,8 +78,8 @@ var trustSettingsData = []byte(`
 
 // systemTrustAvailable reports whether the system has a certificate trust store.
 // On macOS the keychain always exists.
-func systemTrustAvailable() error {
-	return nil
+func systemTrustAvailable() bool {
+	return true
 }
 
 // installCATrust installs the CA into the system trust store.

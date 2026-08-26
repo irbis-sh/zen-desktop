@@ -13,7 +13,7 @@ import (
 func TestGetSystemTrustInfoNoStore(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "missing")
 	swapSystemTrustCandidates(t, []systemTrustCandidate{
-		{dir: missing, certPath: filepath.Join(missing, "%s.pem"), command: []string{"update-ca-trust", "extract"}},
+		{dir: missing, ext: ".pem", command: []string{"update-ca-trust", "extract"}},
 	})
 
 	_, _, err := getSystemTrustInfo()
@@ -27,9 +27,9 @@ func TestGetSystemTrustInfoFirstMatchWins(t *testing.T) {
 	first := makeTrustDir(t)
 	second := makeTrustDir(t)
 	swapSystemTrustCandidates(t, []systemTrustCandidate{
-		{dir: missing, certPath: filepath.Join(missing, "%s.pem"), command: []string{"skipped"}},
-		{dir: first, certPath: filepath.Join(first, "%s.crt"), command: []string{"update-ca-certificates"}},
-		{dir: second, certPath: filepath.Join(second, "%s.pem"), command: []string{"unreachable"}},
+		{dir: missing, ext: ".pem", command: []string{"skipped"}},
+		{dir: first, ext: ".crt", command: []string{"update-ca-certificates"}},
+		{dir: second, ext: ".pem", command: []string{"unreachable"}},
 	})
 
 	certFilename, command, err := getSystemTrustInfo()

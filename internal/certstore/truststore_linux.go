@@ -36,6 +36,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 var firefoxProfiles = []string{os.Getenv("HOME") + "/.mozilla/firefox/*",
@@ -50,35 +51,19 @@ const (
 )
 
 // systemTrustCandidate describes one known system trust store layout:
-// the anchor directory to probe for, the pattern for the installed cert path,
+// the anchor directory to probe for, the extension the installed cert must have,
 // and the command that rebuilds the trust store after a change.
 type systemTrustCandidate struct {
-	dir      string
-	certPath string
-	command  []string
+	dir     string
+	ext     string
+	command []string
 }
 
 var systemTrustCandidates = []systemTrustCandidate{
-	{
-		dir:      "/etc/pki/ca-trust/source/anchors/",
-		certPath: "/etc/pki/ca-trust/source/anchors/%s.pem",
-		command:  []string{"update-ca-trust", "extract"},
-	},
-	{
-		dir:      "/usr/local/share/ca-certificates/",
-		certPath: "/usr/local/share/ca-certificates/%s.crt",
-		command:  []string{"update-ca-certificates"},
-	},
-	{
-		dir:      "/etc/ca-certificates/trust-source/anchors/",
-		certPath: "/etc/ca-certificates/trust-source/anchors/%s.crt",
-		command:  []string{"trust", "extract-compat"},
-	},
-	{
-		dir:      "/usr/share/pki/trust/anchors",
-		certPath: "/usr/share/pki/trust/anchors/%s.pem",
-		command:  []string{"update-ca-certificates"},
-	},
+	{dir: "/etc/pki/ca-trust/source/anchors", ext: ".pem", command: []string{"update-ca-trust", "extract"}},
+	{dir: "/usr/local/share/ca-certificates", ext: ".crt", command: []string{"update-ca-certificates"}},
+	{dir: "/etc/ca-certificates/trust-source/anchors", ext: ".crt", command: []string{"trust", "extract-compat"}},
+	{dir: "/usr/share/pki/trust/anchors", ext: ".pem", command: []string{"update-ca-certificates"}},
 }
 
 // getSystemTrustInfo identifies the system's trust store
@@ -88,18 +73,17 @@ var systemTrustCandidates = []systemTrustCandidate{
 func getSystemTrustInfo() (certFilename string, command []string, err error) {
 	for _, candidate := range systemTrustCandidates {
 		if pathExists(candidate.dir) {
-			return fmt.Sprintf(candidate.certPath, systemTrustFilename), candidate.command, nil
+			return filepath.Join(candidate.dir, systemTrustFilename+candidate.ext), candidate.command, nil
 		}
 	}
 
-	return "", []string{}, ErrNoSystemTrustStore
+	return "", nil, ErrNoSystemTrustStore
 }
 
-// systemTrustAvailable probes for a known system trust store layout,
-// returning ErrNoSystemTrustStore when none exists.
-func systemTrustAvailable() error {
+// systemTrustAvailable reports whether a known system trust store layout exists.
+func systemTrustAvailable() bool {
 	_, _, err := getSystemTrustInfo()
-	return err
+	return err == nil
 }
 
 // installCATrust installs the CA into the system trust store.

@@ -23,8 +23,8 @@ import (
 	"github.com/hectane/go-acl"
 )
 
-// ErrNoSystemTrustStore is returned by platform trust store probes when no system-wide
-// certificate trust store exists, e.g. on NixOS, where trust is configured declaratively.
+// ErrNoSystemTrustStore signals that no system-wide certificate trust store exists
+// on this device, e.g. on NixOS, where trust is configured declaratively.
 // Init returns an error wrapping it after a successful NSS-only install; the store is
 // fully initialized and usable in that case, but callers may want to inform the user
 // that applications not backed by NSS will not trust the CA.
@@ -60,12 +60,12 @@ type DiskCertStore struct {
 
 	// Seams for the platform-specific trust operations, bound to the real
 	// implementations in NewDiskCertStore and substituted in tests.
-	installTrustFn      func() error
-	uninstallTrustFn    func() error
-	installNSSFn        func(systemTrustMissing bool) error
-	uninstallNSSFn      func() error
-	probeTrustFn        func() error
-	caTrustedBySystemFn func() bool
+	installTrustFn         func() error
+	uninstallTrustFn       func() error
+	installNSSFn           func(systemTrustMissing bool) error
+	uninstallNSSFn         func() error
+	systemTrustAvailableFn func() bool
+	caTrustedBySystemFn    func() bool
 }
 
 func NewDiskCertStore(caStatusManager CAStatusManager, dataDir string, orgName string) (*DiskCertStore, error) {
@@ -90,7 +90,7 @@ func NewDiskCertStore(caStatusManager CAStatusManager, dataDir string, orgName s
 	cs.uninstallTrustFn = cs.uninstallCATrust
 	cs.installNSSFn = cs.installNSS
 	cs.uninstallNSSFn = cs.uninstallNSS
-	cs.probeTrustFn = systemTrustAvailable
+	cs.systemTrustAvailableFn = systemTrustAvailable
 	cs.caTrustedBySystemFn = cs.caTrustedBySystem
 
 	return cs, nil
@@ -117,14 +117,13 @@ func (cs *DiskCertStore) Init() error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
+	systemTrustMissing := !cs.systemTrustAvailableFn()
+
 	if cs.caStatusManager.GetCAInstalled() {
 		if err := cs.loadCA(); err != nil {
 			return fmt.Errorf("CA load: %w", err)
 		}
-		if err := cs.probeTrustFn(); errors.Is(err, ErrNoSystemTrustStore) && !cs.caTrustedBySystemFn() {
-			return fmt.Errorf("CA installed to NSS databases only: %w", err)
-		}
-		return nil
+		return cs.nssOnlyCaveat(systemTrustMissing)
 	}
 
 	// A CA on disk without the installed flag is left over from a failed install attempt.
@@ -145,12 +144,13 @@ func (cs *DiskCertStore) Init() error {
 		}
 	}
 
-	trustErr := cs.installTrustFn()
-	if trustErr != nil && !errors.Is(trustErr, ErrNoSystemTrustStore) {
-		return fmt.Errorf("install CA to system trust store: %v", trustErr)
+	if !systemTrustMissing {
+		if err := cs.installTrustFn(); err != nil {
+			return fmt.Errorf("install CA to system trust store: %v", err)
+		}
 	}
-	if err := cs.installNSSFn(trustErr != nil); err != nil {
-		if trustErr != nil {
+	if err := cs.installNSSFn(systemTrustMissing); err != nil {
+		if systemTrustMissing {
 			// Without a system trust store, NSS is the only place the CA can be
 			// installed; if that fails too, nothing on this system trusts it.
 			// %v, not %w: wrapping ErrNoSystemTrustStore here would make total
@@ -161,10 +161,17 @@ func (cs *DiskCertStore) Init() error {
 	}
 	cs.caStatusManager.SetCAInstalled(true)
 
-	if trustErr != nil && !cs.caTrustedBySystemFn() {
-		return fmt.Errorf("CA installed to NSS databases only: %w", trustErr)
+	return cs.nssOnlyCaveat(systemTrustMissing)
+}
+
+// nssOnlyCaveat builds the "success with a caveat" error described on Init: the CA
+// is trusted through NSS databases only. It is suppressed once the CA verifies
+// against the system pool, i.e. the user established trust out of band.
+func (cs *DiskCertStore) nssOnlyCaveat(systemTrustMissing bool) error {
+	if !systemTrustMissing || cs.caTrustedBySystemFn() {
+		return nil
 	}
-	return nil
+	return fmt.Errorf("CA installed to NSS databases only: %w", ErrNoSystemTrustStore)
 }
 
 // caTrustedBySystem reports whether the CA verifies against the system certificate
@@ -197,8 +204,10 @@ func (cs *DiskCertStore) UninstallCA() error {
 		}
 	}
 
-	if err := cs.uninstallTrustFn(); err != nil && !errors.Is(err, ErrNoSystemTrustStore) {
-		return fmt.Errorf("uninstall CA from system trust store: %w", err)
+	if cs.systemTrustAvailableFn() {
+		if err := cs.uninstallTrustFn(); err != nil {
+			return fmt.Errorf("uninstall CA from system trust store: %w", err)
+		}
 	}
 	if err := cs.uninstallNSSFn(); err != nil {
 		log.Printf("uninstall CA from NSS database: %v", err)

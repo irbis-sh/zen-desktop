@@ -2,7 +2,6 @@ package certstore
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"testing"
 )
@@ -34,8 +33,11 @@ func TestInitNSSOnlyWrapsSentinel(t *testing.T) {
 
 	mgr := &fakeCAStatusManager{}
 	cs := newTestStore(t, mgr)
+	cs.systemTrustAvailableFn = func() bool { return false }
+	trustInstallCalled := false
 	cs.installTrustFn = func() error {
-		return fmt.Errorf("failed to get system trust store: %w", ErrNoSystemTrustStore)
+		trustInstallCalled = true
+		return nil
 	}
 	var nssArg *bool
 	cs.installNSSFn = func(systemTrustMissing bool) error {
@@ -50,6 +52,9 @@ func TestInitNSSOnlyWrapsSentinel(t *testing.T) {
 	if !mgr.installed {
 		t.Error("NSS-only install is a success: CA should be marked installed")
 	}
+	if trustInstallCalled {
+		t.Error("system trust install should be skipped when no trust store exists")
+	}
 	if nssArg == nil || !*nssArg {
 		t.Errorf("installNSS should be called with systemTrustMissing=true, got %v", nssArg)
 	}
@@ -60,9 +65,7 @@ func TestInitNSSOnlySuppressedWhenSystemTrusted(t *testing.T) {
 
 	mgr := &fakeCAStatusManager{}
 	cs := newTestStore(t, mgr)
-	cs.installTrustFn = func() error {
-		return fmt.Errorf("failed to get system trust store: %w", ErrNoSystemTrustStore)
-	}
+	cs.systemTrustAvailableFn = func() bool { return false }
 	cs.caTrustedBySystemFn = func() bool { return true }
 
 	if err := cs.Init(); err != nil {
@@ -78,9 +81,7 @@ func TestInitTotalFailureDoesNotWrapSentinel(t *testing.T) {
 
 	mgr := &fakeCAStatusManager{}
 	cs := newTestStore(t, mgr)
-	cs.installTrustFn = func() error {
-		return fmt.Errorf("failed to get system trust store: %w", ErrNoSystemTrustStore)
-	}
+	cs.systemTrustAvailableFn = func() bool { return false }
 	cs.installNSSFn = func(bool) error { return errors.New("no certutil found") }
 
 	err := cs.Init()
@@ -151,7 +152,7 @@ func TestInitReportsMissingTrustStoreWhenAlreadyInstalled(t *testing.T) {
 		t.Fatalf("second Init with an available trust store: %v", err)
 	}
 
-	cs.probeTrustFn = func() error { return ErrNoSystemTrustStore }
+	cs.systemTrustAvailableFn = func() bool { return false }
 	err = cs.Init()
 	if !errors.Is(err, ErrNoSystemTrustStore) {
 		t.Fatalf("Init should re-report the missing trust store on every call, got %v", err)
@@ -163,7 +164,7 @@ func TestInitReportsMissingTrustStoreWhenAlreadyInstalled(t *testing.T) {
 	}
 }
 
-func TestUninstallCAToleratesMissingTrustStore(t *testing.T) {
+func TestUninstallCASkipsMissingTrustStore(t *testing.T) {
 	t.Parallel()
 
 	mgr := &fakeCAStatusManager{}
@@ -172,11 +173,17 @@ func TestUninstallCAToleratesMissingTrustStore(t *testing.T) {
 		t.Fatalf("Init: %v", err)
 	}
 
+	cs.systemTrustAvailableFn = func() bool { return false }
+	trustUninstallCalled := false
 	cs.uninstallTrustFn = func() error {
-		return fmt.Errorf("failed to get system trust store: %w", ErrNoSystemTrustStore)
+		trustUninstallCalled = true
+		return nil
 	}
 	if err := cs.UninstallCA(); err != nil {
 		t.Fatalf("UninstallCA: %v", err)
+	}
+	if trustUninstallCalled {
+		t.Error("system trust uninstall should be skipped when no trust store exists")
 	}
 	if mgr.installed {
 		t.Error("CA should be marked uninstalled")
@@ -206,7 +213,7 @@ func newTestStore(t *testing.T, mgr *fakeCAStatusManager) *DiskCertStore {
 	cs.uninstallTrustFn = func() error { return nil }
 	cs.installNSSFn = func(bool) error { return nil }
 	cs.uninstallNSSFn = func() error { return nil }
-	cs.probeTrustFn = func() error { return nil }
+	cs.systemTrustAvailableFn = func() bool { return true }
 	cs.caTrustedBySystemFn = func() bool { return false }
 	return cs
 }

@@ -108,13 +108,10 @@ func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 	if systemTrustMissing {
 		// Without a system trust store, NSS databases are the only place the CA
 		// can be installed, and existing browser profiles (e.g. Firefox's) don't
-		// cover browsers installed later. Create the shared user database:
+		// cover browsers installed later. Ensure the shared user database exists:
 		// Chromium-based browsers pick it up on first launch.
-		_, err := os.Stat(filepath.Join(os.Getenv("HOME"), ".pki/nssdb/cert9.db")) // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
-		if os.IsNotExist(err) {
-			if err := createUserNssDb(certutilPath); err != nil {
-				return fmt.Errorf("create user NSS database: %v", err)
-			}
+		if err := ensureUserNSSDB(certutilPath); err != nil {
+			return fmt.Errorf("create user NSS database: %v", err)
 		}
 	}
 
@@ -136,9 +133,14 @@ func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 	return nil
 }
 
-// createUserNssDb initializes an empty NSS certificate database at ~/.pki/nssdb.
-func createUserNssDb(certutilPath string) error {
+// ensureUserNSSDB initializes an empty NSS certificate database at ~/.pki/nssdb
+// if one does not exist yet.
+func ensureUserNSSDB(certutilPath string) error {
 	dbDir := filepath.Join(os.Getenv("HOME"), ".pki/nssdb")
+	_, err := os.Stat(filepath.Join(dbDir, "cert9.db")) // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
+	if !os.IsNotExist(err) {
+		return nil
+	}
 	if err := os.MkdirAll(dbDir, 0700); err != nil { // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
 		return err
 	}
