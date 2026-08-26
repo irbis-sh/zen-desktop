@@ -39,7 +39,8 @@ import (
 )
 
 var firefoxProfiles = []string{os.Getenv("HOME") + "/.mozilla/firefox/*",
-	os.Getenv("HOME") + "/snap/firefox/common/.mozilla/firefox/*"}
+	os.Getenv("HOME") + "/snap/firefox/common/.mozilla/firefox/*",
+	os.Getenv("HOME") + "/.var/app/org.mozilla.firefox/.mozilla/firefox/*"}
 
 const (
 	// caFolderName defines the name of the folder where the root CA certificate and key are stored.

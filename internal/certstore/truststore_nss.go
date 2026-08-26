@@ -201,6 +201,8 @@ func (cs *DiskCertStore) forEachNSSProfile(f func(profile string)) (found int) {
 func getFirefoxPaths() []string {
 	firefoxPaths := []string{
 		"/snap/firefox",
+		"/var/lib/flatpak/app/org.mozilla.firefox",
+		filepath.Join(os.Getenv("HOME"), ".local/share/flatpak/app/org.mozilla.firefox"),
 		"C:\\Program Files\\Mozilla Firefox",
 	}
 
