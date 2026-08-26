@@ -91,28 +91,60 @@ func (cs *DiskCertStore) checkNSS() bool {
 	return profileCount > 0 && success
 }
 
-func (cs *DiskCertStore) installNSS() error {
+// installNSS installs the CA into all NSS certificate databases found on the system.
+// systemTrustMissing signals that the system trust store install failed with
+// [ErrNoSystemTrustStore] (only ever true on Linux), making NSS the CA's only trust
+// path; in that case the shared user database is created if it does not exist yet.
+func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 	hasNSS, hasCertutil, certutilPath := getNSSInfo()
-	if !hasNSS {
-		return fmt.Errorf("no NSS browsers found")
+	if !hasNSS && !systemTrustMissing {
+		return errors.New("no NSS browsers found")
 	}
 
 	if !hasCertutil {
 		return errors.New("no certutil found")
 	}
 
-	if cs.forEachNSSProfile(func(profile string) {
+	if systemTrustMissing {
+		// Without a system trust store, NSS databases are the only place the CA
+		// can be installed, and existing browser profiles (e.g. Firefox's) don't
+		// cover browsers installed later. Create the shared user database:
+		// Chromium-based browsers pick it up on first launch.
+		_, err := os.Stat(filepath.Join(os.Getenv("HOME"), ".pki/nssdb/cert9.db")) // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
+		if os.IsNotExist(err) {
+			if err := createUserNssDb(certutilPath); err != nil {
+				return fmt.Errorf("create user NSS database: %v", err)
+			}
+		}
+	}
+
+	install := func(profile string) {
 		cmd := exec.Command(certutilPath, "-A", "-d", profile, "-t", "C,,", "-n", certCommonName, "-i", cs.certPath)
 		out, err := execCertutil(cmd)
 		if err != nil {
 			log.Printf("failed to install cert in %s: %v (%q)", profile, err, out)
 		}
-	}) == 0 {
+	}
+
+	if cs.forEachNSSProfile(install) == 0 {
 		return errors.New("no security databases found")
 	}
 
 	if !cs.checkNSS() {
 		return errors.New("failed to install NSS, profiles have not been created")
+	}
+	return nil
+}
+
+// createUserNssDb initializes an empty NSS certificate database at ~/.pki/nssdb.
+func createUserNssDb(certutilPath string) error {
+	dbDir := filepath.Join(os.Getenv("HOME"), ".pki/nssdb")
+	if err := os.MkdirAll(dbDir, 0700); err != nil { // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
+		return err
+	}
+	cmd := exec.Command(certutilPath, "-N", "-d", "sql:"+dbDir, "--empty-password") // #nosec G204 G702 -- certutilPath is resolved via exec.LookPath; dbDir is derived from $HOME.
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("certutil -N: %v (%q)", err, out)
 	}
 	return nil
 }

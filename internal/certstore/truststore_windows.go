@@ -59,6 +59,12 @@ var (
 	procCertOpenSystemStoreW             = modcrypt32.NewProc("CertOpenSystemStoreW")
 )
 
+// systemTrustAvailable reports whether the system has a certificate trust store.
+// On Windows the root store always exists.
+func systemTrustAvailable() error {
+	return nil
+}
+
 // installCATrust installs the CA into the system trust store.
 func (cs *DiskCertStore) installCATrust() error {
 	certBlock, _ := pem.Decode(cs.certData)

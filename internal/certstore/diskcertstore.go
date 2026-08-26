@@ -23,6 +23,13 @@ import (
 	"github.com/hectane/go-acl"
 )
 
+// ErrNoSystemTrustStore is returned by platform trust store probes when no system-wide
+// certificate trust store exists, e.g. on NixOS, where trust is configured declaratively.
+// Init returns an error wrapping it after a successful NSS-only install; the store is
+// fully initialized and usable in that case, but callers may want to inform the user
+// that applications not backed by NSS will not trust the CA.
+var ErrNoSystemTrustStore = errors.New("system trust store not found")
+
 const (
 	// certFilename is the name of the file containing the root CA certificate.
 	certFilename = "rootCA.pem"
@@ -50,6 +57,15 @@ type DiskCertStore struct {
 	keyPath         string
 	key             crypto.PrivateKey
 	orgName         string
+
+	// Seams for the platform-specific trust operations, bound to the real
+	// implementations in NewDiskCertStore and substituted in tests.
+	installTrustFn      func() error
+	uninstallTrustFn    func() error
+	installNSSFn        func(systemTrustMissing bool) error
+	uninstallNSSFn      func() error
+	probeTrustFn        func() error
+	caTrustedBySystemFn func() bool
 }
 
 func NewDiskCertStore(caStatusManager CAStatusManager, dataDir string, orgName string) (*DiskCertStore, error) {
@@ -70,6 +86,13 @@ func NewDiskCertStore(caStatusManager CAStatusManager, dataDir string, orgName s
 	cs.keyPath = filepath.Join(cs.folderPath, keyFilename)
 	cs.orgName = orgName
 
+	cs.installTrustFn = cs.installCATrust
+	cs.uninstallTrustFn = cs.uninstallCATrust
+	cs.installNSSFn = cs.installNSS
+	cs.uninstallNSSFn = cs.uninstallNSS
+	cs.probeTrustFn = systemTrustAvailable
+	cs.caTrustedBySystemFn = cs.caTrustedBySystem
+
 	return cs, nil
 }
 
@@ -84,6 +107,12 @@ func (cs *DiskCertStore) GetCertificate() (*x509.Certificate, crypto.PrivateKey,
 	return cs.cert, cs.key, nil
 }
 
+// Init loads the CA, creating and installing it into the trust stores first if needed.
+// A non-nil error wrapping ErrNoSystemTrustStore signals success with a caveat:
+// the store is fully initialized, but the CA is only trusted through NSS databases
+// because the system has no trust store (e.g. NixOS). The caveat is reported on
+// every call, not just the installing one, and clears once the CA shows up in the
+// system certificate pool, e.g. after the user adds it to security.pki.certificateFiles.
 func (cs *DiskCertStore) Init() error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
@@ -92,30 +121,66 @@ func (cs *DiskCertStore) Init() error {
 		if err := cs.loadCA(); err != nil {
 			return fmt.Errorf("CA load: %w", err)
 		}
+		if err := cs.probeTrustFn(); errors.Is(err, ErrNoSystemTrustStore) && !cs.caTrustedBySystemFn() {
+			return fmt.Errorf("CA installed to NSS databases only: %w", err)
+		}
 		return nil
 	}
 
-	if err := os.RemoveAll(cs.folderPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("remove existing CA folder: %v", err)
-	}
-	if err := os.MkdirAll(cs.folderPath, 0755); err != nil {
-		return fmt.Errorf("create certs folder: %v", err)
-	}
-	if err := cs.newCA(); err != nil {
-		return fmt.Errorf("create new CA: %v", err)
-	}
+	// A CA on disk without the installed flag is left over from a failed install attempt.
+	// Reuse it instead of regenerating, so trust established out of band
+	// (e.g. NixOS security.pki.certificateFiles) survives retries.
 	if err := cs.loadCA(); err != nil {
-		return fmt.Errorf("CA load: %v", err)
+		if err := os.RemoveAll(cs.folderPath); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("remove existing CA folder: %v", err)
+		}
+		if err := os.MkdirAll(cs.folderPath, 0755); err != nil {
+			return fmt.Errorf("create certs folder: %v", err)
+		}
+		if err := cs.newCA(); err != nil {
+			return fmt.Errorf("create new CA: %v", err)
+		}
+		if err := cs.loadCA(); err != nil {
+			return fmt.Errorf("CA load: %v", err)
+		}
 	}
-	if err := cs.installCATrust(); err != nil {
-		return fmt.Errorf("install CA from system trust store: %v", err)
+
+	trustErr := cs.installTrustFn()
+	if trustErr != nil && !errors.Is(trustErr, ErrNoSystemTrustStore) {
+		return fmt.Errorf("install CA to system trust store: %v", trustErr)
 	}
-	if err := cs.installNSS(); err != nil {
-		log.Printf("install CA from NSS database: %v", err)
+	if err := cs.installNSSFn(trustErr != nil); err != nil {
+		if trustErr != nil {
+			// Without a system trust store, NSS is the only place the CA can be
+			// installed; if that fails too, nothing on this system trusts it.
+			// %v, not %w: wrapping ErrNoSystemTrustStore here would make total
+			// failure look like the benign NSS-only fallback to callers.
+			return fmt.Errorf("no system trust store found and NSS install failed: %v", err)
+		}
+		log.Printf("install CA to NSS database: %v", err)
 	}
 	cs.caStatusManager.SetCAInstalled(true)
 
+	if trustErr != nil && !cs.caTrustedBySystemFn() {
+		return fmt.Errorf("CA installed to NSS databases only: %w", trustErr)
+	}
 	return nil
+}
+
+// caTrustedBySystem reports whether the CA verifies against the system certificate
+// pool, i.e. system-wide trust was established out of band, e.g. through
+// security.pki.certificateFiles on NixOS. Go caches the pool per process, so a
+// bundle updated mid-session is only noticed on the next app launch.
+func (cs *DiskCertStore) caTrustedBySystem() bool {
+	if cs.cert == nil {
+		return false
+	}
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return false
+	}
+	_, err = cs.cert.Verify(x509.VerifyOptions{Roots: pool})
+	return err == nil
 }
 
 func (cs *DiskCertStore) UninstallCA() error {
@@ -132,10 +197,10 @@ func (cs *DiskCertStore) UninstallCA() error {
 		}
 	}
 
-	if err := cs.uninstallCATrust(); err != nil {
+	if err := cs.uninstallTrustFn(); err != nil && !errors.Is(err, ErrNoSystemTrustStore) {
 		return fmt.Errorf("uninstall CA from system trust store: %w", err)
 	}
-	if err := cs.uninstallNSS(); err != nil {
+	if err := cs.uninstallNSSFn(); err != nil {
 		log.Printf("uninstall CA from NSS database: %v", err)
 	}
 	if err := os.RemoveAll(cs.folderPath); err != nil && !os.IsNotExist(err) {

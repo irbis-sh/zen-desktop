@@ -76,6 +76,12 @@ var trustSettingsData = []byte(`
 </array>
 `)
 
+// systemTrustAvailable reports whether the system has a certificate trust store.
+// On macOS the keychain always exists.
+func systemTrustAvailable() error {
+	return nil
+}
+
 // installCATrust installs the CA into the system trust store.
 func (cs *DiskCertStore) installCATrust() error {
 	cmd := elevate.WithPrompt("Authorize Zen to install the root CA certificate").Command(
