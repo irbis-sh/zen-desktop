@@ -384,13 +384,6 @@ func TestExceptionRules(t *testing.T) {
 func TestAllModifier(t *testing.T) {
 	t.Parallel()
 
-	navigationHeaders := func() http.Header {
-		return http.Header{
-			"Sec-Fetch-User": []string{"?1"},
-			"Sec-Fetch-Dest": []string{"document"},
-		}
-	}
-
 	t.Run("blocks user navigation", func(t *testing.T) {
 		t.Parallel()
 
@@ -399,7 +392,11 @@ func TestAllModifier(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		headers := http.Header{
+			"Sec-Fetch-User": []string{"?1"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", headers))
 		if !shouldBlock {
 			t.Fatal("expected $all rule to block user navigation")
 		}
@@ -428,7 +425,11 @@ func TestAllModifier(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		headers := http.Header{
+			"Sec-Fetch-User": []string{"?1"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", headers))
 		if shouldBlock {
 			t.Fatal("expected bare rule not to block user navigation")
 		}
@@ -445,7 +446,11 @@ func TestAllModifier(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", navigationHeaders()))
+		headers := http.Header{
+			"Sec-Fetch-User": []string{"?1"},
+			"Sec-Fetch-Dest": []string{"document"},
+		}
+		_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://example.com/landing", headers))
 		if shouldBlock {
 			t.Fatal("expected $all exception to cancel $all primary rule for navigation")
 		}

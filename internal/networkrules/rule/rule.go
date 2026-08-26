@@ -50,7 +50,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			continue
 		}
 
-		name, hasValue := cutModifierName(m)
+		name, negated, hasValue := cutModifierName(m)
 
 		var modifier rulemodifiers.Modifier
 		var isOr bool // true if the modifier belongs to ConditionModifiers.Or.
@@ -83,13 +83,15 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			case "removeparam":
 				modifier = &rulemodifiers.RemoveParamModifier{}
 			case "all":
-				// No engine defines ~all; cutModifierName strips the ~, so reject it
-				// explicitly rather than silently treating it as all.
-				if m[0] == '~' {
+				// No engine defines ~all; reject it rather than silently treating it as all.
+				if negated {
 					return fmt.Errorf("unknown modifier %q", m)
 				}
 				// A rule with no content-type condition modifiers already matches every
 				// request type, so lifting the navigation gate is all "all" needs.
+				// With an explicit content-type modifier ("all,script"), the condition
+				// narrows the rule instead of being redundant as in uBO/AdGuard;
+				// accepted, as no default list combines them.
 				// TODO: also set the popup flag once popup blocking gets implemented.
 				rm.Document = true
 				continue
@@ -153,12 +155,13 @@ func isNoopModifier(modifier string) bool {
 	return true
 }
 
-func cutModifierName(modifier string) (name string, hasValue bool) {
+func cutModifierName(modifier string) (name string, negated, hasValue bool) {
 	if len(modifier) > 0 && modifier[0] == '~' {
+		negated = true
 		modifier = modifier[1:]
 	}
 	name, _, hasValue = strings.Cut(modifier, "=")
-	return name, hasValue
+	return name, negated, hasValue
 }
 
 // ShouldMatchReq returns true if the rule should match the request.

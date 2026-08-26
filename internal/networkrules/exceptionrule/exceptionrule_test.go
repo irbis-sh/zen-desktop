@@ -81,6 +81,32 @@ func TestExceptionRule(t *testing.T) {
 		}
 	})
 
+	// Deliberate divergence from the reference engines: uBO's request-based
+	// exceptions would lift every block on the host, and AdGuard rejects
+	// @@...$all at parse. Zen narrows $all exactly like $document.
+	t.Run("'@@||page$all' should not cancel '||page'", func(t *testing.T) {
+		t.Parallel()
+
+		filterName := "test"
+
+		er := &ExceptionRule{
+			Rule: rule.Rule{
+				RawRule:    "||example.com^$all",
+				FilterName: &filterName,
+			},
+		}
+		r := &rule.Rule{
+			RawRule:    "||example.com",
+			FilterName: &filterName,
+		}
+		er.ParseModifiers([]string{"all"})
+
+		want := false
+		if got := er.Cancels(r); got != want {
+			t.Errorf("'%s'.Cancels('%s') = %t, want %t", er.RawRule, r.RawRule, got, want)
+		}
+	})
+
 	t.Run("'@@||page$important' should cancel '||page$important'", func(t *testing.T) {
 		t.Parallel()
 
