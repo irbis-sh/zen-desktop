@@ -77,6 +77,7 @@ curl -fsSL https://raw.githubusercontent.com/irbis-sh/zen-desktop/master/install
 Other installation methods:
 
 - AUR: [👾 zen-adblocker-bin](https://aur.archlinux.org/packages/zen-adblocker-bin)
+- Nix flake (NixOS and other distributions with Nix): `nix profile install github:irbis-sh/zen-desktop`, or `nix run github:irbis-sh/zen-desktop` to try it out
 - x64: [📦 Portable](https://github.com/irbis-sh/zen-desktop/releases/latest/download/Zen_linux_amd64.tar.gz)
 - ARM64: [📦 Portable](https://github.com/irbis-sh/zen-desktop/releases/latest/download/Zen_linux_arm64.tar.gz)
 

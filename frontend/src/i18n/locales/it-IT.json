@@ -191,6 +191,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "Su questo dispositivo non è stato trovato alcun archivio dei certificati attendibili di sistema (comune su NixOS), quindi la CA di Zen è stata aggiunta solo ai database dei certificati dei tuoi browser. Altre applicazioni potrebbero mostrare errori di certificato.<br />Consulta <guide-link>questa guida</guide-link> per i dettagli.",
     "start": "Avvia",
     "startError": "Impossibile avviare il proxy: {{error}}",
     "stop": "Ferma",

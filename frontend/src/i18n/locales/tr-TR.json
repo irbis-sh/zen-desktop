@@ -191,6 +191,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "Bu cihazda sistem sertifika deposu bulunamadı (NixOS'ta yaygındır), bu nedenle Zen'in kök sertifikası yalnızca tarayıcılarınızın sertifika veritabanlarına eklendi. Diğer uygulamalar sertifika hataları gösterebilir.<br />Ayrıntılar için <guide-link>bu kılavuza</guide-link> bakın.",
     "start": "Başlat",
     "startError": "Proxy başlatılamadı: {{error}}",
     "stop": "Durdur",

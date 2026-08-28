@@ -191,6 +191,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "未在此裝置上找到系統憑證信任存放區（常見於 NixOS），因此 Zen 的 CA 憑證僅新增至瀏覽器的憑證資料庫。其他應用程式可能會顯示憑證錯誤。<br />詳情請參閱 <guide-link>此指南</guide-link>。",
     "start": "啟動",
     "startError": "啟動代理伺服器失敗：{{error}}",
     "stop": "停止",

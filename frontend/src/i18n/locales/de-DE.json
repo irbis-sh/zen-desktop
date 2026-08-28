@@ -191,6 +191,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "Auf diesem Gerät wurde kein System-Zertifikatsspeicher gefunden (typisch für NixOS), daher wurde das Zen-Stammzertifikat nur zu den Zertifikatsdatenbanken Ihrer Browser hinzugefügt. Andere Anwendungen könnten Zertifikatsfehler anzeigen.<br />Weitere Details finden Sie in <guide-link>dieser Anleitung</guide-link>.",
     "start": "Starten",
     "startError": "Proxy kann nicht gestartet werden: {{error}}",
     "stop": "Stoppen",

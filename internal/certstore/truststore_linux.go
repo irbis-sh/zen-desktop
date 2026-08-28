@@ -33,14 +33,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 var firefoxProfiles = []string{os.Getenv("HOME") + "/.mozilla/firefox/*",
-	os.Getenv("HOME") + "/snap/firefox/common/.mozilla/firefox/*"}
+	os.Getenv("HOME") + "/snap/firefox/common/.mozilla/firefox/*",
+	os.Getenv("HOME") + "/.var/app/org.mozilla.firefox/.mozilla/firefox/*"}
 
 const (
 	// caFolderName defines the name of the folder where the root CA certificate and key are stored.
@@ -49,30 +50,40 @@ const (
 	systemTrustFilename = "zen-rootCA"
 )
 
+// systemTrustCandidate describes one known system trust store layout:
+// the anchor directory to probe for, the extension the installed cert must have,
+// and the command that rebuilds the trust store after a change.
+type systemTrustCandidate struct {
+	dir     string
+	ext     string
+	command []string
+}
+
+var systemTrustCandidates = []systemTrustCandidate{
+	{dir: "/etc/pki/ca-trust/source/anchors", ext: ".pem", command: []string{"update-ca-trust", "extract"}},
+	{dir: "/usr/local/share/ca-certificates", ext: ".crt", command: []string{"update-ca-certificates"}},
+	{dir: "/etc/ca-certificates/trust-source/anchors", ext: ".crt", command: []string{"trust", "extract-compat"}},
+	{dir: "/usr/share/pki/trust/anchors", ext: ".pem", command: []string{"update-ca-certificates"}},
+}
+
 // getSystemTrustInfo identifies the system's trust store
 // and returns the filename the root CA should be stored in and the command to update the trust store.
+// It returns ErrNoSystemTrustStore when none of the known trust store layouts exist,
+// e.g. on NixOS, where trust is configured declaratively instead of via FHS directories.
 func getSystemTrustInfo() (certFilename string, command []string, err error) {
-	var certPath string
-	switch {
-	case pathExists("/etc/pki/ca-trust/source/anchors/"):
-		certPath = "/etc/pki/ca-trust/source/anchors/%s.pem"
-		command = []string{"update-ca-trust", "extract"}
-	case pathExists("/usr/local/share/ca-certificates/"):
-		certPath = "/usr/local/share/ca-certificates/%s.crt"
-		command = []string{"update-ca-certificates"}
-	case pathExists("/etc/ca-certificates/trust-source/anchors/"):
-		certPath = "/etc/ca-certificates/trust-source/anchors/%s.crt"
-		command = []string{"trust", "extract-compat"}
-	case pathExists("/usr/share/pki/trust/anchors"):
-		certPath = "/usr/share/pki/trust/anchors/%s.pem"
-		command = []string{"update-ca-certificates"}
-	default:
-		return "", []string{}, errors.New("system trust store not found")
+	for _, candidate := range systemTrustCandidates {
+		if pathExists(candidate.dir) {
+			return filepath.Join(candidate.dir, systemTrustFilename+candidate.ext), candidate.command, nil
+		}
 	}
 
-	certFilename = fmt.Sprintf(certPath, systemTrustFilename)
+	return "", nil, ErrNoSystemTrustStore
+}
 
-	return certFilename, command, nil
+// systemTrustAvailable reports whether a known system trust store layout exists.
+func systemTrustAvailable() bool {
+	_, _, err := getSystemTrustInfo()
+	return err == nil
 }
 
 // installCATrust installs the CA into the system trust store.

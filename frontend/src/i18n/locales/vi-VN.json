@@ -191,6 +191,7 @@
     }
   },
   "startStopButton": {
+    "caSystemTrustUnavailableGuide": "Không tìm thấy kho chứng chỉ tin cậy của hệ thống trên thiết bị này (thường gặp trên NixOS), nên chứng chỉ CA của Zen chỉ được thêm vào cơ sở dữ liệu chứng chỉ của các trình duyệt. Các ứng dụng khác có thể hiển thị lỗi chứng chỉ.<br />Xem <guide-link>hướng dẫn này</guide-link> để biết thêm chi tiết.",
     "start": "Bắt đầu",
     "startError": "Không thể khởi động proxy: {{error}}",
     "stop": "Dừng",
