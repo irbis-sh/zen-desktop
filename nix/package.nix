@@ -119,8 +119,12 @@ in
       # the only trust path available on systems without an FHS trust store.
       --prefix PATH : ${lib.makeBinPath [ nss.tools ]}
       # Autostart entries must launch the wrapper, not the hidden .zen-wrapped
-      # binary that os.Executable reports (see internal/autostart).
-      --set-default ZEN_EXEC_PATH $out/bin/zen
+      # binary that os.Executable reports (see internal/autostart). A bare
+      # command rather than $out/bin/zen: the entry is written once and never
+      # refreshed, and a store path stops existing after an upgrade and a
+      # garbage collection. PATH resolution is what the desktop item above
+      # relies on as well.
+      --set-default ZEN_EXEC_PATH zen
     )
   '';
 
