@@ -15,7 +15,7 @@ func (er *ExceptionRule) Cancels(r *rule.Rule) bool {
 		return false
 	}
 
-	if er.Document && !r.Document {
+	if er.Document && !r.Document && !r.All {
 		return false
 	}
 
