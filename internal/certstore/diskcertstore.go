@@ -63,6 +63,7 @@ type DiskCertStore struct {
 	installTrustFn         func() error
 	uninstallTrustFn       func() error
 	installNSSFn           func(systemTrustMissing bool) error
+	refreshNSSFn           func() error
 	uninstallNSSFn         func() error
 	systemTrustAvailableFn func() bool
 	caTrustedBySystemFn    func() bool
@@ -89,6 +90,7 @@ func NewDiskCertStore(caStatusManager CAStatusManager, dataDir string, orgName s
 	cs.installTrustFn = cs.installCATrust
 	cs.uninstallTrustFn = cs.uninstallCATrust
 	cs.installNSSFn = cs.installNSS
+	cs.refreshNSSFn = cs.refreshNSS
 	cs.uninstallNSSFn = cs.uninstallNSS
 	cs.systemTrustAvailableFn = systemTrustAvailable
 	cs.caTrustedBySystemFn = cs.caTrustedBySystem
@@ -122,6 +124,14 @@ func (cs *DiskCertStore) Init() error {
 	if cs.caStatusManager.GetCAInstalled() {
 		if err := cs.loadCA(); err != nil {
 			return fmt.Errorf("CA load: %w", err)
+		}
+		if systemTrustMissing {
+			// NSS databases are the CA's only trust path here, and they come and go:
+			// Firefox creates one per profile on first launch. Without this, a browser
+			// installed after the CA would never trust it.
+			if err := cs.refreshNSSFn(); err != nil {
+				log.Printf("refresh CA in NSS databases: %v", err)
+			}
 		}
 		return cs.nssOnlyCaveat(systemTrustMissing)
 	}

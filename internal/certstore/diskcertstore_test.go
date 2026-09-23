@@ -164,6 +164,36 @@ func TestInitReportsMissingTrustStoreWhenAlreadyInstalled(t *testing.T) {
 	}
 }
 
+func TestInitRefreshesNSSWhenAlreadyInstalled(t *testing.T) {
+	t.Parallel()
+
+	mgr := &fakeCAStatusManager{}
+	cs := newTestStore(t, mgr)
+	refreshCalls := 0
+	cs.refreshNSSFn = func() error {
+		refreshCalls++
+		return errors.New("no certutil found")
+	}
+	if err := cs.Init(); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	if err := cs.Init(); err != nil {
+		t.Fatalf("second Init with an available trust store: %v", err)
+	}
+	if refreshCalls != 0 {
+		t.Errorf("NSS should not be refreshed when a system trust store exists, got %d calls", refreshCalls)
+	}
+
+	cs.systemTrustAvailableFn = func() bool { return false }
+	err := cs.Init()
+	if refreshCalls != 1 {
+		t.Errorf("NSS should be refreshed when no system trust store exists, got %d calls", refreshCalls)
+	}
+	if !errors.Is(err, ErrNoSystemTrustStore) {
+		t.Fatalf("a failed refresh should not be fatal, got %v", err)
+	}
+}
+
 func TestUninstallCASkipsMissingTrustStore(t *testing.T) {
 	t.Parallel()
 
@@ -212,6 +242,7 @@ func newTestStore(t *testing.T, mgr *fakeCAStatusManager) *DiskCertStore {
 	cs.installTrustFn = func() error { return nil }
 	cs.uninstallTrustFn = func() error { return nil }
 	cs.installNSSFn = func(bool) error { return nil }
+	cs.refreshNSSFn = func() error { return nil }
 	cs.uninstallNSSFn = func() error { return nil }
 	cs.systemTrustAvailableFn = func() bool { return true }
 	cs.caTrustedBySystemFn = func() bool { return false }

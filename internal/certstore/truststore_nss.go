@@ -151,6 +151,29 @@ func ensureUserNSSDB(certutilPath string) error {
 	return nil
 }
 
+// refreshNSS adds the CA to NSS databases that don't have it yet, such as the
+// profile of a Firefox installed after the CA. Unlike installNSS, it skips
+// databases that already have the CA and never escalates with pkexec: it runs
+// on every start, and a password prompt each time would be worse than missing
+// a database only root can write to.
+func (cs *DiskCertStore) refreshNSS() error {
+	_, hasCertutil, certutilPath := getNSSInfo()
+	if !hasCertutil {
+		return errors.New("no certutil found")
+	}
+
+	cs.forEachNSSProfile(func(profile string) {
+		if exec.Command(certutilPath, "-V", "-d", profile, "-u", "L", "-n", certCommonName).Run() == nil {
+			return
+		}
+		out, err := exec.Command(certutilPath, "-A", "-d", profile, "-t", "C,,", "-n", certCommonName, "-i", cs.certPath).CombinedOutput()
+		if err != nil {
+			log.Printf("failed to install cert in %s: %v (%q)", profile, err, out)
+		}
+	})
+	return nil
+}
+
 func (cs *DiskCertStore) uninstallNSS() error {
 	_, hasCertutil, certutilPath := getNSSInfo()
 
