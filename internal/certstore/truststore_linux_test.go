@@ -44,6 +44,21 @@ func TestGetSystemTrustInfoFirstMatchWins(t *testing.T) {
 	}
 }
 
+func TestXDGConfigHome(t *testing.T) {
+	t.Setenv("HOME", "/home/user")
+
+	for _, tc := range []struct{ env, want string }{
+		{"", "/home/user/.config"},
+		{"relative/config", "/home/user/.config"},
+		{"/custom/config", "/custom/config"},
+	} {
+		t.Setenv("XDG_CONFIG_HOME", tc.env)
+		if got := xdgConfigHome(); got != tc.want {
+			t.Errorf("XDG_CONFIG_HOME=%q: got %q, want %q", tc.env, got, tc.want)
+		}
+	}
+}
+
 func swapSystemTrustCandidates(t *testing.T, candidates []systemTrustCandidate) {
 	t.Helper()
 	orig := systemTrustCandidates

@@ -39,9 +39,25 @@ import (
 	"path/filepath"
 )
 
-var firefoxProfiles = []string{os.Getenv("HOME") + "/.mozilla/firefox/*",
+// Since Firefox 147, new installs follow the XDG base directory spec: without an
+// existing ~/.mozilla, profiles go under $XDG_CONFIG_HOME/mozilla, which Flatpak
+// points at ~/.var/app/<app-id>/config. Both layouts are listed.
+var firefoxProfiles = []string{
+	os.Getenv("HOME") + "/.mozilla/firefox/*",
+	xdgConfigHome() + "/mozilla/firefox/*",
 	os.Getenv("HOME") + "/snap/firefox/common/.mozilla/firefox/*",
-	os.Getenv("HOME") + "/.var/app/org.mozilla.firefox/.mozilla/firefox/*"}
+	os.Getenv("HOME") + "/.var/app/org.mozilla.firefox/.mozilla/firefox/*",
+	os.Getenv("HOME") + "/.var/app/org.mozilla.firefox/config/mozilla/firefox/*",
+}
+
+// xdgConfigHome returns $XDG_CONFIG_HOME, or ~/.config when it is unset or not an
+// absolute path, as the XDG base directory spec requires.
+func xdgConfigHome() string {
+	if dir := os.Getenv("XDG_CONFIG_HOME"); filepath.IsAbs(dir) {
+		return dir
+	}
+	return filepath.Join(os.Getenv("HOME"), ".config")
+}
 
 const (
 	// caFolderName defines the name of the folder where the root CA certificate and key are stored.
