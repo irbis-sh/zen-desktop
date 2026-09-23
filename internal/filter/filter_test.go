@@ -367,6 +367,64 @@ func TestOutcomeMerge(t *testing.T) {
 	}
 }
 
+func TestDuplicateNetworkRuleAcrossListsParsedOnce(t *testing.T) {
+	t.Parallel()
+
+	f, rules := newTestFilter(t, &fakeStore{})
+
+	// Differing trust mirrors the default config, where EasyList is
+	// untrusted and AdGuard Base, which embeds it, is trusted.
+	if err := f.AddReader(strings.NewReader("||shared.example.com^\n||a.example.com^\n"), "a", false); err != nil {
+		t.Fatalf("AddReader a: %v", err)
+	}
+	if err := f.AddReader(strings.NewReader("||shared.example.com^\n||b.example.com^\n"), "b", true); err != nil {
+		t.Fatalf("AddReader b: %v", err)
+	}
+
+	assertRules(t, rules.got(), "||shared.example.com^", "||a.example.com^", "||b.example.com^")
+}
+
+func TestLineAfterFinalizeIsAccepted(t *testing.T) {
+	t.Parallel()
+
+	f, rules := newTestFilter(t, &fakeStore{})
+
+	if err := f.AddReader(strings.NewReader("||ads.example.com^\n"), "list", false); err != nil {
+		t.Fatalf("AddReader before Finalize: %v", err)
+	}
+	f.Finalize()
+	if err := f.AddReader(strings.NewReader("||ads.example.com^\n"), "list", false); err != nil {
+		t.Fatalf("AddReader after Finalize: %v", err)
+	}
+
+	assertRules(t, rules.got(), "||ads.example.com^", "||ads.example.com^")
+}
+
+func TestTrustedDuplicateNotShadowedByUntrusted(t *testing.T) {
+	t.Parallel()
+
+	injector := &recordingInjector{}
+	f, err := NewFilter(&fakeNetworkRules{}, injector, &fakeStore{}, fakeObserver{}, fakeWhitelist{})
+	if err != nil {
+		t.Fatalf("NewFilter: %v", err)
+	}
+
+	const line = "example.com#%#//scriptlet('set-constant', 'ads', 'false')"
+	if err := f.AddReader(strings.NewReader(line), "untrusted", false); err != nil {
+		t.Fatalf("AddReader untrusted: %v", err)
+	}
+	// Trust decides whether scriptlets run, so the trusted copy must still
+	// reach the injector: dedupe applies to network rules only.
+	if err := f.AddReader(strings.NewReader(line), "trusted", true); err != nil {
+		t.Fatalf("AddReader trusted: %v", err)
+	}
+
+	want := []injectedRule{{line, false}, {line, true}}
+	if got := injector.got(); !slices.Equal(got, want) {
+		t.Errorf("injected rules mismatch:\ngot  %+v\nwant %+v", got, want)
+	}
+}
+
 func newTestFilter(t *testing.T, store *fakeStore) (*Filter, *fakeNetworkRules) {
 	t.Helper()
 	rules := &fakeNetworkRules{}
@@ -513,6 +571,32 @@ type fakeInjector struct{}
 
 func (fakeInjector) AddRule(string, bool) (bool, error)         { return false, nil }
 func (fakeInjector) Inject(*http.Request, *http.Response) error { return nil }
+
+type injectedRule struct {
+	rule    string
+	trusted bool
+}
+
+// recordingInjector claims every rule, so none reach the network rules.
+type recordingInjector struct {
+	mu    sync.Mutex
+	rules []injectedRule
+}
+
+func (i *recordingInjector) AddRule(rule string, trusted bool) (bool, error) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	i.rules = append(i.rules, injectedRule{rule, trusted})
+	return true, nil
+}
+
+func (i *recordingInjector) got() []injectedRule {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	return slices.Clone(i.rules)
+}
+
+func (*recordingInjector) Inject(*http.Request, *http.Response) error { return nil }
 
 type fakeObserver struct{}
 
