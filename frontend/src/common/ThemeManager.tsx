@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 
 import { WindowSetDarkTheme, WindowSetLightTheme, WindowSetSystemDefaultTheme } from 'wails/runtime/runtime';
 
@@ -74,9 +74,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = useMemo(() => ({ theme, effectiveTheme, setTheme }), [theme, effectiveTheme]);
+  const value = { theme, effectiveTheme, setTheme };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext value={value}>{children}</ThemeContext>;
 }
 
 export function useTheme() {
