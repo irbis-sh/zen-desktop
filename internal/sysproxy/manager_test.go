@@ -103,6 +103,38 @@ func TestSetKeepsServerOnUnsupportedDE(t *testing.T) {
 	assertPACServed(t, port)
 }
 
+func TestClearRetriesFailedUnset(t *testing.T) {
+	m := newTestManager(freePort(t))
+	unsetCalls := 0
+	m.unsetSystemProxy = func() error {
+		unsetCalls++
+		if unsetCalls == 1 {
+			return errors.New("boom")
+		}
+		return nil
+	}
+
+	if err := m.Set(1234, nil, allowAll); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	if err := m.Clear(); err == nil {
+		t.Fatal("first Clear should report the failed unset")
+	}
+	if err := m.Clear(); err != nil {
+		t.Fatalf("second Clear: %v", err)
+	}
+	if unsetCalls != 2 {
+		t.Fatalf("unsetSystemProxy called %d times, want 2: the failed unset was not retried", unsetCalls)
+	}
+
+	if err := m.Clear(); err != nil {
+		t.Fatalf("third Clear: %v", err)
+	}
+	if unsetCalls != 2 {
+		t.Fatalf("unsetSystemProxy called %d times after a successful unset, want 2", unsetCalls)
+	}
+}
+
 func allowAll(string) bool { return true }
 
 // newTestManager returns a Manager whose platform functions succeed without touching the OS.

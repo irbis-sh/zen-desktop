@@ -101,7 +101,10 @@ func unsetSystemProxy() error {
 		}
 	}
 
-	networkServices = nil
+	// Keep the services after a failure so that a retry unsets them again.
+	if finalErr == nil {
+		networkServices = nil
+	}
 	return finalErr
 }
 

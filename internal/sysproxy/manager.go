@@ -29,6 +29,9 @@ type Manager struct {
 	pacPort  int
 	server   *http.Server
 	listener net.Listener
+	// systemProxySet is true from a successful setSystemProxy until a successful
+	// unsetSystemProxy, so that Clear retries a failed unset after the server is gone.
+	systemProxySet bool
 
 	// Platform functions, replaceable in tests.
 	setSystemProxy   func(pacURL string) error
@@ -83,20 +86,28 @@ func (m *Manager) Set(proxyPort int, userConfiguredExcludedHosts []string, shoul
 		}
 		return err
 	}
+	m.systemProxySet = true
 
 	return nil
 }
 
 // Clear removes the system proxy configuration and stops the PAC server.
-// The server is closed even if the system-level unset fails.
+// The server is closed even if the system-level unset fails, and a failed unset
+// is retried on the next call.
 func (m *Manager) Clear() error {
-	if m.server == nil {
+	if m.server == nil && !m.systemProxySet {
 		log.Println("warning: trying to clear system proxy without setting it first")
 		return nil
 	}
 
-	closeErr := m.closeServer()
+	var closeErr error
+	if m.server != nil {
+		closeErr = m.closeServer()
+	}
 	unsetErr := m.unsetSystemProxy()
+	if unsetErr == nil {
+		m.systemProxySet = false
+	}
 	return errors.Join(closeErr, unsetErr)
 }
 
