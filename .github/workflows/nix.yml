@@ -1,0 +1,46 @@
+name: Nix
+
+# nix/package.nix pins hashes of the Go and npm dependencies, which go stale on
+# every dependency update and break `nix profile install` for users. Building
+# the flake on the changes that can invalidate them catches that before merge;
+# the hash mismatch error prints the new hash to paste in.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - go.mod
+      - go.sum
+      - frontend/package.json
+      - frontend/package-lock.json
+      - flake.nix
+      - flake.lock
+      - nix/**
+      - .github/workflows/nix.yml
+  pull_request:
+    paths:
+      - go.mod
+      - go.sum
+      - frontend/package.json
+      - frontend/package-lock.json
+      - flake.nix
+      - flake.lock
+      - nix/**
+      - .github/workflows/nix.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+      - name: Build
+        run: nix build --print-build-logs .#default
