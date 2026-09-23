@@ -233,14 +233,14 @@ func (a *App) StartProxy() (err error) {
 		return fmt.Errorf("create proxy: %v", err)
 	}
 
-	if err := a.certStore.Init(); err != nil {
-		if !errors.Is(err, certstore.ErrNoSystemTrustStore) {
-			return fmt.Errorf("initialize cert store: %v", err)
+	trustCaveat := a.certStore.Init()
+	if trustCaveat != nil {
+		if !errors.Is(trustCaveat, certstore.ErrNoSystemTrustStore) {
+			return fmt.Errorf("initialize cert store: %v", trustCaveat)
 		}
 		// The store initialized successfully, but the CA could only be installed
-		// into NSS databases (e.g. on NixOS). Not fatal: warn and keep starting.
-		log.Printf("cert store init: %v", err)
-		a.frontendEvents.OnCASystemTrustUnavailable(err)
+		// into NSS databases (e.g. on NixOS). Not fatal: warn once the proxy is up.
+		log.Printf("cert store init: %v", trustCaveat)
 	}
 
 	port, err := a.proxy.Start()
@@ -263,6 +263,10 @@ func (a *App) StartProxy() (err error) {
 	a.proxyOn = true
 
 	a.systrayMgr.OnProxyStarted()
+
+	if trustCaveat != nil {
+		a.frontendEvents.OnCASystemTrustUnavailable(trustCaveat)
+	}
 
 	return nil
 }
