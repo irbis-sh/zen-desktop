@@ -92,9 +92,9 @@ func (cs *DiskCertStore) checkNSS() bool {
 }
 
 // installNSS installs the CA into all NSS certificate databases found on the system.
-// systemTrustMissing signals that the system trust store install failed with
-// [ErrNoSystemTrustStore] (only ever true on Linux), making NSS the CA's only trust
-// path; in that case the shared user database is created if it does not exist yet.
+// systemTrustMissing signals that the system has no trust store (only ever true on
+// Linux), making NSS the CA's only trust path; in that case the shared user database
+// is created if it does not exist yet.
 func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 	hasNSS, hasCertutil, certutilPath := getNSSInfo()
 	if !hasNSS && !systemTrustMissing {
