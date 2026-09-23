@@ -35,6 +35,9 @@
             pkg-config
             gtk3
             webkitgtk_4_1
+            # Last, so that go_1_26 and nodejs_24 come before the default
+            # go and nodejs that wails propagates on PATH.
+            wails
           ];
         };
       });
