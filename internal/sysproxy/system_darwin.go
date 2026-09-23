@@ -39,6 +39,11 @@ func setSystemProxy(pacURL string) error {
 
 	if requiresAdminPrivileges() {
 		if out, err := runElevated(cmds); err != nil {
+			// Forget the services so that Manager.Set's rollback does not show a second
+			// password prompt right after the user declined the first. If the batch
+			// instead failed partway after being authorised, undoing it would take
+			// another prompt too, so those services are left as they are.
+			networkServices = nil
 			return fmt.Errorf("set system proxy with elevation: %v (%q)", err, out)
 		}
 		return nil
@@ -51,6 +56,7 @@ func setSystemProxy(pacURL string) error {
 				// denies standard users regardless of that right (see discussion #751).
 				// Retry the whole batch elevated; re-running already-succeeded commands is harmless.
 				if out, err := runElevated(cmds); err != nil {
+					networkServices = nil // See the elevated path above.
 					return fmt.Errorf("set system proxy with elevation: %v (%q)", err, out)
 				}
 				return nil
