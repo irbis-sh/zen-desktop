@@ -594,20 +594,38 @@ func writeResp(w http.ResponseWriter, resp *http.Response) {
 	}
 }
 
-func linkBidirectionalTunnel(src, dst io.ReadWriter) {
-	doneC := make(chan struct{}, 2)
-	go tunnelConn(src, dst, doneC)
-	go tunnelConn(dst, src, doneC)
-	<-doneC
-	<-doneC
+// linkBidirectionalTunnel copies data both ways between a and b until both
+// directions end. When one side finishes sending, the other direction keeps going,
+// so a client that half-closes its connection still gets the reply. When a
+// direction fails, or its end cannot be passed on, both connections are closed.
+// Otherwise the other direction would stay blocked on a peer that may be silent
+// for minutes, holding both connections and the proxy with its filter.
+func linkBidirectionalTunnel(a, b io.ReadWriteCloser) {
+	halfClosedC := make(chan bool, 2)
+	go tunnelConn(a, b, halfClosedC)
+	go tunnelConn(b, a, halfClosedC)
+	for range 2 {
+		if !<-halfClosedC {
+			a.Close()
+			b.Close()
+		}
+	}
 }
 
-// tunnelConn tunnels the data between src and dst.
-func tunnelConn(dst io.Writer, src io.Reader, done chan<- struct{}) {
-	if _, err := io.Copy(dst, src); err != nil && !isCloseable(err) {
-		log.Printf("copying: %v", err)
+// tunnelConn copies data from src to dst. When src ends cleanly, it passes the end
+// on to dst with CloseWrite, as httputil.ReverseProxy does for upgraded
+// connections, and reports whether that worked.
+func tunnelConn(dst io.Writer, src io.Reader, halfClosed chan<- bool) {
+	if _, err := io.Copy(dst, src); err != nil {
+		if !isCloseable(err) {
+			log.Printf("copying: %v", err)
+		}
+		halfClosed <- false
+		return
 	}
-	done <- struct{}{}
+
+	cw, ok := dst.(interface{ CloseWrite() error })
+	halfClosed <- ok && cw.CloseWrite() == nil
 }
 
 // headerContains returns true if the named header contains the given value
@@ -633,6 +651,11 @@ func isTLSError(err error) bool {
 // can be closed.
 func isCloseable(err error) (ok bool) {
 	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+		return true
+	}
+	if errors.Is(err, net.ErrClosed) {
+		// linkBidirectionalTunnel closes both connections when either direction
+		// fails.
 		return true
 	}
 

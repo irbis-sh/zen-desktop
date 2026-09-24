@@ -167,6 +167,52 @@ func TestTunnelForwardsTraffic(t *testing.T) {
 	}
 }
 
+// TestTunnelPassesHalfCloseOn pins that a client that finishes sending still gets
+// the reply. The target replies only after it reads to the end, so the tunnel must
+// pass the half-close on and keep the other direction open.
+func TestTunnelPassesHalfCloseOn(t *testing.T) {
+	t.Parallel()
+
+	target, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer target.Close()
+	go func() {
+		conn, err := target.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		conn.SetDeadline(time.Now().Add(backstopTimeout))
+		if _, err := io.ReadAll(conn); err == nil {
+			io.WriteString(conn, "pong")
+		}
+	}()
+
+	addr := startTestProxy(t, nil)
+
+	conn, br, resp := connectThrough(t, addr, target.Addr().String())
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	if _, err := io.WriteString(conn, "ping"); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	if err := conn.(*net.TCPConn).CloseWrite(); err != nil {
+		t.Fatalf("close write: %v", err)
+	}
+
+	got, err := io.ReadAll(br)
+	if err != nil {
+		t.Fatalf("read reply: %v", err)
+	}
+	if string(got) != "pong" {
+		t.Fatalf("reply = %q, want %q", got, "pong")
+	}
+}
+
 // localTestHost stands in for the local endpoint hostname. It sits under the
 // reserved .test TLD, so a regression that sends it down a real tunnel can only
 // fail resolution, never reach an actual host.
