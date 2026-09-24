@@ -52,6 +52,7 @@ type Proxy struct {
 	certGenerator      certGenerator
 	port               int
 	server             *http.Server
+	servingCtx         context.Context
 	requestTransport   http.RoundTripper
 	requestClient      *http.Client
 	netDialer          *net.Dialer
@@ -91,7 +92,7 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 		KeepAlive: dialKeepAlive,
 	}
 	p.requestTransport = &http.Transport{
-		DialContext:           p.netDialer.DialContext,
+		DialContext:           p.dialUpstream,
 		ForceAttemptHTTP2:     true,
 		TLSHandshakeTimeout:   tlsHandshakeTimeout,
 		ResponseHeaderTimeout: responseHeaderTimeout,
@@ -113,16 +114,63 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 	return p, nil
 }
 
+// dialUpstream dials connections for requestTransport that close when the proxy
+// stops. Draining the pool on Stop would not be enough: a connection busy at that
+// point goes back to the pool once its request is cancelled, and outlives the
+// proxy there until idleConnTimeout.
+func (p *Proxy) dialUpstream(ctx context.Context, network, addr string) (net.Conn, error) {
+	// The transport strips cancellation from ctx, so without this a dial still
+	// running at Stop would carry on for up to dialTimeout.
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	stopCancelling := context.AfterFunc(p.servingCtx, cancel)
+	defer stopCancelling()
+
+	conn, err := p.netDialer.DialContext(ctx, network, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stopConn{
+		Conn:        conn,
+		stopClosing: context.AfterFunc(p.servingCtx, func() { conn.Close() }),
+	}, nil
+}
+
+// stopConn is a net.Conn that closes when the proxy stops.
+type stopConn struct {
+	net.Conn
+	stopClosing func() bool
+}
+
+func (c *stopConn) Close() error {
+	// Unregister, or servingCtx would keep every connection ever dialled reachable.
+	c.stopClosing()
+	return c.Conn.Close()
+}
+
 // Start starts the proxy on the given address.
 //
 // If Proxy was configured with a port of 0, the actual port will be returned.
 func (p *Proxy) Start() (int, error) {
+	servingCtx, stopServing := context.WithCancel(context.Background())
+	p.servingCtx = servingCtx
 	p.server = &http.Server{
-		Handler: p,
+		Handler:     p,
+		BaseContext: func(net.Listener) context.Context { return servingCtx },
 		// WriteTimeout is deliberately unset: it caps the whole handler, response write
 		// included, and would truncate large downloads and long-lived streams.
 		ReadHeaderTimeout: 10 * time.Second,
 	}
+	// Shutdown neither closes nor waits for hijacked connections, and every CONNECT
+	// is hijacked. Left open, they keep being served by this proxy and its filter,
+	// holding both in memory, until the client drops them. Cancelling servingCtx closes
+	// them along with every upstream connection (see dialUpstream), and aborts
+	// requests in flight on the rest so that Shutdown doesn't wait them out.
+	// It must run after Shutdown stops accepting, which OnShutdown hooks do:
+	// otherwise clients reconnect straight away, and Shutdown waits up to 5s for
+	// those connections to send a request.
+	p.server.RegisterOnShutdown(stopServing)
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", p.port))
 	if err != nil {
 		return 0, fmt.Errorf("listen: %v", err)
@@ -141,22 +189,6 @@ func (p *Proxy) Start() (int, error) {
 
 // Stop stops the proxy.
 func (p *Proxy) Stop() error {
-	err := p.shutdownServer()
-
-	// Shutdown only closes inbound connections, and runs first so that requests still in
-	// flight cannot return an upstream connection to the pool after it has been drained.
-	// Left alone, those connections and their read and write goroutines outlive the proxy
-	// until idleConnTimeout.
-	p.requestClient.CloseIdleConnections()
-
-	if err != nil {
-		return fmt.Errorf("shut down server: %v", err)
-	}
-
-	return nil
-}
-
-func (p *Proxy) shutdownServer() error {
 	if p.server == nil {
 		return nil
 	}
@@ -165,10 +197,7 @@ func (p *Proxy) shutdownServer() error {
 	defer cancel()
 
 	if err := p.server.Shutdown(ctx); err != nil {
-		// As per documentation:
-		// Shutdown does not attempt to close nor wait for hijacked connections such as WebSockets. The caller of Shutdown should separately notify such long-lived connections of shutdown and wait for them to close, if desired. See RegisterOnShutdown for a way to register shutdown notification functions.
-		// TODO: implement websocket shutdown
-		return fmt.Errorf("server shutdown: %w", err)
+		return fmt.Errorf("shut down server: %w", err)
 	}
 
 	return nil
@@ -265,6 +294,12 @@ func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo pr
 	roundTripDone = true
 	roundTripMutex.Unlock()
 	if err != nil {
+		if r.Context().Err() != nil {
+			// The client went away or the proxy is stopping. An error page would blame
+			// the upstream for a request that nobody is waiting on, or that the proxy
+			// cut short itself.
+			panic(http.ErrAbortHandler)
+		}
 		log.Printf("error making request: %v", redacted.Redacted(err)) // The error might contain information about the hostname we are connecting to.
 		writeUpstreamError(w, r, err)
 		return
@@ -298,6 +333,10 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 		return
 	}
 	defer clientConn.Close()
+	// Hijacking leaves the request context live until the handler returns, and Stop
+	// cancels it.
+	stopClosing := context.AfterFunc(connReq.Context(), func() { clientConn.Close() })
+	defer stopClosing()
 
 	host, _, err := net.SplitHostPort(connReq.Host)
 	if err != nil {
@@ -373,6 +412,9 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 	srv := &http.Server{
 		Handler:   handler,
 		TLSConfig: tlsConfig,
+		// Derive request contexts from the CONNECT request's, so that Stop cancels
+		// them too.
+		BaseContext: func(net.Listener) context.Context { return connReq.Context() },
 		ConnState: func(_ net.Conn, state http.ConnState) {
 			if state == http.StateClosed {
 				ln.Close()
@@ -465,6 +507,10 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		roundTripDone = true
 		roundTripMutex.Unlock()
 		if err != nil {
+			if req.Context().Err() != nil {
+				// See the same case in proxyHTTP.
+				panic(http.ErrAbortHandler)
+			}
 			if isTLSError(err) {
 				log.Printf("adding %s to ignored hosts", redacted.Redacted(host))
 				p.addTransparentHost(host)
@@ -524,6 +570,10 @@ func (p *Proxy) tunnel(w net.Conn, r *http.Request) {
 		return
 	}
 	defer remoteConn.Close()
+	// Closing the client side alone isn't enough: after a clean half-close, the
+	// tunnel keeps reading from this side, and the remote may stay silent.
+	stopClosing := context.AfterFunc(r.Context(), func() { remoteConn.Close() })
+	defer stopClosing()
 
 	if _, err := w.Write([]byte("HTTP/1.1 200 OK\r\n\r\n")); err != nil {
 		log.Printf("writing 200 OK to client(%s): %v", redacted.Redacted(r.Host), err)
@@ -655,7 +705,7 @@ func isCloseable(err error) (ok bool) {
 	}
 	if errors.Is(err, net.ErrClosed) {
 		// linkBidirectionalTunnel closes both connections when either direction
-		// fails.
+		// fails, and Stop closes both ends of every tunnel.
 		return true
 	}
 

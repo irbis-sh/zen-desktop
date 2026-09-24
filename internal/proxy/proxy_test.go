@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -18,6 +19,7 @@ import (
 	"net/url"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
@@ -210,6 +212,261 @@ func TestTunnelPassesHalfCloseOn(t *testing.T) {
 	}
 	if string(got) != "pong" {
 		t.Fatalf("reply = %q, want %q", got, "pong")
+	}
+}
+
+// TestStopClosesTunnels pins that Stop reaches hijacked connections, which
+// Server.Shutdown leaves running. A surviving tunnel keeps a stopped proxy in use.
+// Both ends must close. Here the tunnel closes the target end itself once the
+// client end fails. The case where tunnel's own AfterFunc on the target end
+// matters, a half-closed tunnel with a silent target, has no test: only a
+// leftover goroutine would show the difference.
+func TestStopClosesTunnels(t *testing.T) {
+	t.Parallel()
+
+	target, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer target.Close()
+	accepted := make(chan net.Conn, 1)
+	go func() {
+		if conn, err := target.Accept(); err == nil {
+			accepted <- conn
+		}
+	}()
+
+	p, addr := startStoppableProxy(t, unusedCertGenerator{}, nil)
+
+	_, br, resp := connectThrough(t, addr, target.Addr().String())
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var remote net.Conn
+	select {
+	case remote = <-accepted:
+	case <-time.After(backstopTimeout):
+		t.Fatal("target never accepted the tunnelled connection")
+	}
+	defer remote.Close()
+	if err := remote.SetDeadline(time.Now().Add(backstopTimeout)); err != nil {
+		t.Fatalf("set deadline: %v", err)
+	}
+
+	if err := p.Stop(); err != nil {
+		t.Fatalf("stop proxy: %v", err)
+	}
+
+	assertClosed(t, br)
+	assertClosed(t, remote)
+}
+
+// TestStopClosesMITMConnections is TestStopClosesTunnels for a CONNECT the
+// proxy MITMs, where a surviving connection keeps the stopped proxy's filter in use.
+func TestStopClosesMITMConnections(t *testing.T) {
+	t.Parallel()
+
+	// A hostname rather than an IP, so the proxy MITMs it, and a port nothing
+	// listens on, so the proxy answers with its error page without depending on DNS.
+	closed, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	closed.Close()
+	host := fmt.Sprintf("localhost:%d", closed.Addr().(*net.TCPAddr).Port)
+
+	p, addr := startStoppableProxy(t, selfSignedCertGenerator{}, nil)
+
+	conn, _, resp := connectThrough(t, addr, host)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	tlsConn := tls.Client(conn, &tls.Config{
+		ServerName:         "localhost",
+		InsecureSkipVerify: true, // #nosec G402 -- the MITM certificate is self-signed on purpose; trust is not under test.
+	})
+	// A full round trip rather than just the handshake: with TLS 1.3 the client's
+	// handshake returns before the proxy has finished its side, and Stop would land
+	// before the connection is being served.
+	req, err := http.NewRequest(http.MethodGet, "https://"+host+"/", nil)
+	if err != nil {
+		t.Fatalf("build request: %v", err)
+	}
+	if err := req.Write(tlsConn); err != nil {
+		t.Fatalf("write request: %v", err)
+	}
+	br := bufio.NewReader(tlsConn)
+	resp, err = http.ReadResponse(br, req)
+	if err != nil {
+		t.Fatalf("read response: %v", err)
+	}
+	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+		t.Fatalf("read response body: %v", err)
+	}
+	resp.Body.Close()
+
+	if err := p.Stop(); err != nil {
+		t.Fatalf("stop proxy: %v", err)
+	}
+
+	assertClosed(t, br)
+}
+
+// TestStopClosesBusyUpstreamConnections pins that Stop closes upstream
+// connections still carrying a request, not only idle ones. Once its request is
+// cancelled, a busy HTTP/2 connection goes back to the pool, and would outlive
+// the proxy there.
+func TestStopClosesBusyUpstreamConnections(t *testing.T) {
+	t.Parallel()
+
+	handling := make(chan struct{}, 1)
+	closed := make(chan struct{}, 1)
+	target := httptest.NewUnstartedServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		handling <- struct{}{}
+		<-r.Context().Done()
+	}))
+	target.EnableHTTP2 = true
+	target.Config.ConnState = func(_ net.Conn, state http.ConnState) {
+		if state == http.StateClosed {
+			select {
+			case closed <- struct{}{}:
+			default:
+			}
+		}
+	}
+	target.StartTLS()
+	// Close waits for in-flight handlers, so if the proxy leaves the connection
+	// open, closing it here is what lets a failing test finish.
+	defer target.Close()
+	defer target.CloseClientConnections()
+
+	p, addr := startStoppableProxy(t, selfSignedCertGenerator{}, func(p *Proxy) {
+		transportOf(t, p).TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true, // #nosec G402 -- the target's certificate is httptest's; trust is not under test.
+		}
+	})
+
+	// A hostname rather than the target's IP, which the proxy would tunnel
+	// instead of MITM'ing.
+	host := fmt.Sprintf("localhost:%d", target.Listener.Addr().(*net.TCPAddr).Port)
+	conn, _, resp := connectThrough(t, addr, host)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	tlsConn := tls.Client(conn, &tls.Config{
+		ServerName:         "localhost",
+		InsecureSkipVerify: true, // #nosec G402 -- the MITM certificate is self-signed on purpose; trust is not under test.
+	})
+	req, err := http.NewRequest(http.MethodGet, "https://"+host+"/", nil)
+	if err != nil {
+		t.Fatalf("build request: %v", err)
+	}
+	if err := req.Write(tlsConn); err != nil {
+		t.Fatalf("write request: %v", err)
+	}
+	select {
+	case <-handling:
+	case <-time.After(backstopTimeout):
+		t.Fatal("request never reached the target")
+	}
+
+	if err := p.Stop(); err != nil {
+		t.Fatalf("stop proxy: %v", err)
+	}
+
+	select {
+	case <-closed:
+	case <-time.After(backstopTimeout):
+		t.Fatal("upstream connection still open after Stop")
+	}
+}
+
+// TestStopAbortsRequestsInFlight pins that a plain-HTTP request cut short by Stop
+// is dropped rather than answered with the upstream error page, which would blame
+// the user's network for something the proxy did.
+func TestStopAbortsRequestsInFlight(t *testing.T) {
+	t.Parallel()
+
+	handling := make(chan struct{}, 1)
+	target := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		handling <- struct{}{}
+		<-r.Context().Done()
+	}))
+	defer target.Close()
+	defer target.CloseClientConnections()
+
+	p, addr := startStoppableProxy(t, unusedCertGenerator{}, nil)
+	client := proxyClient(t, addr)
+
+	type result struct {
+		resp *http.Response
+		err  error
+	}
+	done := make(chan result, 1)
+	go func() {
+		resp, err := client.Get(target.URL) // #nosec G107 -- the URL is the local test server's.
+		done <- result{resp, err}
+	}()
+	select {
+	case <-handling:
+	case <-time.After(backstopTimeout):
+		t.Fatal("request never reached the target")
+	}
+
+	if err := p.Stop(); err != nil {
+		t.Fatalf("stop proxy: %v", err)
+	}
+
+	select {
+	case res := <-done:
+		if res.err == nil {
+			res.resp.Body.Close()
+			t.Fatalf("got a %d response, want the request dropped", res.resp.StatusCode)
+		}
+	case <-time.After(backstopTimeout):
+		t.Fatal("request still in flight after Stop")
+	}
+}
+
+// TestStopCancelsUpstreamDials pins that Stop reaches a dial still in progress. The
+// transport strips cancellation from the context it dials with, so the dial would
+// otherwise keep the stopped proxy in use for up to dialTimeout.
+func TestStopCancelsUpstreamDials(t *testing.T) {
+	t.Parallel()
+
+	dialling := make(chan context.Context, 1)
+	p, addr := startStoppableProxy(t, unusedCertGenerator{}, func(p *Proxy) {
+		p.netDialer.ControlContext = func(ctx context.Context, _, _ string, _ syscall.RawConn) error {
+			dialling <- ctx
+			<-ctx.Done()
+			return ctx.Err()
+		}
+	})
+	client := proxyClient(t, addr)
+	go func() {
+		if resp, err := client.Get("http://127.0.0.1:1/"); err == nil {
+			resp.Body.Close()
+		}
+	}()
+
+	var dialCtx context.Context
+	select {
+	case dialCtx = <-dialling:
+	case <-time.After(backstopTimeout):
+		t.Fatal("proxy never dialled upstream")
+	}
+
+	if err := p.Stop(); err != nil {
+		t.Fatalf("stop proxy: %v", err)
+	}
+
+	select {
+	case <-dialCtx.Done():
+	case <-time.After(backstopTimeout):
+		t.Fatal("dial still running after Stop")
 	}
 }
 
@@ -475,30 +732,19 @@ func mitmGet(t *testing.T, proxyAddr, target, serverName string) (int, string) {
 	return tunnelled.StatusCode, string(body)
 }
 
-// startTestProxy starts a proxy and returns its address. configure, if non-nil, may
-// shorten timeouts before the proxy begins serving; it has to run there, because the
-// transport and the dialer read their timeout fields without synchronisation and Start
-// is what hands the proxy to serving goroutines.
+// startTestProxy is startStoppableProxy for tests that don't stop the proxy
+// themselves: it stops at cleanup.
 func startTestProxy(t *testing.T, configure func(*Proxy)) string {
 	t.Helper()
 
-	p := newTestProxy(t)
-
-	if configure != nil {
-		configure(p)
-	}
-
-	port, err := p.Start()
-	if err != nil {
-		t.Fatalf("start proxy: %v", err)
-	}
+	p, addr := startStoppableProxy(t, unusedCertGenerator{}, configure)
 	t.Cleanup(func() {
 		if err := p.Stop(); err != nil {
 			t.Errorf("stop proxy: %v", err)
 		}
 	})
 
-	return fmt.Sprintf("127.0.0.1:%d", port)
+	return addr
 }
 
 // proxyClient returns a client that routes its requests through the proxy at addr.
@@ -552,6 +798,46 @@ func connectThrough(t *testing.T, proxyAddr, target string) (net.Conn, *bufio.Re
 	}
 
 	return conn, br, resp
+}
+
+// startStoppableProxy starts a proxy and returns it along with its address,
+// leaving the caller to stop it. configure, if non-nil, may shorten timeouts before
+// the proxy begins serving; it has to run there, because the transport and the dialer
+// read their timeout fields without synchronisation and Start is what hands the proxy
+// to serving goroutines.
+func startStoppableProxy(t *testing.T, cg certGenerator, configure func(*Proxy)) (*Proxy, string) {
+	t.Helper()
+
+	p, err := NewProxy(noopFilter{}, cg, 0, nil, "", nil)
+	if err != nil {
+		t.Fatalf("create proxy: %v", err)
+	}
+
+	if configure != nil {
+		configure(p)
+	}
+
+	port, err := p.Start()
+	if err != nil {
+		t.Fatalf("start proxy: %v", err)
+	}
+
+	return p, fmt.Sprintf("127.0.0.1:%d", port)
+}
+
+// assertClosed fails unless reading r reports that the proxy closed the
+// connection under it. A timeout means the connection is still open.
+func assertClosed(t *testing.T, r io.Reader) {
+	t.Helper()
+
+	_, err := r.Read(make([]byte, 1))
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		t.Fatalf("connection still open after Stop: %v", err)
+	}
+	if err == nil {
+		t.Fatal("read data after Stop, want the connection closed")
+	}
 }
 
 // transportOf returns the proxy's outbound transport, which is held behind an interface.

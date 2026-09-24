@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"io"
 	"log"
@@ -13,14 +14,14 @@ import (
 
 func (p *Proxy) proxyWebsocketTLS(w http.ResponseWriter, req *http.Request) {
 	dialer := &tls.Dialer{NetDialer: p.netDialer, Config: &tls.Config{MinVersion: tls.VersionTLS12}}
-	hijackAndTunnelWebsocket(w, req, dialer.Dial)
+	hijackAndTunnelWebsocket(w, req, dialer.DialContext)
 }
 
 func (p *Proxy) proxyWebsocket(w http.ResponseWriter, req *http.Request) {
-	hijackAndTunnelWebsocket(w, req, p.netDialer.Dial)
+	hijackAndTunnelWebsocket(w, req, p.netDialer.DialContext)
 }
 
-func hijackAndTunnelWebsocket(w http.ResponseWriter, req *http.Request, dial func(network, addr string) (net.Conn, error)) {
+func hijackAndTunnelWebsocket(w http.ResponseWriter, req *http.Request, dial func(ctx context.Context, network, addr string) (net.Conn, error)) {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
 		http.Error(w, "websocket hijack not supported", http.StatusInternalServerError)
@@ -32,14 +33,22 @@ func hijackAndTunnelWebsocket(w http.ResponseWriter, req *http.Request, dial fun
 		return
 	}
 	defer clientConn.Close()
+	// Stop cancels req's context for both ws:// and wss://: the MITM server derives
+	// its request contexts from the CONNECT request's. Hijacking leaves the context
+	// live until the handler returns.
+	stopClosingClient := context.AfterFunc(req.Context(), func() { clientConn.Close() })
+	defer stopClosingClient()
 
-	targetConn, err := dial("tcp", req.URL.Host)
+	targetConn, err := dial(req.Context(), "tcp", req.URL.Host)
 	if err != nil {
 		log.Printf("dialing websocket backend(%s): %v", redacted.Redacted(req.URL.Host), err)
 		clientConn.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
 		return
 	}
 	defer targetConn.Close()
+	// The handshake and the tunnel both read from the target, which may stay silent.
+	stopClosingTarget := context.AfterFunc(req.Context(), func() { targetConn.Close() })
+	defer stopClosingTarget()
 
 	if err := websocketHandshake(req, targetConn, clientConn); err != nil {
 		return
