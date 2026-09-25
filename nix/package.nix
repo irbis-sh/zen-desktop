@@ -24,7 +24,11 @@ let
 
     src = ../frontend;
     nodejs = nodejs_24;
-    npmDepsHash = "sha256-x2/8u3u2UeQ4xo0eM6ONd5WImMBmFTKdDLDXvi/WobI=";
+    npmDepsHash = "sha256-4yfSedOJeWqrHTtOOQcKszKG+v54iiWTYA72Ok7Z8Pg=";
+    # react-popper, pulled in by Blueprint, only accepts React up to 18. A plain
+    # npm ci warns about it online, but in the sandbox it tries to fetch react's
+    # package metadata to re-resolve the peer and fails with ENOTCACHED.
+    npmFlags = [ "--legacy-peer-deps" ];
 
     installPhase = ''
       runHook preInstall
