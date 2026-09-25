@@ -13,6 +13,7 @@
     "update": {
       "restart": "Neustarten",
       "restartFailed": "App kann nicht neu gestartet werden: {{error}}",
+      "restarting": "Wird neu gestartet...",
       "updateAvailable": "Eine neue Version von Zen ist verfügbar."
     }
   },

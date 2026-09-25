@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/maphash"
 	"io"
 	"log"
 	"mime"
@@ -61,6 +62,14 @@ type Filter struct {
 	filterListStore filterListStore
 	actionObserver  filterActionObserver
 	whitelistSrv    whitelistSrv
+
+	// seenRules holds hashes of the network rules parsed so far, so a rule
+	// supplied by several lists (AdGuard Base embeds EasyList) is parsed and
+	// stored once. Finalize sets it to nil, which frees it and turns dedupe
+	// off. seenMu guards it because lists load on parallel goroutines.
+	seenMu    sync.Mutex
+	seenSeed  maphash.Seed
+	seenRules map[uint64]struct{}
 }
 
 var (
@@ -92,6 +101,8 @@ func NewFilter(networkRules networkRules, injector documentInjector, filterListS
 		actionObserver:  actionObserver,
 		whitelistSrv:    whitelistSrv,
 		filterListStore: filterListStore,
+		seenSeed:        maphash.MakeSeed(),
+		seenRules:       make(map[uint64]struct{}),
 	}
 
 	return f, nil
@@ -318,11 +329,38 @@ func (f *Filter) addRule(rule string, filterListName *string, filterListTrusted 
 		return false, nil
 	}
 
+	// Dedupe only after the injector declines the line: network rules ignore
+	// list trust, but the injector uses it to decide whether scriptlets run.
+	// The first list to supply a rule keeps it, so the request log names that
+	// list, and which one comes first varies between builds.
+	if f.markSeen(rule) {
+		return false, nil
+	}
+
 	isExceptionRule, err := f.networkRules.ParseRule(rule, filterListName)
 	if err != nil {
 		return false, fmt.Errorf("parse network rule: %w", err)
 	}
 	return isExceptionRule, nil
+}
+
+// markSeen records a network rule and reports whether it was recorded before.
+//
+// Only the 64-bit hash is stored, so a collision silently drops a rule. At
+// ~700k lines the odds are about n^2/2^65, 1 in 75 million per build.
+func (f *Filter) markSeen(rule string) bool {
+	key := maphash.String(f.seenSeed, rule)
+
+	f.seenMu.Lock()
+	defer f.seenMu.Unlock()
+	if f.seenRules == nil {
+		return false
+	}
+	if _, ok := f.seenRules[key]; ok {
+		return true
+	}
+	f.seenRules[key] = struct{}{}
+	return false
 }
 
 // HandleRequest handles the given request by matching it against the filter rules.
@@ -366,7 +404,13 @@ func (f *Filter) HandleRequest(req *http.Request, processInfo process.Info) (*ht
 // This method should be called once after all AddURL/AddReader calls are complete and before
 // the filter starts handling requests. Calling Finalize is not required for correctness,
 // but improves memory usage and lookup performance.
+//
+// Rules added after Finalize are not deduplicated.
 func (f *Filter) Finalize() {
+	f.seenMu.Lock()
+	f.seenRules = nil
+	f.seenMu.Unlock()
+
 	f.networkRules.Compact()
 }
 

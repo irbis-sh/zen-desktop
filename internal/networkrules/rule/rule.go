@@ -27,6 +27,10 @@ type Rule struct {
 	Document bool
 	// Important shows if rule has Important modifier.
 	Important bool
+	// All shows if rule has All modifier.
+	// On primary rules, it implies Document. It is kept separate so that "@@...$all" exceptions,
+	// which share this struct, still cancel non-document rules.
+	All bool
 }
 
 // TODO: The split between And and Or modifiers is somewhat convoluted and exists only to support ContentType.
@@ -83,7 +87,8 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			case "removeparam":
 				modifier = &rulemodifiers.RemoveParamModifier{}
 			case "all":
-				// TODO: should act as "popup" modifier once it gets implemented
+				// TODO: should also act as "popup" modifier once it gets implemented
+				rm.All = true
 				continue
 			default:
 				return fmt.Errorf("unknown modifier %q", m)
@@ -155,7 +160,7 @@ func cutModifierName(modifier string) (name string, hasValue bool) {
 
 // ShouldMatchReq returns true if the rule should match the request.
 func (rm *Rule) ShouldMatchReq(req *http.Request) bool {
-	if req.Header.Get("Sec-Fetch-User") == "?1" && req.Header.Get("Sec-Fetch-Dest") == "document" && !rm.Document {
+	if req.Header.Get("Sec-Fetch-User") == "?1" && req.Header.Get("Sec-Fetch-Dest") == "document" && !rm.Document && !rm.All {
 		return false
 	}
 

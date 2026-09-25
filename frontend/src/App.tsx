@@ -38,14 +38,18 @@ function App() {
           action: {
             text: t('app.update.restart'),
             onClick: () => {
-              try {
-                RestartApplication();
-              } catch (error) {
+              const restartingToast = AppToaster.show({
+                message: t('app.update.restarting'),
+                intent: 'primary',
+                timeout: 0,
+              });
+              RestartApplication().catch((error) => {
+                AppToaster.dismiss(restartingToast);
                 AppToaster.show({
                   message: t('app.update.restartFailed', { error }),
                   intent: 'danger',
                 });
-              }
+              });
             },
           },
         });

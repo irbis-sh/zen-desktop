@@ -2,7 +2,6 @@ import { CardList, Card, Tag, Collapse, Intent, CompoundTag, HTMLTable } from '@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getCurrentLocale } from '@/i18n';
 import { EventsOn } from 'wails/runtime';
 import './index.css';
 
@@ -74,7 +73,7 @@ export function RequestLog() {
 }
 
 function RequestLogCard({ log }: { log: FilterAction }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const { hostname } = new URL(log.url, 'http://foo'); // Setting the base url somehow helps with parsing //hostname:port URLs
@@ -108,9 +107,7 @@ function RequestLogCard({ log }: { log: FilterAction }) {
             {log.process.name}
           </Tag>
         </div>
-        <div className="bp6-text-muted">
-          {log.createdAt.toLocaleTimeString(getCurrentLocale(), { timeStyle: 'short' })}
-        </div>
+        <div className="bp6-text-muted">{log.createdAt.toLocaleTimeString(i18n.language, { timeStyle: 'short' })}</div>
       </Card>
 
       <Collapse isOpen={isOpen}>

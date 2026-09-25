@@ -13,6 +13,7 @@
     "update": {
       "restart": "Khởi động lại",
       "restartFailed": "Không thể khởi động lại ứng dụng: {{error}}",
+      "restarting": "Đang khởi động lại...",
       "updateAvailable": "Đã có phiên bản Zen mới."
     }
   },

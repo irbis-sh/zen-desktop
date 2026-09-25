@@ -13,6 +13,7 @@
     "update": {
       "restart": "重启",
       "restartFailed": "重新启动应用失败: {{error}}",
+      "restarting": "正在重启...",
       "updateAvailable": "Zen 有新版本可用。"
     }
   },

@@ -1,6 +1,8 @@
 package rule
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -219,6 +221,60 @@ func TestParseModifiers(t *testing.T) {
 	})
 }
 
+func TestShouldMatchReq(t *testing.T) {
+	t.Parallel()
+
+	navigationHeaders := map[string]string{
+		"Sec-Fetch-Dest": "document",
+		"Sec-Fetch-User": "?1",
+	}
+
+	t.Run("rule without modifiers does not match user navigation", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t)
+		if r.ShouldMatchReq(newTestRequest(navigationHeaders)) {
+			t.Fatal("ShouldMatchReq() = true, want false")
+		}
+	})
+
+	t.Run("all matches user navigation", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t, "all")
+		if !r.ShouldMatchReq(newTestRequest(navigationHeaders)) {
+			t.Fatal("ShouldMatchReq() = false, want true")
+		}
+	})
+
+	t.Run("all matches subresource", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t, "all")
+		if !r.ShouldMatchReq(newTestRequest(map[string]string{"Sec-Fetch-Dest": "script"})) {
+			t.Fatal("ShouldMatchReq() = false, want true")
+		}
+	})
+
+	t.Run("all with domain matches user navigation only from that domain", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t, "all", "domain=example.com")
+
+		fromExample := newTestRequest(navigationHeaders)
+		fromExample.Header.Set("Referer", "https://example.com/")
+		if !r.ShouldMatchReq(fromExample) {
+			t.Error("ShouldMatchReq() with example.com referer = false, want true")
+		}
+
+		fromOther := newTestRequest(navigationHeaders)
+		fromOther.Header.Set("Referer", "https://other.com/")
+		if r.ShouldMatchReq(fromOther) {
+			t.Error("ShouldMatchReq() with other.com referer = true, want false")
+		}
+	})
+}
+
 func assertRuleBuckets(t *testing.T, r *Rule, wantImportant, wantDocument bool, wantAnd, wantOr, wantQuery, wantActions []string) {
 	t.Helper()
 
@@ -252,4 +308,22 @@ func typeNames[T any](items []T) []string {
 		names[i] = reflect.TypeOf(item).String()
 	}
 	return names
+}
+
+func newTestRule(t *testing.T, modifiers ...string) *Rule {
+	t.Helper()
+
+	var r Rule
+	if err := r.ParseModifiers(modifiers); err != nil {
+		t.Fatalf("ParseModifiers(%q) = %v, want nil", modifiers, err)
+	}
+	return &r
+}
+
+func newTestRequest(headers map[string]string) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, "https://target.example/", nil)
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	return req
 }
