@@ -74,22 +74,14 @@ func getNSSInfo() (hasNSS bool, hasCertutil bool, certutilPath string) {
 	return
 }
 
-func (cs *DiskCertStore) checkNSS() bool {
-	_, hasCertutil, certutilpath := getNSSInfo()
-
-	if !hasCertutil {
-		return false
-	}
-
-	success := true
-	profileCount := cs.forEachNSSProfile(func(profile string) {
-		err := exec.Command(certutilpath, "-V", "-d", profile, "-u", "L", "-n", certCommonName).Run()
-		if err != nil {
-			success = false
+// countNSSWithCA returns the number of NSS databases that hold the CA.
+func (cs *DiskCertStore) countNSSWithCA(certutilPath string) (count int) {
+	cs.forEachNSSProfile(func(profile string) {
+		if exec.Command(certutilPath, "-V", "-d", profile, "-u", "L", "-n", certCommonName).Run() == nil {
+			count++
 		}
 	})
-
-	return profileCount > 0 && success
+	return count
 }
 
 // installNSS installs the CA into all NSS certificate databases found on the system.
@@ -128,7 +120,11 @@ func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 		return errors.New("no security databases found")
 	}
 
-	if !cs.checkNSS() {
+	// Succeed if any database took the CA; the ones that didn't are logged
+	// above. Without a system trust store, Init treats an error here as fatal,
+	// so requiring every database would let one that can't take the CA (e.g. a
+	// Firefox profile with a primary password) stop the proxy from starting.
+	if cs.countNSSWithCA(certutilPath) == 0 {
 		return errors.New("failed to install NSS, profiles have not been created")
 	}
 	return nil
