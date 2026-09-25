@@ -15,12 +15,12 @@ tasks:
   dev:
     desc: Runs the application in development mode.
     cmds:
-      - wails dev
+      - wails dev -tags webkit2_41
 
   build-dev:
     desc: Create a development build of the application.
     cmds:
-      - wails build
+      - wails build -tags webkit2_41
 
   test-go:
     desc: Run Go tests.
