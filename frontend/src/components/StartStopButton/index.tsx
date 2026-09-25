@@ -12,7 +12,7 @@ import './index.css';
 
 const PROXY_CHANNEL = 'proxy:action';
 const LINUX_PROXY_GUIDE_URL = 'https://docs.irbis.sh/docs/zen/how-to/proxy-linux/';
-const CA_TRUST_GUIDE_URL = 'TODO';
+const CA_TRUST_GUIDE_URL = 'https://docs.irbis.sh/docs/zen/how-to/ca-trust-linux/';
 
 enum ProxyActionKind {
   Starting = 'starting',
