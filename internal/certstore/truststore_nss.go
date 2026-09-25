@@ -35,6 +35,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -138,8 +139,11 @@ func (cs *DiskCertStore) installNSS(systemTrustMissing bool) error {
 func ensureUserNSSDB(certutilPath string) error {
 	dbDir := filepath.Join(os.Getenv("HOME"), ".pki/nssdb")
 	_, err := os.Stat(filepath.Join(dbDir, "cert9.db")) // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
-	if !os.IsNotExist(err) {
+	if err == nil {
 		return nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		return err
 	}
 	if err := os.MkdirAll(dbDir, 0700); err != nil { // #nosec G703 -- the path is derived from $HOME, same trust level as the rest of the NSS db discovery.
 		return err
