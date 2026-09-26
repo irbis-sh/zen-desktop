@@ -45,7 +45,12 @@ in
   inherit version;
 
   src = lib.cleanSource ../.;
-  vendorHash = "sha256-7OFMEbchbp1HghzWr+Yb6T2kIZc/1wQSno6b/WDncyQ=";
+  # Hash the module cache rather than `go mod vendor`'s output: vendor/ holds
+  # only the imported packages, so a new import from a module already in
+  # go.mod would change the hash without touching go.mod or go.sum, and the
+  # Nix workflow would not catch it.
+  proxyVendor = true;
+  vendorHash = "sha256-u5vh0HijXcSx1ah+tyMh5ndsiCHXNvszCY72HTjTbxk=";
 
   nativeBuildInputs = [
     pkg-config
