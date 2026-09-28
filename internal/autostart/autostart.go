@@ -8,12 +8,14 @@ import (
 // Manager manages automatic startup of the app on user login.
 type Manager struct{}
 
-// getExecPath returns the path autostart entries should launch.
+// getExecPath returns the path or command autostart entries should launch.
 // ZEN_EXEC_PATH takes precedence over os.Executable because the latter resolves
 // wrapper scripts to the real binary: under Nix's wrapGAppsHook3 it reports the
 // hidden .zen-wrapped executable, and launching that directly would skip the
 // wrapper's environment (certutil on PATH, the tray library, GIO modules).
-// The Nix package sets ZEN_EXEC_PATH to the wrapper.
+// The Nix package sets ZEN_EXEC_PATH to the bare command `zen`, which PATH
+// resolves to the wrapper; a store path would stop existing after an upgrade
+// and a garbage collection, while the entry is never rewritten.
 func getExecPath() (string, error) {
 	if path := os.Getenv("ZEN_EXEC_PATH"); path != "" {
 		return path, nil
