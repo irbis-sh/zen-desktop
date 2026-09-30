@@ -24,10 +24,8 @@ import (
 )
 
 // ErrNoSystemTrustStore signals that no system-wide certificate trust store exists
-// on this device, e.g. on NixOS, where trust is configured declaratively.
-// Init returns an error wrapping it after a successful NSS-only install; the store is
-// fully initialized and usable in that case, but callers may want to inform the user
-// that applications not backed by NSS will not trust the CA.
+// on this device, e.g. on NixOS, where trust is configured declaratively, so the CA
+// is only trusted through NSS databases.
 var ErrNoSystemTrustStore = errors.New("system trust store not found")
 
 const (
