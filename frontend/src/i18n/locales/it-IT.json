@@ -169,6 +169,18 @@
       "uninstallConfirm": "Disinstalla",
       "usefulIf": "Questo può essere utile se"
     },
+    "caKeyStorage": {
+      "cancel": "Annulla",
+      "confirm": "Rigenera",
+      "confirmBody": "Per cambiare dove viene conservata la chiave è necessario creare una nuova autorità di certificazione. Zen disinstallerà subito la CA attuale e ne installerà una nuova al prossimo avvio, quindi vedrai di nuovo la richiesta di autorizzazione del sistema.",
+      "confirmTitle": "Vuoi rigenerare la CA?",
+      "descriptionMacOS": "Conserva la chiave privata della CA nel Secure Enclave di questo Mac. Non può essere copiata fuori dal dispositivo, nemmeno da un malware.",
+      "descriptionWindows": "Conserva la chiave privata della CA nel TPM di questo PC. Non può essere copiata fuori dal dispositivo, nemmeno da un malware.",
+      "errorMessage": "Impossibile modificare l'archiviazione della chiave della CA: {{error}}",
+      "label": "Chiave della CA protetta dall'hardware",
+      "stopProxyTooltip": "Ferma il proxy per modificare l'archiviazione della chiave della CA",
+      "unavailableTooltip": "Non disponibile su questo dispositivo: {{reason}}"
+    },
     "language": {
       "helper": "Seleziona la tua lingua preferita",
       "label": "Lingua"

@@ -64,6 +64,9 @@ const (
 	caFolderName = "certs"
 	// systemTrustFilename is the name of the file that contains the system trust settings.
 	systemTrustFilename = "zen-rootCA"
+	// hardwareKeyName is unused: Linux has no hardware key support yet, so the store always
+	// keeps the key on disk.
+	hardwareKeyName = ""
 )
 
 // systemTrustCandidate describes one known system trust store layout:

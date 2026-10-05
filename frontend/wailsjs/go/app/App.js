@@ -6,6 +6,10 @@ export function ExportCustomFilterLists() {
   return window['go']['app']['App']['ExportCustomFilterLists']();
 }
 
+export function HardwareKeyUnavailableReason() {
+  return window['go']['app']['App']['HardwareKeyUnavailableReason']();
+}
+
 export function ImportCustomFilterLists() {
   return window['go']['app']['App']['ImportCustomFilterLists']();
 }
@@ -26,8 +30,16 @@ export function RestartApplication() {
   return window['go']['app']['App']['RestartApplication']();
 }
 
+export function RunPendingRestart() {
+  return window['go']['app']['App']['RunPendingRestart']();
+}
+
 export function SelectAppForRouting() {
   return window['go']['app']['App']['SelectAppForRouting']();
+}
+
+export function SetCAKeyStorage(arg1) {
+  return window['go']['app']['App']['SetCAKeyStorage'](arg1);
 }
 
 export function StartProxy() {

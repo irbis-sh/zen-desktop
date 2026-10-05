@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import (
 	"bytes"
+	"crypto/sha1" // #nosec G505 -- security delete-certificate selects certificates by SHA-1 hash
 	"encoding/asn1"
 	"fmt"
 	"os"
@@ -47,6 +48,10 @@ var firefoxProfiles = []string{os.Getenv("HOME") + "/Library/Application Support
 // caFolderName defines the name of the folder where the root CA certificate and key are stored.
 // It is capitalized to follow the general convention of using capitalized folder names on macOS.
 const caFolderName = "Certs"
+
+// hardwareKeyName is the keychain application tag of the root's hardware key. The bundle
+// identifier is the natural namespace for it.
+const hardwareKeyName = "net.zenprivacy.zen.rootca"
 
 // https://github.com/golang/go/issues/24652#issuecomment-399826583
 var trustSettings []interface{}
@@ -154,8 +159,12 @@ func (cs *DiskCertStore) installCATrust() error {
 
 // uninstallCATrust removes the root CA certificate from the system trust store.
 func (cs *DiskCertStore) uninstallCATrust() error {
+	// Select the certificate by hash, not by name: every Zen CA has the same common name, and
+	// delete-certificate -c refuses to delete anything once two of them are installed. The
+	// elevation helper does not pass that failure on, so the CA would silently stay trusted.
+	hash := fmt.Sprintf("%X", sha1.Sum(cs.cert.Raw)) // #nosec G401 -- identifies the certificate, as security expects
 	cmd := elevate.WithPrompt("Authorize Zen to remove the root CA certificate").Command(
-		"security", "delete-certificate", "-c", cs.cert.Subject.CommonName, "-t")
+		"security", "delete-certificate", "-Z", hash, "-t", "/Library/Keychains/System.keychain")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("delete root CA certificate: %w\n%s", err, out)

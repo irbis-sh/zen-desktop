@@ -169,6 +169,18 @@
       "uninstallConfirm": "Désinstaller",
       "usefulIf": "Cela peut être utile si :"
     },
+    "caKeyStorage": {
+      "cancel": "Annuler",
+      "confirm": "Régénérer",
+      "confirmBody": "Changer l'emplacement de stockage de la clé implique de créer une nouvelle Autorité de certification. Zen va désinstaller dès maintenant l'Autorité de certification actuelle, puis en installera une nouvelle à son prochain démarrage. Vous verrez donc de nouveau la demande d'autorisation du système.",
+      "confirmTitle": "Régénérer l'Autorité de certification ?",
+      "descriptionMacOS": "Conserver la clé privée de l'Autorité de certification dans la Secure Enclave de ce Mac. Elle ne peut pas être copiée hors de l'appareil, même par un logiciel malveillant.",
+      "descriptionWindows": "Conserver la clé privée de l'Autorité de certification dans le TPM de ce PC. Elle ne peut pas être copiée hors de l'appareil, même par un logiciel malveillant.",
+      "errorMessage": "Échec de la modification du stockage de la clé de l'Autorité de certification : {{error}}",
+      "label": "Clé de l'Autorité de certification protégée par le matériel",
+      "stopProxyTooltip": "Arrêtez le proxy pour modifier le stockage de la clé de l'Autorité de certification",
+      "unavailableTooltip": "Indisponible sur cet appareil : {{reason}}"
+    },
     "language": {
       "helper": "Sélectionnez votre langue préférée",
       "label": "Langue"

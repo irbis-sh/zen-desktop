@@ -1,13 +1,17 @@
 export namespace config {
 	
-	export enum UpdatePolicyType {
-	    AUTOMATIC = "automatic",
-	    PROMPT = "prompt",
-	    DISABLED = "disabled",
+	export enum KeyStorageType {
+	    DISK = "disk",
+	    HARDWARE = "hardware",
 	}
 	export enum RoutingMode {
-	    BLOCKLIST = "blocklist",
 	    ALLOWLIST = "allowlist",
+	    BLOCKLIST = "blocklist",
+	}
+	export enum UpdatePolicyType {
+	    AUTOMATIC = "automatic",
+	    DISABLED = "disabled",
+	    PROMPT = "prompt",
 	}
 	export class FilterList {
 	    name: string;

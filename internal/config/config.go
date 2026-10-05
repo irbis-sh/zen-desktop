@@ -63,6 +63,24 @@ type RoutingConfig struct {
 	AppPaths []string    `json:"appPaths"`
 }
 
+// KeyStorageType says where the root CA's private key is stored.
+type KeyStorageType string
+
+const (
+	// KeyStorageDisk keeps the key in a PEM file in the data directory.
+	KeyStorageDisk KeyStorageType = "disk"
+	// KeyStorageHardware keeps the key in the Secure Enclave (macOS) or the TPM (Windows).
+	KeyStorageHardware KeyStorageType = "hardware"
+)
+
+var KeyStorageEnum = []struct {
+	Value  KeyStorageType
+	TSName string
+}{
+	{KeyStorageDisk, "DISK"},
+	{KeyStorageHardware, "HARDWARE"},
+}
+
 type FilterListType string
 
 const (
@@ -102,6 +120,9 @@ type Config struct {
 	} `json:"filter"`
 	Certmanager struct {
 		CAInstalled bool `json:"caInstalled"`
+		// KeyStorage describes the installed CA, not a pending choice. It only changes after the
+		// old CA has been uninstalled, so it always matches the CA that CAInstalled refers to.
+		KeyStorage KeyStorageType `json:"keyStorage"`
 	} `json:"certmanager"`
 	Proxy struct {
 		Port         int           `json:"port"`
@@ -118,11 +139,12 @@ type Config struct {
 }
 
 type DebugData struct {
-	EnabledFilterListURLs []string `json:"enabledFilterListURLs"`
-	Rules                 []string `json:"rules"`
-	Platform              string   `json:"platform"`
-	Architecture          string   `json:"architecture"`
-	Version               string   `json:"version"`
+	EnabledFilterListURLs []string       `json:"enabledFilterListURLs"`
+	Rules                 []string       `json:"rules"`
+	Platform              string         `json:"platform"`
+	Architecture          string         `json:"architecture"`
+	Version               string         `json:"version"`
+	KeyStorage            KeyStorageType `json:"keyStorage"`
 }
 
 func (c *Config) ExportDebugData() (string, error) {
@@ -140,6 +162,7 @@ func (c *Config) ExportDebugData() (string, error) {
 		Platform:              runtime.GOOS,
 		Architecture:          runtime.GOARCH,
 		Version:               Version,
+		KeyStorage:            c.Certmanager.KeyStorage,
 	}
 	jsonData, err := json.MarshalIndent(debugData, "", "  ")
 	if err != nil {
@@ -210,6 +233,10 @@ func New() (*Config, error) {
 
 	if err := json.Unmarshal(configData, c); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
+	}
+	// Configs written before hardware keys existed have no keyStorage; their CA is on disk.
+	if c.Certmanager.KeyStorage == "" {
+		c.Certmanager.KeyStorage = KeyStorageDisk
 	}
 
 	return c, nil
@@ -414,6 +441,23 @@ func (c *Config) GetCAInstalled() bool {
 func (c *Config) SetCAInstalled(caInstalled bool) {
 	_ = c.update(func() error {
 		c.Certmanager.CAInstalled = caInstalled
+		return nil
+	})
+}
+
+// GetKeyStorage returns where the installed CA's private key is stored.
+func (c *Config) GetKeyStorage() KeyStorageType {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.Certmanager.KeyStorage
+}
+
+// SetKeyStorage records where the CA's private key is stored. It must only be called while no CA
+// is installed, which App.SetCAKeyStorage ensures.
+func (c *Config) SetKeyStorage(storage KeyStorageType) error {
+	return c.update(func() error {
+		c.Certmanager.KeyStorage = storage
 		return nil
 	})
 }

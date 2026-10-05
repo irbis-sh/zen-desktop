@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Both entitlements are required to reach the data protection keychain, which is where
+	     the CA's Secure Enclave key lives. Without them SecItem calls fail with -34018
+	     errSecMissingEntitlement. keychain-access-groups is restricted: the app must be signed
+	     with a real Apple identity and carry a provisioning profile that allowlists it
+	     (Contents/embedded.provisionprofile). An app that claims it without a valid profile is
+	     killed at launch.
+
+	     Never change the access group below. Keychain items are bound to it, so a different
+	     group in a later version makes every user's hardware key unreachable, and their CA
+	     with it.
+
+	     The team ID placeholder is replaced with the Apple Developer team ID at build time. -->
+	<key>com.apple.application-identifier</key>
+	<string>@TEAM_ID@.net.zenprivacy.zen</string>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>@TEAM_ID@.net.zenprivacy.zen</string>
+	</array>
+</dict>
+</plist>

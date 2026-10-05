@@ -18,6 +18,8 @@ export function GetFirstLaunch():Promise<boolean>;
 
 export function GetIgnoredHosts():Promise<Array<string>>;
 
+export function GetKeyStorage():Promise<config.KeyStorageType>;
+
 export function GetLocale():Promise<string>;
 
 export function GetPACPort():Promise<number>;
@@ -41,6 +43,8 @@ export function RunMigrations():Promise<void>;
 export function SetCAInstalled(arg1:boolean):Promise<void>;
 
 export function SetIgnoredHosts(arg1:Array<string>):Promise<void>;
+
+export function SetKeyStorage(arg1:config.KeyStorageType):Promise<void>;
 
 export function SetLocale(arg1:string):Promise<void>;
 

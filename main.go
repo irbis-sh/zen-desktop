@@ -84,6 +84,7 @@ func main() {
 		EnumBind: []interface{}{
 			config.UpdatePolicyEnum,
 			config.RoutingModeEnum,
+			config.KeyStorageEnum,
 		},
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{

@@ -13,6 +13,7 @@ import { BrowserOpenURL } from 'wails/runtime';
 import { AppRoutingSettings } from './AppRoutingSettings';
 import { AutostartSwitch } from './AutostartSwitch';
 import { AutoupdateSwitch } from './AutoupdateSwitch';
+import { CAKeyStorageSwitch } from './CAKeyStorageSwitch';
 import { ExportDebugDataButton } from './ExportDebugDataButton';
 import { ExportLogsButton } from './ExportLogsButton';
 import { IgnoredHostsInput } from './IgnoredHostsInput';
@@ -75,6 +76,7 @@ export function SettingsManager() {
           <PACPortInput />
           <IgnoredHostsInput />
           <AppRoutingSettings />
+          <CAKeyStorageSwitch proxyState={proxyState} />
           <UninstallCADialog proxyState={proxyState} />
         </div>
       </div>

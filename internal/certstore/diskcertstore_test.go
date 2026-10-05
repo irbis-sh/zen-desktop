@@ -1,9 +1,14 @@
 package certstore
 
 import (
+	"crypto/rsa"
 	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
+
+	"github.com/irbis-sh/zen-desktop/internal/config"
 )
 
 func TestInitInstallsCA(t *testing.T) {
@@ -223,12 +228,66 @@ func TestUninstallCASkipsMissingTrustStore(t *testing.T) {
 	}
 }
 
+func TestInitFailsWhenKeyIsReplaced(t *testing.T) {
+	t.Parallel()
+
+	mgr := &fakeCAStatusManager{}
+	cs := newTestStore(t, mgr)
+	if err := cs.Init(); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+
+	if _, err := (diskKey{path: cs.keyPath}).Generate(); err != nil {
+		t.Fatalf("replace key: %v", err)
+	}
+	if err := cs.Init(); err == nil || !strings.Contains(err.Error(), "does not match") {
+		t.Fatalf("Init should reject a key that does not match the certificate, got %v", err)
+	}
+	if _, err := cs.GetCA(); err == nil {
+		t.Error("GetCA should fail after a failed load")
+	}
+}
+
+func TestDiskKeyRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	k := diskKey{path: filepath.Join(t.TempDir(), keyFilename)}
+	generated, err := k.Generate()
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	loaded, err := k.Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if !generated.Public().(*rsa.PublicKey).Equal(loaded.Public()) {
+		t.Error("loaded key differs from the generated one")
+	}
+
+	if err := k.Remove(); err != nil {
+		t.Fatalf("Remove: %v", err)
+	}
+	if _, err := k.Load(); err == nil {
+		t.Error("Load after Remove should fail")
+	}
+	if err := k.Remove(); err != nil {
+		t.Errorf("Remove of a missing key should succeed, got %v", err)
+	}
+}
+
 type fakeCAStatusManager struct {
 	installed bool
+	storage   config.KeyStorageType
 }
 
 func (m *fakeCAStatusManager) GetCAInstalled() bool      { return m.installed }
 func (m *fakeCAStatusManager) SetCAInstalled(value bool) { m.installed = value }
+func (m *fakeCAStatusManager) GetKeyStorage() config.KeyStorageType {
+	if m.storage == "" {
+		return config.KeyStorageDisk
+	}
+	return m.storage
+}
 
 // newTestStore returns a store with all platform trust operations stubbed out
 // as successful; tests override individual seams as needed.

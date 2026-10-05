@@ -377,7 +377,8 @@
     ]
   },
   "certmanager": {
-    "caInstalled": false
+    "caInstalled": false,
+    "keyStorage": "disk"
   },
   "proxy": {
     "port": 0,
