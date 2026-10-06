@@ -172,7 +172,7 @@
     "caKeyStorage": {
       "cancel": "Abbrechen",
       "confirm": "Neu erstellen",
-      "confirmBody": "Wenn Sie den Speicherort des Schlüssels ändern, muss ein neues Zertifikat erstellt werden. Zen deinstalliert jetzt das aktuelle Zertifikat und installiert beim nächsten Start von Zen ein neues, sodass Sie die Autorisierungsabfrage des Systems noch einmal sehen.",
+      "confirmBody": "Wenn Sie den Speicherort des Schlüssels ändern, muss ein neues Zertifikat erstellt werden. Zen deinstalliert jetzt das aktuelle Zertifikat und installiert beim nächsten Start ein neues, sodass Sie die Autorisierungsabfrage des Systems noch einmal sehen.",
       "confirmTitle": "Zertifikat neu erstellen?",
       "descriptionMacOS": "Den privaten Schlüssel des Zertifikats in der Secure Enclave dieses Mac speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
       "descriptionWindows": "Den privaten Schlüssel des Zertifikats im TPM dieses PCs speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
