@@ -177,6 +177,7 @@
       "descriptionMacOS": "Lưu khóa riêng tư của CA trong Secure Enclave của máy Mac này. Khóa không thể bị sao chép ra khỏi thiết bị, kể cả bởi phần mềm độc hại.",
       "descriptionWindows": "Lưu khóa riêng tư của CA trong TPM của PC này. Khóa không thể bị sao chép ra khỏi thiết bị, kể cả bởi phần mềm độc hại.",
       "errorMessage": "Không thể thay đổi nơi lưu khóa CA: {{error}}",
+      "experimental": "Thử nghiệm",
       "label": "Khóa CA được bảo vệ bằng phần cứng",
       "stopProxyTooltip": "Dừng proxy để thay đổi nơi lưu khóa CA",
       "unavailableTooltip": "Không khả dụng trên thiết bị này: {{reason}}"

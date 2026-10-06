@@ -177,6 +177,7 @@
       "descriptionMacOS": "CA の秘密鍵をこの Mac の Secure Enclave に保管します。マルウェアであってもデバイスの外にコピーすることはできません。",
       "descriptionWindows": "CA の秘密鍵をこの PC の TPM に保管します。マルウェアであってもデバイスの外にコピーすることはできません。",
       "errorMessage": "CA 鍵の保管場所の変更に失敗しました: {{error}}",
+      "experimental": "実験的",
       "label": "ハードウェアで保護された CA 鍵",
       "stopProxyTooltip": "CA 鍵の保管場所を変更するにはプロキシを停止してください",
       "unavailableTooltip": "このデバイスでは利用できません: {{reason}}"

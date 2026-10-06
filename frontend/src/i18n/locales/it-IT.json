@@ -177,6 +177,7 @@
       "descriptionMacOS": "Conserva la chiave privata della CA nel Secure Enclave di questo Mac. Non può essere copiata fuori dal dispositivo, nemmeno da un malware.",
       "descriptionWindows": "Conserva la chiave privata della CA nel TPM di questo PC. Non può essere copiata fuori dal dispositivo, nemmeno da un malware.",
       "errorMessage": "Impossibile modificare l'archiviazione della chiave della CA: {{error}}",
+      "experimental": "Sperimentale",
       "label": "Chiave della CA protetta dall'hardware",
       "stopProxyTooltip": "Ferma il proxy per modificare l'archiviazione della chiave della CA",
       "unavailableTooltip": "Non disponibile su questo dispositivo: {{reason}}"

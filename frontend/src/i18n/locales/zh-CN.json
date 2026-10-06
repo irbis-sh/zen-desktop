@@ -177,6 +177,7 @@
       "descriptionMacOS": "将 CA 私钥保存在这台 Mac 的安全隔区（Secure Enclave）中。即使是恶意软件，也无法将其从设备中复制出去。",
       "descriptionWindows": "将 CA 私钥保存在这台电脑的 TPM 中。即使是恶意软件，也无法将其从设备中复制出去。",
       "errorMessage": "更改 CA 密钥存储位置失败：{{error}}",
+      "experimental": "实验性",
       "label": "硬件保护的 CA 密钥",
       "stopProxyTooltip": "停止代理以更改 CA 密钥存储位置",
       "unavailableTooltip": "在此设备上不可用：{{reason}}"

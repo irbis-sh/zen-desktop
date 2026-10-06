@@ -177,6 +177,7 @@
       "descriptionMacOS": "Den privaten Schlüssel des Zertifikats in der Secure Enclave dieses Mac speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
       "descriptionWindows": "Den privaten Schlüssel des Zertifikats im TPM dieses PCs speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
       "errorMessage": "Speicherort des Zertifikatsschlüssels kann nicht geändert werden: {{error}}",
+      "experimental": "Experimentell",
       "label": "Hardwaregestützter Zertifikatsschlüssel",
       "stopProxyTooltip": "Stoppen Sie den Proxy, um den Speicherort des Zertifikatsschlüssels zu ändern",
       "unavailableTooltip": "Auf diesem Gerät nicht verfügbar: {{reason}}"

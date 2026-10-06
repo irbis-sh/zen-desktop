@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogBody, DialogFooter, FormGroup, Switch, Tooltip } from '@blueprintjs/core';
+import { Button, Dialog, DialogBody, DialogFooter, FormGroup, Switch, Tag, Tooltip } from '@blueprintjs/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -72,6 +72,11 @@ export function CAKeyStorageSwitch({ proxyState }: CAKeyStorageSwitchProps) {
       <FormGroup
         label={t('settings.caKeyStorage.label')}
         labelFor="caKeyStorage"
+        labelInfo={
+          <Tag minimal intent="warning">
+            {t('settings.caKeyStorage.experimental')}
+          </Tag>
+        }
         helperText={
           state.platform === 'darwin'
             ? t('settings.caKeyStorage.descriptionMacOS')

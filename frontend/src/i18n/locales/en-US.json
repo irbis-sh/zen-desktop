@@ -177,6 +177,7 @@
       "descriptionMacOS": "Keep the CA's private key in this Mac's Secure Enclave. It can't be copied off the device, even by malware.",
       "descriptionWindows": "Keep the CA's private key in this PC's TPM. It can't be copied off the device, even by malware.",
       "errorMessage": "Failed to change CA key storage: {{error}}",
+      "experimental": "Experimental",
       "label": "Hardware-backed CA key",
       "stopProxyTooltip": "Stop the proxy to change CA key storage",
       "unavailableTooltip": "Not available on this device: {{reason}}"

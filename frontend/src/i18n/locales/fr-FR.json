@@ -177,6 +177,7 @@
       "descriptionMacOS": "Conserver la clé privée de l'Autorité de certification dans la Secure Enclave de ce Mac. Elle ne peut pas être copiée hors de l'appareil, même par un logiciel malveillant.",
       "descriptionWindows": "Conserver la clé privée de l'Autorité de certification dans le TPM de ce PC. Elle ne peut pas être copiée hors de l'appareil, même par un logiciel malveillant.",
       "errorMessage": "Échec de la modification du stockage de la clé de l'Autorité de certification : {{error}}",
+      "experimental": "Expérimental",
       "label": "Clé de l'Autorité de certification protégée par le matériel",
       "stopProxyTooltip": "Arrêtez le proxy pour modifier le stockage de la clé de l'Autorité de certification",
       "unavailableTooltip": "Indisponible sur cet appareil : {{reason}}"

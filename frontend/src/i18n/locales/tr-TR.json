@@ -177,6 +177,7 @@
       "descriptionMacOS": "CA'nın özel anahtarını bu Mac'teki Secure Enclave'de saklayın. Kötü amaçlı yazılımlar bile anahtarı cihazdan kopyalayamaz.",
       "descriptionWindows": "CA'nın özel anahtarını bu bilgisayardaki TPM'de saklayın. Kötü amaçlı yazılımlar bile anahtarı cihazdan kopyalayamaz.",
       "errorMessage": "CA anahtarının depolama konumu değiştirilemedi: {{error}}",
+      "experimental": "Deneysel",
       "label": "Donanım destekli CA anahtarı",
       "stopProxyTooltip": "CA anahtarının depolama konumunu değiştirmek için proxy'yi durdurun",
       "unavailableTooltip": "Bu cihazda kullanılamıyor: {{reason}}"
