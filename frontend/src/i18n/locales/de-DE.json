@@ -179,6 +179,7 @@
       "errorMessage": "Speicherort des Zertifikatsschlüssels kann nicht geändert werden: {{error}}",
       "experimental": "Experimentell",
       "label": "Hardwaregestützter Zertifikatsschlüssel",
+      "learnMore": "Mehr erfahren",
       "stopProxyTooltip": "Stoppen Sie den Proxy, um den Speicherort des Zertifikatsschlüssels zu ändern",
       "unavailableTooltip": "Auf diesem Gerät nicht verfügbar: {{reason}}"
     },

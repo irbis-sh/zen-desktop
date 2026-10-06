@@ -179,6 +179,7 @@
       "errorMessage": "Impossibile modificare l'archiviazione della chiave della CA: {{error}}",
       "experimental": "Sperimentale",
       "label": "Chiave della CA protetta dall'hardware",
+      "learnMore": "Scopri di più",
       "stopProxyTooltip": "Ferma il proxy per modificare l'archiviazione della chiave della CA",
       "unavailableTooltip": "Non disponibile su questo dispositivo: {{reason}}"
     },

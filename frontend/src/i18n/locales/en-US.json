@@ -179,6 +179,7 @@
       "errorMessage": "Failed to change CA key storage: {{error}}",
       "experimental": "Experimental",
       "label": "Hardware-backed CA key",
+      "learnMore": "Learn more",
       "stopProxyTooltip": "Stop the proxy to change CA key storage",
       "unavailableTooltip": "Not available on this device: {{reason}}"
     },

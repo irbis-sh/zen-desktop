@@ -179,6 +179,7 @@
       "errorMessage": "CA anahtarının depolama konumu değiştirilemedi: {{error}}",
       "experimental": "Deneysel",
       "label": "Donanım destekli CA anahtarı",
+      "learnMore": "Daha fazla bilgi",
       "stopProxyTooltip": "CA anahtarının depolama konumunu değiştirmek için proxy'yi durdurun",
       "unavailableTooltip": "Bu cihazda kullanılamıyor: {{reason}}"
     },

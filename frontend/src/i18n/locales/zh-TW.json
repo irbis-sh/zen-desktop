@@ -179,6 +179,7 @@
       "errorMessage": "變更 CA 金鑰儲存位置失敗：{{error}}",
       "experimental": "實驗性",
       "label": "以硬體保護 CA 金鑰",
+      "learnMore": "了解更多",
       "stopProxyTooltip": "停止代理伺服器以變更 CA 金鑰儲存位置",
       "unavailableTooltip": "無法在此裝置上使用：{{reason}}"
     },

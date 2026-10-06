@@ -179,6 +179,7 @@
       "errorMessage": "Không thể thay đổi nơi lưu khóa CA: {{error}}",
       "experimental": "Thử nghiệm",
       "label": "Khóa CA được bảo vệ bằng phần cứng",
+      "learnMore": "Tìm hiểu thêm",
       "stopProxyTooltip": "Dừng proxy để thay đổi nơi lưu khóa CA",
       "unavailableTooltip": "Không khả dụng trên thiết bị này: {{reason}}"
     },

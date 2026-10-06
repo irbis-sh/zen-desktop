@@ -179,6 +179,7 @@
       "errorMessage": "CA 鍵の保管場所の変更に失敗しました: {{error}}",
       "experimental": "実験的",
       "label": "ハードウェアで保護された CA 鍵",
+      "learnMore": "詳細はこちら",
       "stopProxyTooltip": "CA 鍵の保管場所を変更するにはプロキシを停止してください",
       "unavailableTooltip": "このデバイスでは利用できません: {{reason}}"
     },

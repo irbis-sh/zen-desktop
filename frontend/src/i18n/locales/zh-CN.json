@@ -179,6 +179,7 @@
       "errorMessage": "更改 CA 密钥存储位置失败：{{error}}",
       "experimental": "实验性",
       "label": "硬件保护的 CA 密钥",
+      "learnMore": "了解更多",
       "stopProxyTooltip": "停止代理以更改 CA 密钥存储位置",
       "unavailableTooltip": "在此设备上不可用：{{reason}}"
     },

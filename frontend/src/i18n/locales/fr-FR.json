@@ -179,6 +179,7 @@
       "errorMessage": "Échec de la modification du stockage de la clé de l'Autorité de certification : {{error}}",
       "experimental": "Expérimental",
       "label": "Clé de l'Autorité de certification protégée par le matériel",
+      "learnMore": "En savoir plus",
       "stopProxyTooltip": "Arrêtez le proxy pour modifier le stockage de la clé de l'Autorité de certification",
       "unavailableTooltip": "Indisponible sur cet appareil : {{reason}}"
     },

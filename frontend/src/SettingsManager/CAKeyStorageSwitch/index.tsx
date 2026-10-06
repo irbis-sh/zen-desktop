@@ -4,12 +4,15 @@ import { useTranslation } from 'react-i18next';
 
 import './index.css';
 
+import { BrowserLink } from '@/common/BrowserLink';
 import { AppToaster } from '@/common/toaster';
 import { ProxyState } from '@/types';
 import { HardwareKeyUnavailableReason, SetCAKeyStorage } from 'wails/go/app/App';
 import { GetKeyStorage } from 'wails/go/config/Config';
 import { config } from 'wails/go/models';
 import { Environment } from 'wails/runtime';
+
+const DOCS_URL = 'https://docs.irbis.sh/docs/zen/explanation/hardware-ca-key/';
 
 export interface CAKeyStorageSwitchProps {
   proxyState: ProxyState;
@@ -78,9 +81,12 @@ export function CAKeyStorageSwitch({ proxyState }: CAKeyStorageSwitchProps) {
           </Tag>
         }
         helperText={
-          state.platform === 'darwin'
-            ? t('settings.caKeyStorage.descriptionMacOS')
-            : t('settings.caKeyStorage.descriptionWindows')
+          <>
+            {state.platform === 'darwin'
+              ? t('settings.caKeyStorage.descriptionMacOS')
+              : t('settings.caKeyStorage.descriptionWindows')}{' '}
+            <BrowserLink href={DOCS_URL}>{t('settings.caKeyStorage.learnMore')}</BrowserLink>
+          </>
         }
       >
         <Tooltip content={disabledReason}>
