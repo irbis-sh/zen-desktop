@@ -242,8 +242,10 @@ func (cs *DiskCertStore) UninstallCA() error {
 	}
 	closeKey(cs.key)
 	cs.key = nil
+	// Trust is already gone, so failing here would leave the CA marked installed but untrusted,
+	// breaking HTTPS on the next proxy start. A leftover key is harmless: the next Create replaces it.
 	if err := cs.keyBackend().Remove(); err != nil {
-		return fmt.Errorf("remove CA key: %w", err)
+		log.Printf("remove CA key: %v", err)
 	}
 	if err := os.RemoveAll(cs.folderPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("remove CA folder: %w", err)
