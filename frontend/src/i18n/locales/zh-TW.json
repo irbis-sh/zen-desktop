@@ -169,6 +169,20 @@
       "uninstallConfirm": "解除安裝",
       "usefulIf": "在以下情況下可能有用"
     },
+    "caKeyStorage": {
+      "cancel": "取消",
+      "confirm": "重新產生",
+      "confirmBody": "變更金鑰的儲存位置需要建立新的憑證授權單位（CA）。Zen 將立即解除安裝目前的 CA，並在您下次啟動 Zen 時安裝新的 CA，因此您會再次看到系統的授權提示。",
+      "confirmTitle": "要重新產生 CA 嗎？",
+      "descriptionMacOS": "將 CA 的私密金鑰儲存在這台 Mac 的安全隔離區（Secure Enclave）中。即使是惡意軟體，也無法將其從裝置中複製出來。",
+      "descriptionWindows": "將 CA 的私密金鑰儲存在這台電腦的 TPM 中。即使是惡意軟體，也無法將其從裝置中複製出來。",
+      "errorMessage": "變更 CA 金鑰儲存位置失敗：{{error}}",
+      "experimental": "實驗性",
+      "label": "以硬體保護 CA 金鑰",
+      "learnMore": "了解更多",
+      "stopProxyTooltip": "停止代理伺服器以變更 CA 金鑰儲存位置",
+      "unavailableTooltip": "無法在此裝置上使用：{{reason}}"
+    },
     "language": {
       "helper": "選擇您偏好的語言",
       "label": "語言"

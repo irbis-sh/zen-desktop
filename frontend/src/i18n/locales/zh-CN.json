@@ -169,6 +169,20 @@
       "uninstallConfirm": "卸载",
       "usefulIf": "在以下情况下可能有用"
     },
+    "caKeyStorage": {
+      "cancel": "取消",
+      "confirm": "重新生成",
+      "confirmBody": "更改密钥的存储位置意味着需要创建新的 CA。Zen 将立即卸载当前 CA，并在您下次启动 Zen 时安装新的 CA，届时您会再次看到系统的授权提示。",
+      "confirmTitle": "要重新生成 CA 吗？",
+      "descriptionMacOS": "将 CA 私钥保存在这台 Mac 的安全隔区（Secure Enclave）中。即使是恶意软件，也无法将其从设备中复制出去。",
+      "descriptionWindows": "将 CA 私钥保存在这台电脑的 TPM 中。即使是恶意软件，也无法将其从设备中复制出去。",
+      "errorMessage": "更改 CA 密钥存储位置失败：{{error}}",
+      "experimental": "实验性",
+      "label": "硬件保护的 CA 密钥",
+      "learnMore": "了解更多",
+      "stopProxyTooltip": "停止代理以更改 CA 密钥存储位置",
+      "unavailableTooltip": "在此设备上不可用：{{reason}}"
+    },
     "language": {
       "helper": "选择您偏好的语言",
       "label": "语言"

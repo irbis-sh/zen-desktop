@@ -12,9 +12,7 @@ tasks:
     desc: Create a production build of the application. Only recommended for use in CI/CD pipelines.
     cmds:
       - task: app
-      - task: codesign
-        vars:
-          FILENAME: build/bin/Zen.app
+      - task: sign-app-ci
       - task: notarize
         vars:
           FILENAME: build/bin/Zen.app
@@ -32,9 +30,7 @@ tasks:
     desc: Create a production build of the application with self-updates disabled. Only recommended for use in CI/CD pipelines. Doesn't include a DMG installer.
     cmds:
       - task: app-noupdate
-      - task: codesign
-        vars:
-          FILENAME: build/bin/Zen.app
+      - task: sign-app-ci
       - task: notarize
         vars:
           FILENAME: build/bin/Zen.app
@@ -53,6 +49,19 @@ tasks:
     desc: Build the .app application bundle with self-updates disabled. The .app file will be placed in the build/bin directory.
     cmds:
       - wails build -platform "darwin/{{default .ARCH64 .ARCH}}" -m -skipbindings -ldflags "-X 'github.com/irbis-sh/zen-desktop/internal/config.Version={{.GIT_TAG}}' -X 'github.com/irbis-sh/zen-desktop/internal/constants.InstanceID={{.INSTANCE_ID}}' -X 'github.com/irbis-sh/zen-desktop/internal/selfupdate.NoSelfUpdate=true'" -tags prod
+
+  app-signed-local:
+    desc: >-
+      Build and sign the .app bundle with a local identity, without notarising, to test the Secure Enclave key.
+      Needs PROFILE_PATH (a provisioning profile for the net.zenprivacy.zen App ID), TEAM_ID and CERTIFICATE_NAME.
+    cmds:
+      - task: app
+      - task: sign-app
+        vars:
+          PROFILE_PATH: '{{.PROFILE_PATH}}'
+          TEAM_ID: '{{.TEAM_ID}}'
+    requires:
+      vars: [PROFILE_PATH, TEAM_ID, CERTIFICATE_NAME]
 
   dmg:
     desc: Create a DMG installer for the application. The DMG file will be placed in the build/bin directory.
@@ -75,6 +84,56 @@ tasks:
       - security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k "$CI_KEYCHAIN_PWD" zen.keychain
     requires:
       vars: [CI_KEYCHAIN_PWD, CERTIFICATE, CERTIFICATE_PWD]
+
+  sign-app-ci:
+    desc: Sign build/bin/Zen.app with the provisioning profile from the PROVISIONING_PROFILE secret (base64).
+    internal: true
+    vars:
+      PROFILE_PATH: build/bin/embedded.provisionprofile
+    cmds:
+      - echo "$PROVISIONING_PROFILE" | base64 --decode > "{{.PROFILE_PATH}}"
+      - defer: rm -f "{{.PROFILE_PATH}}"
+      - task: check-profile-expiry
+        vars:
+          PROFILE_PATH: '{{.PROFILE_PATH}}'
+      - task: sign-app
+        vars:
+          PROFILE_PATH: '{{.PROFILE_PATH}}'
+          TEAM_ID: '{{.NOTARIZATION_TEAM_ID}}'
+    requires:
+      vars: [PROVISIONING_PROFILE, NOTARIZATION_TEAM_ID]
+
+  check-profile-expiry:
+    desc: >-
+      Fail if the provisioning profile expires within 90 days. macOS refuses to launch an app whose restricted
+      entitlements it cannot validate, so an expired profile would stop the release from starting for everyone.
+    internal: true
+    cmds:
+      - |
+        expiry=$(security cms -D -i "{{.PROFILE_PATH}}" | plutil -extract ExpirationDate raw -o - -)
+        if [ "$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$expiry" +%s)" -lt "$(date -v+90d +%s)" ]; then
+          echo "The provisioning profile expires on $expiry, within 90 days. Renew it before releasing." >&2
+          exit 1
+        fi
+        echo "The provisioning profile expires on $expiry"
+    requires:
+      vars: [PROFILE_PATH]
+
+  sign-app:
+    desc: Embed the provisioning profile in build/bin/Zen.app and sign it with the entitlements the Secure Enclave key needs.
+    internal: true
+    vars:
+      APP: build/bin/Zen.app
+      ENTITLEMENTS: build/bin/entitlements.plist
+    cmds:
+      # The profile goes in before signing, because the signature seals it.
+      - cp "{{.PROFILE_PATH}}" "{{.APP}}/Contents/embedded.provisionprofile"
+      # codesign embeds the entitlements file byte for byte; plutil drops the source's comments.
+      - sed "s/@TEAM_ID@/{{.TEAM_ID}}/g" build/darwin/entitlements.plist.in | plutil -convert xml1 -o "{{.ENTITLEMENTS}}" -
+      - defer: rm -f "{{.ENTITLEMENTS}}"
+      - /usr/bin/codesign --force -s "{{.CERTIFICATE_NAME}}" --options runtime --entitlements "{{.ENTITLEMENTS}}" "{{.APP}}" -v
+    requires:
+      vars: [PROFILE_PATH, TEAM_ID, CERTIFICATE_NAME]
 
   codesign:
     desc: Codesign the specified file.

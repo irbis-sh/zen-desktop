@@ -34,6 +34,10 @@ export function GetIgnoredHosts() {
   return window['go']['config']['Config']['GetIgnoredHosts']();
 }
 
+export function GetKeyStorage() {
+  return window['go']['config']['Config']['GetKeyStorage']();
+}
+
 export function GetLocale() {
   return window['go']['config']['Config']['GetLocale']();
 }
@@ -80,6 +84,10 @@ export function SetCAInstalled(arg1) {
 
 export function SetIgnoredHosts(arg1) {
   return window['go']['config']['Config']['SetIgnoredHosts'](arg1);
+}
+
+export function SetKeyStorage(arg1) {
+  return window['go']['config']['Config']['SetKeyStorage'](arg1);
 }
 
 export function SetLocale(arg1) {

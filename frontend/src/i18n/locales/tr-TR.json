@@ -169,6 +169,20 @@
       "uninstallConfirm": "Kaldır",
       "usefulIf": "Bu şu durumlarda faydalı olabilir"
     },
+    "caKeyStorage": {
+      "cancel": "İptal",
+      "confirm": "Yeniden oluştur",
+      "confirmBody": "Anahtarın saklandığı yeri değiştirmek, yeni bir sertifika yetkilisi oluşturmak anlamına gelir. Zen mevcut CA'yı şimdi kaldıracak, yenisini ise uygulamayı bir sonraki başlatışınızda yükleyecek. Bu nedenle sistemin yetkilendirme penceresini bir kez daha göreceksiniz.",
+      "confirmTitle": "CA yeniden oluşturulsun mu?",
+      "descriptionMacOS": "CA'nın özel anahtarını bu Mac'teki Secure Enclave'de saklayın. Kötü amaçlı yazılımlar bile anahtarı cihazdan kopyalayamaz.",
+      "descriptionWindows": "CA'nın özel anahtarını bu bilgisayardaki TPM'de saklayın. Kötü amaçlı yazılımlar bile anahtarı cihazdan kopyalayamaz.",
+      "errorMessage": "CA anahtarının depolama konumu değiştirilemedi: {{error}}",
+      "experimental": "Deneysel",
+      "label": "Donanım destekli CA anahtarı",
+      "learnMore": "Daha fazla bilgi",
+      "stopProxyTooltip": "CA anahtarının depolama konumunu değiştirmek için proxy'yi durdurun",
+      "unavailableTooltip": "Bu cihazda kullanılamıyor: {{reason}}"
+    },
     "language": {
       "helper": "Tercih ettiğiniz dili seçin",
       "label": "Dil"

@@ -169,6 +169,20 @@
       "uninstallConfirm": "アンインストール",
       "usefulIf": "次のような場合に役立ちます"
     },
+    "caKeyStorage": {
+      "cancel": "キャンセル",
+      "confirm": "再生成",
+      "confirmBody": "鍵の保管場所を変更するには、新しい認証局（CA）を作成する必要があります。Zen は現在の CA を今すぐアンインストールし、次回の起動時に新しい CA をインストールします。そのため、システムの許可を求めるダイアログがもう一度表示されます。",
+      "confirmTitle": "CA を再生成してもよろしいですか？",
+      "descriptionMacOS": "CA の秘密鍵をこの Mac の Secure Enclave に保管します。マルウェアであってもデバイスの外にコピーすることはできません。",
+      "descriptionWindows": "CA の秘密鍵をこの PC の TPM に保管します。マルウェアであってもデバイスの外にコピーすることはできません。",
+      "errorMessage": "CA 鍵の保管場所の変更に失敗しました: {{error}}",
+      "experimental": "実験的",
+      "label": "ハードウェアで保護された CA 鍵",
+      "learnMore": "詳細はこちら",
+      "stopProxyTooltip": "CA 鍵の保管場所を変更するにはプロキシを停止してください",
+      "unavailableTooltip": "このデバイスでは利用できません: {{reason}}"
+    },
     "language": {
       "helper": "使用する言語を選択してください",
       "label": "言語"

@@ -169,6 +169,20 @@
       "uninstallConfirm": "Gỡ cài đặt",
       "usefulIf": "Điều này hữu ích nếu"
     },
+    "caKeyStorage": {
+      "cancel": "Hủy",
+      "confirm": "Tạo lại",
+      "confirmBody": "Thay đổi nơi lưu khóa nghĩa là phải tạo chứng chỉ CA mới. Zen sẽ gỡ cài đặt CA hiện tại ngay bây giờ và cài đặt CA mới vào lần tới bạn khởi động Zen, vì vậy bạn sẽ thấy yêu cầu cấp quyền của hệ thống thêm một lần nữa.",
+      "confirmTitle": "Tạo lại chứng chỉ CA?",
+      "descriptionMacOS": "Lưu khóa riêng tư của CA trong Secure Enclave của máy Mac này. Khóa không thể bị sao chép ra khỏi thiết bị, kể cả bởi phần mềm độc hại.",
+      "descriptionWindows": "Lưu khóa riêng tư của CA trong TPM của PC này. Khóa không thể bị sao chép ra khỏi thiết bị, kể cả bởi phần mềm độc hại.",
+      "errorMessage": "Không thể thay đổi nơi lưu khóa CA: {{error}}",
+      "experimental": "Thử nghiệm",
+      "label": "Khóa CA được bảo vệ bằng phần cứng",
+      "learnMore": "Tìm hiểu thêm",
+      "stopProxyTooltip": "Dừng proxy để thay đổi nơi lưu khóa CA",
+      "unavailableTooltip": "Không khả dụng trên thiết bị này: {{reason}}"
+    },
     "language": {
       "helper": "Chọn ngôn ngữ ưu tiên của bạn",
       "label": "Ngôn ngữ"

@@ -105,11 +105,13 @@ jobs:
           NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
           NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
           NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
+          PROVISIONING_PROFILE: ${{ secrets.PROD_MACOS_PROVISIONING_PROFILE }}
         run: |
           CERTIFICATE_NAME=$CERTIFICATE_NAME \
           NOTARIZATION_APPLE_ID=$NOTARIZATION_APPLE_ID \
           NOTARIZATION_TEAM_ID=$NOTARIZATION_TEAM_ID \
           NOTARIZATION_PWD=$NOTARIZATION_PWD \
+          PROVISIONING_PROFILE=$PROVISIONING_PROFILE \
           task build:prod ARCH=${{ matrix.arch }}
           tar -czvf Zen_darwin_${{ matrix.arch }}.tar.gz -C build/bin Zen.app
           mv build/bin/Zen.dmg build/bin/Zen-${{ matrix.arch }}.dmg
@@ -118,6 +120,7 @@ jobs:
           NOTARIZATION_APPLE_ID=$NOTARIZATION_APPLE_ID \
           NOTARIZATION_TEAM_ID=$NOTARIZATION_TEAM_ID \
           NOTARIZATION_PWD=$NOTARIZATION_PWD \
+          PROVISIONING_PROFILE=$PROVISIONING_PROFILE \
           task build:prod-noupdate ARCH=${{ matrix.arch }}
           tar -czvf Zen_darwin_${{ matrix.arch }}_noselfupdate.tar.gz -C build/bin Zen.app
       - name: Upload macOS artifacts

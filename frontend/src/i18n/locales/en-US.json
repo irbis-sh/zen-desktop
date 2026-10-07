@@ -169,6 +169,20 @@
       "uninstallConfirm": "Uninstall",
       "usefulIf": "This can be useful if"
     },
+    "caKeyStorage": {
+      "cancel": "Cancel",
+      "confirm": "Regenerate",
+      "confirmBody": "Changing where the key is stored means creating a new certificate authority. Zen will uninstall the current CA now and install a new one the next time you start it, so you'll see the system's authorization prompt once more.",
+      "confirmTitle": "Regenerate the CA?",
+      "descriptionMacOS": "Keep the CA's private key in this Mac's Secure Enclave. It can't be copied off the device, even by malware.",
+      "descriptionWindows": "Keep the CA's private key in this PC's TPM. It can't be copied off the device, even by malware.",
+      "errorMessage": "Failed to change CA key storage: {{error}}",
+      "experimental": "Experimental",
+      "label": "Hardware-backed CA key",
+      "learnMore": "Learn more",
+      "stopProxyTooltip": "Stop the proxy to change CA key storage",
+      "unavailableTooltip": "Not available on this device: {{reason}}"
+    },
     "language": {
       "helper": "Select your preferred language",
       "label": "Language"

@@ -20,6 +20,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/constants"
 	"github.com/irbis-sh/zen-desktop/internal/filter/whitelistserver"
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
+	"github.com/irbis-sh/zen-desktop/internal/hwkey"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
 	"github.com/irbis-sh/zen-desktop/internal/proxy"
 	"github.com/irbis-sh/zen-desktop/internal/routing"
@@ -57,8 +58,15 @@ type App struct {
 	// otherwise run a fresh build the stop then waits out. Best-effort
 	// because overlapping stops can clear each other's flag; the window this
 	// closes is the common one.
-	stopPending     atomic.Bool
-	certStore       *certstore.DiskCertStore
+	stopPending atomic.Bool
+	certStore   *certstore.DiskCertStore
+	// hardwareKeyMu serialises hwkey.Available probes, and hardwareKeyOK records that the last one
+	// passed. On Windows every probe creates and deletes the same named TPM key, so two at once
+	// can break each other. The Settings page asks on every visit, and a probe can take a second
+	// there. Failures are not cached, so a TPM that was briefly busy does not hide the setting
+	// until restart.
+	hardwareKeyMu   sync.Mutex
+	hardwareKeyOK   bool
 	systrayMgr      *systray.Manager
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
@@ -216,11 +224,6 @@ func (a *App) StartProxy() (err error) {
 		}
 	}()
 
-	certGenerator, err := certgen.NewCertGenerator(a.certStore, constants.OrgName)
-	if err != nil {
-		return fmt.Errorf("create cert manager: %v", err)
-	}
-
 	filter, whitelistSrv, assetInjector, err := a.buildFilter()
 	if err != nil {
 		return err
@@ -240,13 +243,6 @@ func (a *App) StartProxy() (err error) {
 		}
 	}()
 
-	routingPolicy := routing.NewPolicy(a.config.GetRouting())
-
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector))
-	if err != nil {
-		return fmt.Errorf("create proxy: %v", err)
-	}
-
 	trustCaveat := a.certStore.Init()
 	if trustCaveat != nil {
 		if !errors.Is(trustCaveat, certstore.ErrNoSystemTrustStore) {
@@ -255,6 +251,19 @@ func (a *App) StartProxy() (err error) {
 		// The store initialized successfully, but the CA could only be installed
 		// into NSS databases (e.g. on NixOS). Not fatal: warn once the proxy is up.
 		log.Printf("cert store init: %v", trustCaveat)
+	}
+
+	// The generator picks its issuer from the loaded CA, so it must come after Init.
+	certGenerator, err := certgen.NewCertGenerator(a.certStore, constants.OrgName)
+	if err != nil {
+		return fmt.Errorf("create cert generator: %v", err)
+	}
+
+	routingPolicy := routing.NewPolicy(a.config.GetRouting())
+
+	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector))
+	if err != nil {
+		return fmt.Errorf("create proxy: %v", err)
 	}
 
 	port, err := a.proxy.Start()
@@ -366,6 +375,68 @@ func (a *App) UninstallCA() error {
 	}
 
 	return nil
+}
+
+// SetCAKeyStorage switches where the CA's private key is stored. A key cannot move between disk
+// and hardware, so this uninstalls the current CA, and the next proxy start creates a new one.
+func (a *App) SetCAKeyStorage(storage config.KeyStorageType) (err error) {
+	defer func() {
+		if err != nil {
+			log.Printf("failed to set CA key storage: %v", err)
+		}
+	}()
+
+	if storage != config.KeyStorageDisk && storage != config.KeyStorageHardware {
+		return fmt.Errorf("unknown key storage %q", storage)
+	}
+
+	// Holding proxyMu keeps a proxy start from loading the old CA halfway through the switch.
+	a.proxyMu.Lock()
+	defer a.proxyMu.Unlock()
+	if a.proxyOn {
+		return errors.New("stop the proxy to change CA key storage")
+	}
+
+	if storage == config.KeyStorageHardware {
+		a.hardwareKeyMu.Lock()
+		err := hwkey.Available()
+		a.hardwareKeyOK = err == nil
+		a.hardwareKeyMu.Unlock()
+		if err != nil {
+			return fmt.Errorf("hardware key unavailable: %w", err)
+		}
+	}
+	if a.config.GetCAInstalled() {
+		if err := a.certStore.UninstallCA(); err != nil {
+			return fmt.Errorf("uninstall CA: %w", err)
+		}
+	} else if err := a.certStore.DiscardKey(); err != nil {
+		// Not fatal: the next CA creation replaces the key anyway, and failing here would stop
+		// the user from switching back to disk when the hardware is what broke.
+		log.Printf("discard CA key: %v", err)
+	}
+	if err := a.config.SetKeyStorage(storage); err != nil {
+		return err
+	}
+
+	log.Printf("CA key storage set to %s", storage)
+	return nil
+}
+
+// HardwareKeyUnavailableReason returns why this device cannot keep the CA's key in hardware, or
+// an empty string if it can.
+func (a *App) HardwareKeyUnavailableReason() string {
+	a.hardwareKeyMu.Lock()
+	defer a.hardwareKeyMu.Unlock()
+
+	if a.hardwareKeyOK {
+		return ""
+	}
+	if err := hwkey.Available(); err != nil {
+		return err.Error()
+	}
+	a.hardwareKeyOK = true
+	return ""
 }
 
 func (a *App) OpenLogsDirectory() error {

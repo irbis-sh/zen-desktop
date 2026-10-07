@@ -169,6 +169,20 @@
       "uninstallConfirm": "Deinstallieren",
       "usefulIf": "Dies kann sinnvoll sein, wenn"
     },
+    "caKeyStorage": {
+      "cancel": "Abbrechen",
+      "confirm": "Neu erstellen",
+      "confirmBody": "Wenn Sie den Speicherort des Schlüssels ändern, muss ein neues Zertifikat erstellt werden. Zen deinstalliert jetzt das aktuelle Zertifikat und installiert beim nächsten Start ein neues, sodass Sie die Autorisierungsabfrage des Systems noch einmal sehen.",
+      "confirmTitle": "Zertifikat neu erstellen?",
+      "descriptionMacOS": "Den privaten Schlüssel des Zertifikats in der Secure Enclave dieses Mac speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
+      "descriptionWindows": "Den privaten Schlüssel des Zertifikats im TPM dieses PCs speichern. Er kann nicht vom Gerät kopiert werden, auch nicht durch Malware.",
+      "errorMessage": "Speicherort des Zertifikatsschlüssels kann nicht geändert werden: {{error}}",
+      "experimental": "Experimentell",
+      "label": "Hardwaregestützter Zertifikatsschlüssel",
+      "learnMore": "Mehr erfahren",
+      "stopProxyTooltip": "Stoppen Sie den Proxy, um den Speicherort des Zertifikatsschlüssels zu ändern",
+      "unavailableTooltip": "Auf diesem Gerät nicht verfügbar: {{reason}}"
+    },
     "language": {
       "helper": "Wählen Sie Ihre bevorzugte Sprache aus",
       "label": "Sprache"

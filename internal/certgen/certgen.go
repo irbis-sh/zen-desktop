@@ -1,10 +1,11 @@
 package certgen
 
 import (
-	"crypto"
-	"crypto/x509"
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/irbis-sh/zen-desktop/internal/certstore"
 )
 
 const (
@@ -17,18 +18,22 @@ const (
 	cacheCleanupInterval = 5 * time.Minute
 )
 
-// certStore is an interface for getting a root CA certificate and its private key.
+// certStore is an interface for getting the root CA.
 type certStore interface {
-	GetCertificate() (*x509.Certificate, crypto.PrivateKey, error)
+	GetCA() (certstore.CA, error)
 }
 
 // CertGenerator allows for generating certificates for a given host.
 type CertGenerator struct {
 	cache   *certLRUCache
-	store   certStore
+	issuer  issuer
 	orgName string
+	now     func() time.Time
 }
 
+// NewCertGenerator creates a generator for the store's current CA. The store must be
+// initialised. A new generator is created for every proxy start, so a hardware root gets a fresh
+// intermediate each time.
 func NewCertGenerator(certStore certStore, orgName string) (*CertGenerator, error) {
 	if certStore == nil {
 		return nil, errors.New("certStore is nil")
@@ -37,9 +42,26 @@ func NewCertGenerator(certStore certStore, orgName string) (*CertGenerator, erro
 		return nil, errors.New("orgName is empty")
 	}
 
+	ca, err := certStore.GetCA()
+	if err != nil {
+		return nil, fmt.Errorf("get CA: %w", err)
+	}
+
+	return newCertGenerator(ca, orgName, time.Now), nil
+}
+
+func newCertGenerator(ca certstore.CA, orgName string, now func() time.Time) *CertGenerator {
+	var iss issuer
+	if ca.HardwareBacked {
+		iss = &intermediateIssuer{root: ca.Cert, rootKey: ca.Key, orgName: orgName, now: now}
+	} else {
+		iss = &rootIssuer{cert: ca.Cert, key: ca.Key}
+	}
+
 	return &CertGenerator{
 		cache:   newCertLRUCache(cacheMaxSize, cacheCleanupInterval),
-		store:   certStore,
+		issuer:  iss,
 		orgName: orgName,
-	}, nil
+		now:     now,
+	}
 }
