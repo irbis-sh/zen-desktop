@@ -57,6 +57,25 @@ func TestHostMatcherPublic(t *testing.T) {
 		}
 	})
 
+	t.Run("wildcard subdomain pattern matches subdomains only", func(t *testing.T) {
+		t.Parallel()
+
+		hm := hostmatch.NewHostMatcher[string]()
+		if err := hm.AddPrimaryRule("*.example.com", "test"); err != nil {
+			t.Fatalf("failed to add rule: %v", err)
+		}
+
+		if res := hm.Get("example.com"); len(res) != 0 {
+			t.Errorf("expected result for example.com to be empty, got %v", res)
+		}
+		if res := hm.Get("sub.example.com"); len(res) != 1 || res[0] != "test" {
+			t.Errorf("expected result for sub.example.com to be ['test'], got %v", res)
+		}
+		if res := hm.Get("sub2.sub1.example.com"); len(res) != 1 || res[0] != "test" {
+			t.Errorf("expected result for sub2.sub1.example.com to be ['test'], got %v", res)
+		}
+	})
+
 	t.Run("matches rule for multiple domains", func(t *testing.T) {
 		t.Parallel()
 
