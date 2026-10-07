@@ -1,32 +1,49 @@
 package hostmatch
 
 import (
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 )
 
 type node[T any] struct {
-	children map[string]*node[T]
+	// children is sorted by segment. Almost every node has one child or none,
+	// and a one-entry slice is far smaller than a one-entry map.
+	children []childEntry[T]
 	data     []T
 }
 
-func (n *node[T]) findOrAddChild(segment string) *node[T] {
-	if n.children == nil {
-		newChild := &node[T]{}
-		n.children = map[string]*node[T]{
-			segment: newChild,
-		}
-		return newChild
-	}
+type childEntry[T any] struct {
+	segment string
+	node    *node[T]
+}
 
-	existingChild, ok := n.children[segment]
-	if ok {
-		return existingChild
+func (n *node[T]) getChild(segment string) *node[T] {
+	idx := n.searchChildren(segment)
+	if idx < len(n.children) && n.children[idx].segment == segment {
+		return n.children[idx].node
+	}
+	return nil
+}
+
+func (n *node[T]) findOrAddChild(segment string) *node[T] {
+	idx := n.searchChildren(segment)
+	if idx < len(n.children) && n.children[idx].segment == segment {
+		return n.children[idx].node
 	}
 
 	newChild := &node[T]{}
-	n.children[segment] = newChild
+	n.children = append(n.children, childEntry[T]{})
+	copy(n.children[idx+1:], n.children[idx:])
+	n.children[idx] = childEntry[T]{segment, newChild}
 	return newChild
+}
+
+func (n *node[T]) searchChildren(segment string) int {
+	return sort.Search(len(n.children), func(i int) bool {
+		return n.children[i].segment >= segment
+	})
 }
 
 func (n *node[T]) getMatchingData(segments []string, isWildcard bool) []T {
@@ -38,12 +55,17 @@ func (n *node[T]) getMatchingData(segments []string, isWildcard bool) []T {
 	if isWildcard {
 		// Wildcards can consume as many segments as possible.
 		data = append(data, n.getMatchingData(segments[1:], true)...)
+	} else {
+		// The hostname is a subdomain of the patterns ending here. Wildcard
+		// nodes skip this: consuming the extra segments above already matches
+		// their subdomains, and collecting here would count them twice.
+		data = append(data, n.data...)
 	}
 
-	if wildcardChild, ok := n.children["*"]; ok {
+	if wildcardChild := n.getChild("*"); wildcardChild != nil {
 		data = append(data, wildcardChild.getMatchingData(segments[1:], true)...)
 	}
-	if exactChild, ok := n.children[segments[0]]; ok {
+	if exactChild := n.getChild(segments[0]); exactChild != nil {
 		data = append(data, exactChild.getMatchingData(segments[1:], false)...)
 	}
 
@@ -65,10 +87,8 @@ func (ts *trieStore[T]) Add(hostnamePattern string, data T) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
-	segments := strings.Split(hostnamePattern, ".")
-
 	node := ts.root
-	for _, segment := range segments {
+	for _, segment := range reverseSegments(hostnamePattern) {
 		node = node.findOrAddChild(segment)
 	}
 	node.data = append(node.data, data)
@@ -78,6 +98,18 @@ func (ts *trieStore[T]) Get(hostname string) []T {
 	ts.mu.RLock()
 	defer ts.mu.RUnlock()
 
+	return ts.root.getMatchingData(reverseSegments(hostname), false)
+}
+
+// reverseSegments splits a hostname into its dot-separated segments, last one
+// first. Keying the trie from the TLD down puts every pattern a hostname is a
+// subdomain of on its path: sub.example.com walks com → example → sub and
+// collects the data for example.com on the way.
+//
+// Wildcards are unaffected: a * matches one or more whole segments wherever it
+// sits, which holds equally when pattern and hostname are both reversed.
+func reverseSegments(hostname string) []string {
 	segments := strings.Split(hostname, ".")
-	return ts.root.getMatchingData(segments, false)
+	slices.Reverse(segments)
+	return segments
 }
