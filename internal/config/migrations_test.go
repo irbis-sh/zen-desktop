@@ -154,6 +154,40 @@ func TestMigrationV0250MovesLinuxAutostartEntry(t *testing.T) {
 	})
 }
 
+func TestMigrationV0261SetsMissingKeyStorage(t *testing.T) {
+	prevConfigDir := ConfigDir
+	ConfigDir = t.TempDir()
+	t.Cleanup(func() {
+		ConfigDir = prevConfigDir
+	})
+
+	m := findMigration(t, "v0.26.1")
+
+	tests := []struct {
+		name string
+		in   KeyStorageType
+		want KeyStorageType
+	}{
+		{"missing becomes disk", "", KeyStorageDisk},
+		{"disk is kept", KeyStorageDisk, KeyStorageDisk},
+		{"hardware is kept", KeyStorageHardware, KeyStorageHardware},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{}
+			c.Certmanager.KeyStorage = tt.in
+
+			if err := m.fn(c); err != nil {
+				t.Fatalf("run migration: %v", err)
+			}
+
+			if got := c.GetKeyStorage(); got != tt.want {
+				t.Errorf("got key storage %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func findMigration(t *testing.T, version string) *migration {
 	t.Helper()
 	for i := range migrations {

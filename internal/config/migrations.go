@@ -399,6 +399,16 @@ var migrations = []migration{
 		log.Printf("v0.25.0 migration: moved autostart entry to the autostart directory")
 		return nil
 	}},
+	{"v0.26.1", func(c *Config) error {
+		// Configs written before v0.26.0 have no keyStorage; their CA is on disk. This migration
+		// shipped after v0.26.0, so a config may already say "hardware" and must keep it.
+		return c.update(func() error {
+			if c.Certmanager.KeyStorage == "" {
+				c.Certmanager.KeyStorage = KeyStorageDisk
+			}
+			return nil
+		})
+	}},
 }
 
 // RunMigrations runs the version-to-version migrations in order.
