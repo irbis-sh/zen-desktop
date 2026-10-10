@@ -1,7 +1,7 @@
 {
   lib,
   buildGoModule,
-  go_1_26,
+  go_1_27,
   buildNpmPackage,
   nodejs_24,
   pkg-config,
@@ -37,10 +37,10 @@ let
     '';
   };
 in
-# go.mod pins go 1.26.1, and nixpkgs sets GOTOOLCHAIN=local with no network to
+# go.mod pins go 1.27.1, and nixpkgs sets GOTOOLCHAIN=local with no network to
 # auto-download a newer toolchain - pin the compiler rather than rely on the
 # default go being recent enough (it may not be for overlay consumers).
-(buildGoModule.override { go = go_1_26; }) {
+(buildGoModule.override { go = go_1_27; }) {
   pname = "zen";
   inherit version;
 

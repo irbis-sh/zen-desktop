@@ -29,13 +29,13 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            go_1_26
+            go_1_27
             nodejs_24
             go-task
             pkg-config
             gtk3
             webkitgtk_4_1
-            # Last, so that go_1_26 and nodejs_24 come before the default
+            # Last, so that go_1_27 and nodejs_24 come before the default
             # go and nodejs that wails propagates on PATH.
             wails
           ];
