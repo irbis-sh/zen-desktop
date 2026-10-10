@@ -425,6 +425,38 @@ func TestTrustedDuplicateNotShadowedByUntrusted(t *testing.T) {
 	}
 }
 
+func TestAddURLAppliesDirectives(t *testing.T) {
+	t.Parallel()
+
+	// skipped.txt has no entry: fetching it would mark the outcome Failed.
+	store := &fakeStore{entries: map[string]listEntry{
+		"https://example.com/root.txt": {content: "!#if ext_abp\n!#include skipped.txt\n!#else\n!#include kept.txt\n!#endif\n||after.example.com^\n"},
+		"https://example.com/kept.txt": {content: "||kept.example.com^\n!#if ext_abp\n"},
+	}}
+	f, rules := newTestFilter(t, store)
+
+	outcome := f.AddURL(context.Background(), "https://example.com/root.txt", "test", true, filterliststore.ModeDefault)
+
+	if outcome != (Outcome{}) {
+		t.Errorf("expected zero outcome, got %+v", outcome)
+	}
+	// kept.txt ends inside a false block, which must not leak into the
+	// root list: "||after.example.com^" still applies.
+	assertRules(t, rules.got(), "||kept.example.com^", "||after.example.com^")
+}
+
+func TestAddReaderAppliesDirectives(t *testing.T) {
+	t.Parallel()
+
+	f, rules := newTestFilter(t, &fakeStore{})
+
+	if err := f.AddReader(strings.NewReader("!#if ext_abp\n||off.example.com^\n!#endif\n||on.example.com^\n"), "my rules", true); err != nil {
+		t.Fatalf("AddReader: %v", err)
+	}
+
+	assertRules(t, rules.got(), "||on.example.com^")
+}
+
 func newTestFilter(t *testing.T, store *fakeStore) (*Filter, *fakeNetworkRules) {
 	t.Helper()
 	rules := &fakeNetworkRules{}
