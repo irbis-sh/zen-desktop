@@ -33,6 +33,19 @@ func TestParseModifiers(t *testing.T) {
 		assertRuleBuckets(t, &r, true, false, nil, nil, nil, nil)
 	})
 
+	t.Run("flag-only modifiers do not allocate a modifier block", func(t *testing.T) {
+		t.Parallel()
+
+		var r Rule
+		if err := r.ParseModifiers([]string{"document", "important", "all", "_"}); err != nil {
+			t.Fatalf("ParseModifiers() = %v, want nil", err)
+		}
+
+		if r.mods != nil {
+			t.Errorf("mods = %+v, want nil", r.mods)
+		}
+	})
+
 	t.Run("document modifiers set document flag only", func(t *testing.T) {
 		t.Parallel()
 
@@ -284,16 +297,16 @@ func assertRuleBuckets(t *testing.T, r *Rule, wantImportant, wantDocument bool, 
 	if r.Document != wantDocument {
 		t.Errorf("Document = %v, want %v", r.Document, wantDocument)
 	}
-	if got := typeNames(r.ConditionModifiers.And); !reflect.DeepEqual(got, wantAnd) {
+	if got := typeNames(r.AndModifiers()); !reflect.DeepEqual(got, wantAnd) {
 		t.Errorf("AND modifiers = %#v, want %#v", got, wantAnd)
 	}
-	if got := typeNames(r.ConditionModifiers.Or); !reflect.DeepEqual(got, wantOr) {
+	if got := typeNames(r.OrModifiers()); !reflect.DeepEqual(got, wantOr) {
 		t.Errorf("OR modifiers = %#v, want %#v", got, wantOr)
 	}
-	if got := typeNames(r.QueryModifiers); !reflect.DeepEqual(got, wantQuery) {
+	if got := typeNames(r.QueryModifiers()); !reflect.DeepEqual(got, wantQuery) {
 		t.Errorf("query modifiers = %#v, want %#v", got, wantQuery)
 	}
-	if got := typeNames(r.ActionModifiers); !reflect.DeepEqual(got, wantActions) {
+	if got := typeNames(r.ActionModifiers()); !reflect.DeepEqual(got, wantActions) {
 		t.Errorf("action modifiers = %#v, want %#v", got, wantActions)
 	}
 }
