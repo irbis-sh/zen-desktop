@@ -234,10 +234,6 @@ func New() (*Config, error) {
 	if err := json.Unmarshal(configData, c); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
 	}
-	// Configs written before hardware keys existed have no keyStorage; their CA is on disk.
-	if c.Certmanager.KeyStorage == "" {
-		c.Certmanager.KeyStorage = KeyStorageDisk
-	}
 
 	return c, nil
 }
