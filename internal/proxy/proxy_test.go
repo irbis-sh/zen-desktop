@@ -72,7 +72,7 @@ func TestBodyOutlastsResponseHeaderTimeout(t *testing.T) {
 	defer target.Close()
 
 	addr := startTestProxy(t, func(p *Proxy) {
-		transportOf(t, p).ResponseHeaderTimeout = headerTimeout
+		p.requestTransport.ResponseHeaderTimeout = headerTimeout
 	})
 	client := proxyClient(t, addr)
 
@@ -109,7 +109,7 @@ func TestStallBeforeHeadersReturns502(t *testing.T) {
 	defer close(release)
 
 	addr := startTestProxy(t, func(p *Proxy) {
-		transportOf(t, p).ResponseHeaderTimeout = 100 * time.Millisecond
+		p.requestTransport.ResponseHeaderTimeout = 100 * time.Millisecond
 	})
 	client := proxyClient(t, addr)
 
@@ -430,9 +430,8 @@ func mitmGet(t *testing.T, proxyAddr, target, serverName string) (int, string) {
 }
 
 // startTestProxy starts a proxy and returns its address. configure, if non-nil, may
-// shorten timeouts before the proxy begins serving; it has to run there, because the
-// transport and the dialer read their timeout fields without synchronisation and Start
-// is what hands the proxy to serving goroutines.
+// change the proxy's fields before it begins serving; it has to run there, because the
+// serving goroutines that Start launches read those fields without synchronisation.
 func startTestProxy(t *testing.T, configure func(*Proxy)) string {
 	t.Helper()
 
@@ -506,18 +505,6 @@ func connectThrough(t *testing.T, proxyAddr, target string) (net.Conn, *bufio.Re
 	}
 
 	return conn, br, resp
-}
-
-// transportOf returns the proxy's outbound transport, which is held behind an interface.
-func transportOf(t *testing.T, p *Proxy) *http.Transport {
-	t.Helper()
-
-	transport, ok := p.requestTransport.(*http.Transport)
-	if !ok {
-		t.Fatalf("requestTransport is %T, want *http.Transport", p.requestTransport)
-	}
-
-	return transport
 }
 
 // noopFilter passes every request and response through untouched.

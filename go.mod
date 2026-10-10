@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hectane/go-acl v0.0.0-20230122075934-ca0b05cb1adb
 	github.com/klauspost/compress v1.18.0
+	github.com/refraction-networking/utls v1.8.2
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tdewolff/parse/v2 v2.8.4
 	github.com/wailsapp/wails/v2 v2.14.0 // Use one minor version behind latest for stability, unless there are urgently needed features/bugfixes

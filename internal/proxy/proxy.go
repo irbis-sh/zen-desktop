@@ -52,7 +52,7 @@ type Proxy struct {
 	certGenerator      certGenerator
 	port               int
 	server             *http.Server
-	requestTransport   http.RoundTripper
+	requestTransport   *http.Transport
 	requestClient      *http.Client
 	netDialer          *net.Dialer
 	shouldProxy        ShouldProxyFunc
@@ -341,7 +341,25 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	tlsConn := tls.Server(clientConn, tlsConfig)
+	var (
+		tlsClientConn = clientConn
+		upstream      = p.requestTransport
+	)
+	if !isLocal {
+		hello, err := readClientHello(clientConn)
+		tlsClientConn = newReplayConn(clientConn, hello)
+		// A read error needs no handling here: the handshake below reads the same bytes
+		// and reports any problem itself.
+		if err == nil {
+			upstream = p.mirroringTransport(hello)
+			// A request still in flight when the client hangs up can return its connection
+			// to the pool after this runs. An HTTP/1.1 connection then closes at once, but an
+			// HTTP/2 one stays open until idleConnTimeout.
+			defer upstream.CloseIdleConnections()
+		}
+	}
+
+	tlsConn := tls.Server(tlsClientConn, tlsConfig)
 	defer tlsConn.Close()
 
 	// Perform the TLS handshake manually so we can capture TLS errors
@@ -367,7 +385,7 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 		// block Zen's own assets.
 		handler = p.localHandler
 	} else {
-		handler = p.connectHandler(connReq, host, ln, processInfo)
+		handler = p.connectHandler(connReq, host, ln, processInfo, upstream)
 	}
 
 	srv := &http.Server{
@@ -387,7 +405,7 @@ func (p *Proxy) proxyConnect(w http.ResponseWriter, connReq *http.Request, proce
 }
 
 // connectHandler returns an http.Handler that processes requests on a CONNECT-tunnelled TLS connection.
-func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleConnListener, processInfo process.Info) http.Handler {
+func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleConnListener, processInfo process.Info, upstream http.RoundTripper) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Host = connReq.Host
 		req.URL.Scheme = "https"
@@ -460,7 +478,7 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		}
 		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 
-		resp, err := p.requestTransport.RoundTrip(req)
+		resp, err := upstream.RoundTrip(req)
 		roundTripMutex.Lock()
 		roundTripDone = true
 		roundTripMutex.Unlock()
