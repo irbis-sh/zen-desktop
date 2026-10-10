@@ -14,7 +14,7 @@
         "type": "ads"
       },
       {
-        "url": "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_2_Base/filter.txt",
+        "url": "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/platforms/windows/filters/2.txt",
         "name": "AdGuard Base filter",
         "enabled": true,
         "type": "ads",
@@ -33,7 +33,7 @@
         "type": "privacy"
       },
       {
-        "url": "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_3_Spyware/filter.txt",
+        "url": "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/platforms/windows/filters/3.txt",
         "name": "AdGuard Spyware filter",
         "enabled": true,
         "type": "privacy",

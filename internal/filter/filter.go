@@ -227,10 +227,23 @@ func (f *Filter) AddURL(ctx context.Context, listURL string, listName string, li
 			record(Outcome{ServedStale: true})
 		}
 
+		// Each stream tracks its own !#if blocks: includes are parsed on
+		// their own goroutines, so shared state would depend on scheduling.
+		// A block therefore can't span files.
+		var dirs directives
 		scanner := bufio.NewScanner(contents)
 		scanner.Buffer(nil, maxRuleLength)
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
+			// Before the !#include branch: an include in a false block must
+			// not be fetched.
+			skip, err := dirs.skip(line)
+			if err != nil {
+				log.Printf("filter: treating malformed !#if as false in %s (%q): %v", listName, currentURL, err)
+			}
+			if skip {
+				continue
+			}
 			if after, ok := strings.CutPrefix(line, "!#include"); ok {
 				includeURL, err := resolveInclude(base, after)
 				if err != nil {
@@ -282,6 +295,10 @@ func (f *Filter) AddURL(ctx context.Context, listURL string, listName string, li
 				log.Printf("filter: error scanning %q: %v", currentURL, err)
 				record(Outcome{Truncated: true, Err: fmt.Errorf("read %q: %w", currentURL, err)})
 			}
+		} else if n := dirs.open(); n > 0 {
+			// A false one hid every line after it, which would otherwise show
+			// only as a low rule count.
+			log.Printf("filter: %d !#if blocks left open in %s (%q)", n, listName, currentURL)
 		}
 	}
 
@@ -296,12 +313,17 @@ func (f *Filter) AddURL(ctx context.Context, listURL string, listName string, li
 // AddReader parses the rules from the given reader and adds them to the filter.
 func (f *Filter) AddReader(listRules io.Reader, listName string, listTrusted bool) error {
 	var ruleCount, exceptionCount int
+	var dirs directives
 	scanner := bufio.NewScanner(listRules)
 	scanner.Buffer(nil, maxRuleLength)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if len(line) == 0 || ignoreLineRegex.MatchString(line) {
+		skip, err := dirs.skip(line)
+		if err != nil {
+			log.Printf("filter: treating malformed !#if as false in %s: %v", listName, err)
+		}
+		if skip || len(line) == 0 || ignoreLineRegex.MatchString(line) {
 			continue
 		}
 
@@ -315,6 +337,9 @@ func (f *Filter) AddReader(listRules io.Reader, listName string, listTrusted boo
 	}
 	if err := scanner.Err(); err != nil {
 		return err
+	}
+	if n := dirs.open(); n > 0 {
+		log.Printf("filter: %d !#if blocks left open in %s", n, listName)
 	}
 
 	log.Printf("filter: added %d rules, %d exceptions from %s", ruleCount, exceptionCount, listName)
