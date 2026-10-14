@@ -91,6 +91,7 @@ const (
 	FilterListTypeMalware          FilterListType = "malware"
 	FilterListTypeRegional         FilterListType = "regional"
 	FilterListTypeDigitalWellbeing FilterListType = "digitalWellbeing"
+	FilterListTypeAnnoyances       FilterListType = "annoyances"
 	FilterListTypeCustom           FilterListType = "custom"
 )
 

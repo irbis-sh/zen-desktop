@@ -373,7 +373,13 @@
         "enabled": false,
         "type": "regional",
         "locales": ["vi"]
-      }
+      },
+      {
+        "url": "https://secure.fanboy.co.nz/fanboy-annoyance.txt",
+        "name": "Fanboy's Annoyance List",
+        "enabled": false,
+        "type": "annoyances"
+      }      
     ]
   },
   "certmanager": {
