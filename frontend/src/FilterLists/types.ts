@@ -5,5 +5,6 @@ export enum FilterListType {
   MALWARE = 'malware',
   REGIONAL = 'regional',
   DIGITAL_WELLBEING = 'digitalWellbeing',
+  ANNOYANCES = 'annoyances',
   CUSTOM = 'custom',
 }
