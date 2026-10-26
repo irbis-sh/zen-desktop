@@ -3,236 +3,65 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"reflect"
-	"runtime"
-	"strings"
+	"slices"
 	"testing"
-
-	"github.com/irbis-sh/zen-desktop/internal/constants"
 )
 
-func TestMigrationV0220RemovesStaleAntiAdblockList(t *testing.T) {
-	prevConfigDir := ConfigDir
-	ConfigDir = t.TempDir()
-	t.Cleanup(func() {
-		ConfigDir = prevConfigDir
-	})
-
-	const removedURL = "https://raw.githubusercontent.com/olegwukr/polish-privacy-filters/master/anti-adblock.txt"
-	const keepURL = "https://example.com/keep.txt"
-
-	c := &Config{}
-	c.Filter.FilterLists = []FilterList{
-		{URL: keepURL},
-		{URL: removedURL},
-		{URL: removedURL},
-	}
-
-	var m *migration
-	for i := range migrations {
-		if migrations[i].version == "v0.22.0" {
-			m = &migrations[i]
-			break
-		}
-	}
-	if m == nil {
-		t.Fatal("v0.22.0 migration not found")
-	}
-
-	if err := m.fn(c); err != nil {
-		t.Fatalf("run migration: %v", err)
-	}
-
-	if len(c.Filter.FilterLists) != 1 {
-		t.Fatalf("expected 1 list after migration, got %d", len(c.Filter.FilterLists))
-	}
-	if c.Filter.FilterLists[0].URL != keepURL {
-		t.Fatalf("unexpected list URL after migration: %s", c.Filter.FilterLists[0].URL)
-	}
-}
-
-func TestMigrationV0250MovesLinuxAutostartEntry(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("migration is a no-op outside linux")
-	}
-
-	m := findMigration(t, "v0.25.0")
-	desktopName := constants.AppName + "-autostart.desktop"
-
-	t.Run("moves legacy entry to autostart dir", func(t *testing.T) {
-		configHome := t.TempDir()
-		t.Setenv("XDG_CONFIG_HOME", configHome)
-
-		legacyPath := filepath.Join(configHome, desktopName)
-		if err := os.WriteFile(legacyPath, []byte("[Desktop Entry]"), 0644); err != nil {
-			t.Fatalf("write legacy entry: %v", err)
-		}
-
-		if err := m.fn(&Config{}); err != nil {
-			t.Fatalf("run migration: %v", err)
-		}
-
-		if _, err := os.Stat(legacyPath); !os.IsNotExist(err) {
-			t.Errorf("legacy entry still present: %v", err)
-		}
-		newPath := filepath.Join(configHome, "autostart", desktopName)
-		data, err := os.ReadFile(newPath)
-		if err != nil {
-			t.Fatalf("read entry at new location: %v", err)
-		}
-		if !strings.Contains(string(data), "Exec=") {
-			t.Errorf("entry at new location lacks an Exec line: %q", data)
-		}
-	})
-
-	t.Run("keeps existing entry at new location", func(t *testing.T) {
-		configHome := t.TempDir()
-		t.Setenv("XDG_CONFIG_HOME", configHome)
-
-		legacyPath := filepath.Join(configHome, desktopName)
-		if err := os.WriteFile(legacyPath, []byte("[Desktop Entry]"), 0644); err != nil {
-			t.Fatalf("write legacy entry: %v", err)
-		}
-		newPath := filepath.Join(configHome, "autostart", desktopName)
-		if err := os.MkdirAll(filepath.Dir(newPath), 0755); err != nil {
-			t.Fatalf("create autostart dir: %v", err)
-		}
-		const existing = "[Desktop Entry]\nExec=/opt/zen --start --hidden"
-		if err := os.WriteFile(newPath, []byte(existing), 0644); err != nil {
-			t.Fatalf("write entry at new location: %v", err)
-		}
-
-		if err := m.fn(&Config{}); err != nil {
-			t.Fatalf("run migration: %v", err)
-		}
-
-		if _, err := os.Stat(legacyPath); !os.IsNotExist(err) {
-			t.Errorf("legacy entry still present: %v", err)
-		}
-		data, err := os.ReadFile(newPath)
-		if err != nil {
-			t.Fatalf("read entry at new location: %v", err)
-		}
-		if string(data) != existing {
-			t.Errorf("entry at new location was modified: %q", data)
-		}
-	})
-
-	t.Run("removes legacy entry even if enable fails", func(t *testing.T) {
-		configHome := t.TempDir()
-		t.Setenv("XDG_CONFIG_HOME", configHome)
-
-		legacyPath := filepath.Join(configHome, desktopName)
-		if err := os.WriteFile(legacyPath, []byte("[Desktop Entry]"), 0644); err != nil {
-			t.Fatalf("write legacy entry: %v", err)
-		}
-		// A regular file at the autostart dir path makes Enable's MkdirAll fail.
-		if err := os.WriteFile(filepath.Join(configHome, "autostart"), nil, 0644); err != nil {
-			t.Fatalf("write autostart blocker file: %v", err)
-		}
-
-		if err := m.fn(&Config{}); err == nil {
-			t.Fatal("expected migration to return an error")
-		}
-
-		if _, err := os.Stat(legacyPath); !os.IsNotExist(err) {
-			t.Errorf("legacy entry still present: %v", err)
-		}
-	})
-
-	t.Run("no-op without legacy entry", func(t *testing.T) {
-		configHome := t.TempDir()
-		t.Setenv("XDG_CONFIG_HOME", configHome)
-
-		if err := m.fn(&Config{}); err != nil {
-			t.Fatalf("run migration: %v", err)
-		}
-
-		newPath := filepath.Join(configHome, "autostart", desktopName)
-		if _, err := os.Stat(newPath); !os.IsNotExist(err) {
-			t.Errorf("entry unexpectedly created at new location: %v", err)
-		}
-	})
-}
-
-func TestMigrationV0261SetsMissingKeyStorage(t *testing.T) {
-	prevConfigDir := ConfigDir
-	ConfigDir = t.TempDir()
-	t.Cleanup(func() {
-		ConfigDir = prevConfigDir
-	})
-
-	m := findMigration(t, "v0.26.1")
-
+func TestRunMigrations(t *testing.T) {
 	tests := []struct {
-		name string
-		in   KeyStorageType
-		want KeyStorageType
+		name        string
+		firstLaunch bool
+		noFile      bool
+		applied     string
+		wantRan     []int
+		wantApplied string
 	}{
-		{"missing becomes disk", "", KeyStorageDisk},
-		{"disk is kept", KeyStorageDisk, KeyStorageDisk},
-		{"hardware is kept", KeyStorageHardware, KeyStorageHardware},
+		{"first launch runs nothing", true, true, "", nil, "3"},
+		{"missing file runs all", false, true, "", []int{0, 1, 2}, "3"},
+		{"runs only pending", false, false, "1", []int{1, 2}, "3"},
+		{"up to date runs nothing", false, false, "3", nil, "3"},
+		{"downgrade keeps higher count", false, false, "5", nil, "5"},
+		{"trailing newline is accepted", false, false, "1\n", []int{1, 2}, "3"},
+		{"unparsable file counts all as applied", false, false, "junk", nil, "3"},
+		{"empty file counts all as applied", false, false, "", nil, "3"},
+		{"negative count counts all as applied", false, false, "-1", nil, "3"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{}
-			c.Certmanager.KeyStorage = tt.in
-
-			if err := m.fn(c); err != nil {
-				t.Fatalf("run migration: %v", err)
+			prevConfigDir, prevMigrations := ConfigDir, migrations
+			t.Cleanup(func() {
+				ConfigDir, migrations = prevConfigDir, prevMigrations
+			})
+			ConfigDir = t.TempDir()
+			var ran []int
+			migrations = make([]migration, 0, 3)
+			for i := range 3 {
+				migrations = append(migrations, migration{"test", func(*Config) error {
+					ran = append(ran, i)
+					return nil
+				}})
 			}
 
-			if got := c.GetKeyStorage(); got != tt.want {
-				t.Errorf("got key storage %q, want %q", got, tt.want)
+			appliedFile := filepath.Join(ConfigDir, "applied_migrations")
+			if !tt.noFile {
+				if err := os.WriteFile(appliedFile, []byte(tt.applied), 0644); err != nil {
+					t.Fatalf("write applied migrations file: %v", err)
+				}
+			}
+
+			c := &Config{firstLaunch: tt.firstLaunch}
+			c.runMigrations()
+
+			if !slices.Equal(ran, tt.wantRan) {
+				t.Errorf("ran migrations %v, want %v", ran, tt.wantRan)
+			}
+			data, err := os.ReadFile(appliedFile)
+			if err != nil {
+				t.Fatalf("read applied migrations file: %v", err)
+			}
+			if string(data) != tt.wantApplied {
+				t.Errorf("applied migrations file is %q, want %q", data, tt.wantApplied)
 			}
 		})
 	}
-}
-
-func TestMigrationV0270MovesAdGuardListsToWindowsBuilds(t *testing.T) {
-	prevConfigDir := ConfigDir
-	ConfigDir = t.TempDir()
-	t.Cleanup(func() {
-		ConfigDir = prevConfigDir
-	})
-
-	const (
-		oldBase    = "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_2_Base/filter.txt"
-		newBase    = "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/platforms/windows/filters/2.txt"
-		oldSpyware = "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_3_Spyware/filter.txt"
-		newSpyware = "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/platforms/windows/filters/3.txt"
-		other      = "https://example.com/other.txt"
-	)
-
-	c := &Config{}
-	c.Filter.FilterLists = []FilterList{
-		{Name: "AdGuard Base filter", URL: oldBase, Enabled: true, Trusted: true},
-		{URL: other},
-		{URL: oldSpyware, Enabled: true},
-		{URL: newSpyware, Enabled: false},
-	}
-
-	if err := findMigration(t, "v0.27.0").fn(c); err != nil {
-		t.Fatalf("run migration: %v", err)
-	}
-
-	want := []FilterList{
-		{Name: "AdGuard Base filter", URL: newBase, Enabled: true, Trusted: true},
-		{URL: other},
-		{URL: newSpyware, Enabled: false},
-	}
-	if !reflect.DeepEqual(c.Filter.FilterLists, want) {
-		t.Errorf("got lists %+v, want %+v", c.Filter.FilterLists, want)
-	}
-}
-
-func findMigration(t *testing.T, version string) *migration {
-	t.Helper()
-	for i := range migrations {
-		if migrations[i].version == version {
-			return &migrations[i]
-		}
-	}
-	t.Fatalf("%s migration not found", version)
-	return nil
 }
