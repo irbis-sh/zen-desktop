@@ -50,7 +50,7 @@ in
   # go.mod would change the hash without touching go.mod or go.sum, and the
   # Nix workflow would not catch it.
   proxyVendor = true;
-  vendorHash = "sha256-cUjwviF5gajpFeJ+1/itwXoQBMLhPGjOfJDkYrpuwyI=";
+  vendorHash = "sha256-1TqQFirpiUG3XdB0JuGkQSo+STzum0q2uZ5yl6D72TQ=";
 
   nativeBuildInputs = [
     pkg-config
