@@ -48,7 +48,7 @@ func TestParseModifiers(t *testing.T) {
 		}
 	})
 
-	t.Run("document modifiers set document type and flag", func(t *testing.T) {
+	t.Run("document modifiers set document type and block navigations", func(t *testing.T) {
 		t.Parallel()
 
 		for _, modifier := range []string{"document", "doc"} {
@@ -128,12 +128,20 @@ func TestParseModifiers(t *testing.T) {
 		}
 	})
 
-	t.Run("negated document clears document type without document flag", func(t *testing.T) {
+	t.Run("negated document clears document type and does not block navigations", func(t *testing.T) {
 		t.Parallel()
 
 		r := newTestRule(t, "~document")
 
 		assertRuleBuckets(t, r, false, false, contenttype.All&^contenttype.Mask(contenttype.Document), nil, nil, nil)
+	})
+
+	t.Run("all matches any type and blocks navigations", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t, "all")
+
+		assertRuleBuckets(t, r, false, true, 0, nil, nil, nil)
 	})
 
 	t.Run("negated content types narrow positive ones", func(t *testing.T) {
@@ -304,65 +312,39 @@ func TestParseModifiers(t *testing.T) {
 func TestShouldMatchReq(t *testing.T) {
 	t.Parallel()
 
-	navigationHeaders := map[string]string{
-		"Sec-Fetch-Dest": "document",
-		"Sec-Fetch-User": "?1",
+	r := newTestRule(t, "script", "domain=example.com")
+
+	tests := []struct {
+		name    string
+		reqType contenttype.Type
+		referer string
+		want    bool
+	}{
+		{"matching type and domain", contenttype.Script, "https://example.com/", true},
+		{"other type", contenttype.Image, "https://example.com/", false},
+		{"other domain", contenttype.Script, "https://other.com/", false},
 	}
 
-	t.Run("rule without modifiers does not match user navigation", func(t *testing.T) {
-		t.Parallel()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-		r := newTestRule(t)
-		if r.ShouldMatchReq(newTestRequest(navigationHeaders), contenttype.Document) {
-			t.Fatal("ShouldMatchReq() = true, want false")
-		}
-	})
-
-	t.Run("all matches user navigation", func(t *testing.T) {
-		t.Parallel()
-
-		r := newTestRule(t, "all")
-		if !r.ShouldMatchReq(newTestRequest(navigationHeaders), contenttype.Document) {
-			t.Fatal("ShouldMatchReq() = false, want true")
-		}
-	})
-
-	t.Run("all matches subresource", func(t *testing.T) {
-		t.Parallel()
-
-		r := newTestRule(t, "all")
-		if !r.ShouldMatchReq(newTestRequest(map[string]string{"Sec-Fetch-Dest": "script"}), contenttype.Script) {
-			t.Fatal("ShouldMatchReq() = false, want true")
-		}
-	})
-
-	t.Run("all with domain matches user navigation only from that domain", func(t *testing.T) {
-		t.Parallel()
-
-		r := newTestRule(t, "all", "domain=example.com")
-
-		fromExample := newTestRequest(navigationHeaders)
-		fromExample.Header.Set("Referer", "https://example.com/")
-		if !r.ShouldMatchReq(fromExample, contenttype.Document) {
-			t.Error("ShouldMatchReq() with example.com referer = false, want true")
-		}
-
-		fromOther := newTestRequest(navigationHeaders)
-		fromOther.Header.Set("Referer", "https://other.com/")
-		if r.ShouldMatchReq(fromOther, contenttype.Document) {
-			t.Error("ShouldMatchReq() with other.com referer = true, want false")
-		}
-	})
+			req := newTestRequest(map[string]string{"Referer": tt.referer})
+			if got := r.ShouldMatchReq(req, tt.reqType); got != tt.want {
+				t.Errorf("ShouldMatchReq() = %t, want %t", got, tt.want)
+			}
+		})
+	}
 }
 
-func assertRuleBuckets(t *testing.T, r *Rule, wantImportant, wantDocument bool, wantTypes contenttype.Mask, wantConditions, wantQuery, wantActions []string) {
+func assertRuleBuckets(t *testing.T, r *Rule, wantImportant, wantBlocksNavigations bool, wantTypes contenttype.Mask, wantConditions, wantQuery, wantActions []string) {
 	t.Helper()
 
 	if r.Important() != wantImportant {
 		t.Errorf("Important() = %v, want %v", r.Important(), wantImportant)
 	}
-	if r.Document() != wantDocument {
-		t.Errorf("Document() = %v, want %v", r.Document(), wantDocument)
+	if r.BlocksNavigations() != wantBlocksNavigations {
+		t.Errorf("BlocksNavigations() = %v, want %v", r.BlocksNavigations(), wantBlocksNavigations)
 	}
 	if got := r.types(); got != wantTypes {
 		t.Errorf("types = %#x, want %#x", got, wantTypes)

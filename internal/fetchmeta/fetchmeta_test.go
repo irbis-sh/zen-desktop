@@ -60,6 +60,48 @@ func TestIsUserNavigation(t *testing.T) {
 	}
 }
 
+func TestIsUserActivatedNavigation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		headers map[string]string
+		want    bool
+	}{
+		{
+			name:    "clicked link",
+			headers: map[string]string{"Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-User": "?1"},
+			want:    true,
+		},
+		{
+			name:    "script-driven navigation",
+			headers: map[string]string{"Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate"},
+			want:    false,
+		},
+		{
+			name:    "user-activated iframe navigation",
+			headers: map[string]string{"Sec-Fetch-Dest": "iframe", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-User": "?1"},
+			want:    false,
+		},
+		{
+			name:    "no fetch metadata",
+			headers: nil,
+			want:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := newRequest(t, http.MethodGet, tt.headers)
+			if got := fetchmeta.IsUserActivatedNavigation(req); got != tt.want {
+				t.Errorf("IsUserActivatedNavigation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsLikelyUserNavigation(t *testing.T) {
 	t.Parallel()
 

@@ -738,6 +738,92 @@ func TestContentTypes(t *testing.T) {
 	}
 }
 
+func TestUserActivatedNavigation(t *testing.T) {
+	t.Parallel()
+
+	clickedLinkHeaders := http.Header{
+		"Sec-Fetch-Dest": []string{"document"},
+		"Sec-Fetch-Mode": []string{"navigate"},
+		"Sec-Fetch-User": []string{"?1"},
+	}
+	scriptNavigationHeaders := http.Header{
+		"Sec-Fetch-Dest": []string{"document"},
+		"Sec-Fetch-Mode": []string{"navigate"},
+	}
+	documentExceptionRules := []string{`||example.com^`, `@@||example.com^$document`}
+
+	tests := []struct {
+		name         string
+		rules        []string
+		url          string
+		headers      http.Header
+		wantBlock    bool
+		wantRedirect string
+	}{
+		{
+			name:         "untyped removeparam applies to clicked link",
+			rules:        []string{`||example.com^$removeparam=utm_source`},
+			url:          "https://example.com/?utm_source=news&id=1",
+			headers:      clickedLinkHeaders,
+			wantRedirect: "https://example.com/?id=1",
+		},
+		{
+			name:    "untyped block rule does not block clicked link",
+			rules:   []string{`||example.com^`},
+			url:     "https://example.com/",
+			headers: clickedLinkHeaders,
+		},
+		{
+			name:      "untyped block rule blocks script-driven page load",
+			rules:     []string{`||example.com^`},
+			url:       "https://example.com/",
+			headers:   scriptNavigationHeaders,
+			wantBlock: true,
+		},
+		{
+			name:      "later document rule blocks clicked link after skipped untyped rule",
+			rules:     []string{`||example.com^`, `||example.com/page$document`},
+			url:       "https://example.com/page",
+			headers:   clickedLinkHeaders,
+			wantBlock: true,
+		},
+		{
+			name:    "document exception cancels untyped block rule on script-driven page load",
+			rules:   documentExceptionRules,
+			url:     "https://example.com/",
+			headers: scriptNavigationHeaders,
+		},
+		{
+			name:      "document exception does not cancel untyped block rule on script",
+			rules:     documentExceptionRules,
+			url:       "https://example.com/script.js",
+			headers:   http.Header{"Sec-Fetch-Dest": []string{"script"}},
+			wantBlock: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			nr := New()
+			for _, r := range tt.rules {
+				if _, err := nr.ParseRule(r, nil); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			_, shouldBlock, redirectURL := nr.ModifyReq(newTestRequest(t, tt.url, tt.headers))
+			if shouldBlock != tt.wantBlock {
+				t.Errorf("shouldBlock = %t, want %t", shouldBlock, tt.wantBlock)
+			}
+			if redirectURL != tt.wantRedirect {
+				t.Errorf("redirect URL = %q, want %q", redirectURL, tt.wantRedirect)
+			}
+		})
+	}
+}
+
 func TestDocumentResponse(t *testing.T) {
 	t.Parallel()
 

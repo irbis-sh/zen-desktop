@@ -44,8 +44,8 @@ func TestModifierInterner(t *testing.T) {
 		if err := in.Parse(r, "document"); err != nil {
 			t.Fatal(err)
 		}
-		if !r.Document() {
-			t.Error("Document() = false, want true")
+		if !r.BlocksNavigations() {
+			t.Error("BlocksNavigations() = false, want true")
 		}
 	})
 }

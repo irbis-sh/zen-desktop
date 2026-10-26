@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/irbis-sh/zen-desktop/internal/fetchmeta"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/contenttype"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/exceptionrule"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
@@ -42,6 +43,7 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 		return er.ShouldMatchReq(req, reqType)
 	})
 
+	clickedLink := fetchmeta.IsUserActivatedNavigation(req)
 	initialURL := req.URL.String()
 
 	var query url.Values
@@ -57,7 +59,12 @@ outer:
 				continue outer
 			}
 		}
-		if r.ShouldBlockReq(req) {
+		if r.IsBlockRule() {
+			// As in AdGuard, a block rule doesn't stop a page the user asked for unless it
+			// opts in with $document or $all. Rules that modify the request still apply.
+			if clickedLink && !r.BlocksNavigations() {
+				continue
+			}
 			return []rule.Rule{*r}, true, ""
 		}
 

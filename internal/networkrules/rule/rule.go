@@ -33,30 +33,28 @@ type Rule struct {
 type ruleModifiers struct {
 	types contenttype.Mask // 0 = any type, including Unknown
 
-	document  bool
-	important bool
-	all       bool
+	// blocksNavigations is set only by an explicit $document, $doc or $all. A block rule
+	// without it doesn't stop user-activated page loads (see NetworkRules.ModifyReq).
+	// It can't be derived from types: "||x^" and "||x^$~script" both match
+	// script-driven page loads and must keep blocking them, but neither may stop a
+	// clicked link.
+	blocksNavigations bool
+	important         bool
 
 	conditions []rulemodifiers.ConditionModifier // domain, method, third-party, header
 	actions    []rulemodifiers.ActionModifier
 	queries    []rulemodifiers.QueryModifier
 }
 
-// Document reports whether the rule has the document modifier.
-func (rm *Rule) Document() bool {
-	return rm.mods != nil && rm.mods.document
+// BlocksNavigations reports whether the rule, if it is a block rule (see [Rule.IsBlockRule]),
+// may stop a user-activated page load.
+func (rm *Rule) BlocksNavigations() bool {
+	return rm.mods != nil && rm.mods.blocksNavigations
 }
 
 // Important reports whether the rule has the important modifier.
 func (rm *Rule) Important() bool {
 	return rm.mods != nil && rm.mods.important
-}
-
-// All reports whether the rule has the all modifier.
-// On primary rules, it implies Document. It is kept separate so that "@@...$all" exceptions,
-// which embed Rule, still cancel non-document rules.
-func (rm *Rule) All() bool {
-	return rm.mods != nil && rm.mods.all
 }
 
 // types returns the content types the rule applies to.
@@ -98,6 +96,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 	var mods ruleModifiers
 	empty := true
 	var included, excluded contenttype.Mask
+	var all bool // blocksNavigations can't tell, since $document sets it too
 
 	for _, m := range modifiers {
 		if len(m) == 0 {
@@ -122,7 +121,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 				} else {
 					included |= contenttype.Mask(t)
 					if t == contenttype.Document {
-						mods.document = true
+						mods.blocksNavigations = true
 					}
 				}
 				continue
@@ -138,8 +137,11 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			case "removeparam":
 				modifier = &rulemodifiers.RemoveParamModifier{}
 			case "all":
+				// $all leaves types at 0 rather than setting every bit, because Unknown has
+				// no bit and hosts entries and $all rules must keep blocking native apps.
 				// TODO: should also act as "popup" modifier once it gets implemented
-				mods.all = true
+				all = true
+				mods.blocksNavigations = true
 				continue
 			default:
 				return fmt.Errorf("unknown modifier %q", m)
@@ -187,7 +189,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 	if excluded != 0 {
 		// As in uBO and AdGuard, a rule with only negated types applies to every other type.
 		// So does a rule with $all, whatever positive types it also names.
-		if included == 0 || mods.all {
+		if included == 0 || all {
 			included = contenttype.All
 		}
 		mods.types = included &^ excluded
@@ -195,7 +197,7 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 			// A zero mask would match every type instead of none.
 			return errors.New("negated content types exclude every included type")
 		}
-	} else if !mods.all {
+	} else if !all {
 		// With $all, types stays 0: $all already covers any positive types.
 		mods.types = included
 	}
@@ -257,15 +259,6 @@ func isNoopModifier(modifier string) bool {
 
 // ShouldMatchReq reports whether the rule matches a request of type t.
 func (rm *Rule) ShouldMatchReq(req *http.Request, t contenttype.Type) bool {
-	if req.Header.Get("Sec-Fetch-User") == "?1" && req.Header.Get("Sec-Fetch-Dest") == "document" && !rm.Document() && !rm.All() {
-		return false
-	}
-
-	return rm.ModifiersMatchReq(req, t)
-}
-
-// ModifiersMatchReq returns true if the rule's matching modifiers match a request of type t.
-func (rm *Rule) ModifiersMatchReq(req *http.Request, t contenttype.Type) bool {
 	if !rm.types().Matches(t) {
 		return false
 	}
@@ -279,11 +272,6 @@ func (rm *Rule) ModifiersMatchReq(req *http.Request, t contenttype.Type) bool {
 
 // ShouldMatchRes reports whether the rule matches a response of type t.
 func (rm *Rule) ShouldMatchRes(res *http.Response, t contenttype.Type) bool {
-	return rm.ModifiersMatchRes(res, t)
-}
-
-// ModifiersMatchRes returns true if the rule's matching modifiers match a response of type t.
-func (rm *Rule) ModifiersMatchRes(res *http.Response, t contenttype.Type) bool {
 	if !rm.types().Matches(t) {
 		return false
 	}
@@ -295,8 +283,8 @@ func (rm *Rule) ModifiersMatchRes(res *http.Response, t contenttype.Type) bool {
 	return true
 }
 
-// ShouldBlockReq returns true if the request should be blocked.
-func (rm *Rule) ShouldBlockReq(*http.Request) bool {
+// IsBlockRule reports whether the rule blocks matching requests rather than modifying them.
+func (rm *Rule) IsBlockRule() bool {
 	return len(rm.ActionModifiers()) == 0 && len(rm.QueryModifiers()) == 0
 }
 
