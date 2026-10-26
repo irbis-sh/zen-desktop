@@ -30,16 +30,14 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 	reqURL := renderURLWithoutPort(req.URL)
 	reqType := contenttype.FromRequest(req)
 
-	primaryRules := nr.primaryStore.Get(reqURL)
-	primaryRules = filter(primaryRules, func(r *rule.Rule) bool {
+	primaryRules := nr.primaryStore.Match(reqURL, func(r *rule.Rule) bool {
 		return r.ShouldMatchReq(req, reqType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, false, ""
 	}
 
-	exceptions := nr.exceptionStore.Get(reqURL)
-	exceptions = filter(exceptions, func(er *exceptionrule.ExceptionRule) bool {
+	exceptions := nr.exceptionStore.Match(reqURL, func(er *exceptionrule.ExceptionRule) bool {
 		return er.ShouldMatchReq(req, reqType)
 	})
 
@@ -99,16 +97,17 @@ func (nr *NetworkRules) ModifyRes(req *http.Request, res *http.Response) ([]rule
 	url := renderURLWithoutPort(req.URL)
 	resType := contenttype.FromResponse(req, res)
 
-	primaryRules := nr.primaryStore.Get(url)
-	primaryRules = filter(primaryRules, func(r *rule.Rule) bool {
-		return r.ShouldMatchRes(res, resType)
+	// Only action modifiers can change a response.
+	primaryRules := nr.primaryStore.Match(url, func(r *rule.Rule) bool {
+		return len(r.ActionModifiers()) > 0 && r.ShouldMatchRes(res, resType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, nil
 	}
 
-	exceptions := nr.exceptionStore.Get(url)
-	exceptions = filter(exceptions, func(er *exceptionrule.ExceptionRule) bool {
+	// No action-modifier check here: a block-only exception such as @@||x^
+	// cancels action rules too (see ExceptionRule.Cancels).
+	exceptions := nr.exceptionStore.Match(url, func(er *exceptionrule.ExceptionRule) bool {
 		return er.ShouldMatchRes(res, resType)
 	})
 
@@ -139,18 +138,6 @@ func (nr *NetworkRules) Compact() {
 	nr.interner = nil
 	nr.primaryStore.Compact()
 	nr.exceptionStore.Compact()
-}
-
-// filter returns a new slice containing only the elements of arr
-// that satisfy the predicate.
-func filter[T any](arr []T, predicate func(T) bool) []T {
-	var res []T
-	for _, el := range arr {
-		if predicate(el) {
-			res = append(res, el)
-		}
-	}
-	return res
 }
 
 func renderURLWithoutPort(u *url.URL) string {

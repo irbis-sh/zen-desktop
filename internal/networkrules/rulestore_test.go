@@ -1,13 +1,43 @@
 package networkrules
 
 import (
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 )
 
-// TestRuleStoreConcurrentInsertAndGet is meant for -race: the block page's
+func TestRuleStoreMatch(t *testing.T) {
+	t.Parallel()
+
+	s := newRuleStore[string]()
+	for _, r := range []struct{ pattern, value string }{
+		{"", "generic"},
+		{"", "generic-rejected"},
+		{"||example.com^", "tree"},
+		{"||example.com^", "tree-rejected"},
+		{"||other.com^", "tree-unmatched"},
+		{`/banner\d+/`, "regexp"},
+		{`/banner\d+/`, "regexp-rejected"},
+		{`/popup\d+/`, "regexp-unmatched"},
+	} {
+		if err := s.Insert(r.pattern, r.value); err != nil {
+			t.Fatalf("insert %q: %v", r.pattern, err)
+		}
+	}
+
+	got := s.Match("https://example.com/banner1", func(v string) bool {
+		return !strings.HasSuffix(v, "-rejected")
+	})
+	slices.Sort(got)
+	if want := []string{"generic", "regexp", "tree"}; !slices.Equal(got, want) {
+		t.Errorf("Match = %q, want %q", got, want)
+	}
+}
+
+// TestRuleStoreConcurrentInsertAndMatch is meant for -race: the block page's
 // allow button inserts rules of every pattern kind while requests are matched.
-func TestRuleStoreConcurrentInsertAndGet(t *testing.T) {
+func TestRuleStoreConcurrentInsertAndMatch(t *testing.T) {
 	t.Parallel()
 
 	s := newRuleStore[string]()
@@ -27,7 +57,7 @@ func TestRuleStoreConcurrentInsertAndGet(t *testing.T) {
 	for range 4 {
 		wg.Go(func() {
 			for range 200 {
-				s.Get("https://ads.example.com/ads/banner1")
+				s.Match("https://ads.example.com/ads/banner1", func(string) bool { return true })
 			}
 		})
 	}

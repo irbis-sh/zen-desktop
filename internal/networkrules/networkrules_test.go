@@ -412,6 +412,30 @@ func TestExceptionRules(t *testing.T) {
 		}
 	})
 
+	t.Run("block-only exception cancels response modification", func(t *testing.T) {
+		t.Parallel()
+
+		nr := New()
+		if _, err := nr.ParseRule(`||example.com/tracking.js$removeheader=X-Test`, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := nr.ParseRule(`@@||example.com/tracking.js`, nil); err != nil {
+			t.Fatal(err)
+		}
+
+		res := &http.Response{Header: http.Header{"X-Test": []string{"1"}}}
+		applied, err := nr.ModifyRes(newTestRequest(t, "https://example.com/tracking.js", nil), res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(applied) != 0 {
+			t.Fatalf("applied rules = %d, want 0", len(applied))
+		}
+		if res.Header.Get("X-Test") != "1" {
+			t.Fatal("expected response header to be preserved")
+		}
+	})
+
 	t.Run("action exception does not unblock", func(t *testing.T) {
 		t.Parallel()
 

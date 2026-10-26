@@ -63,16 +63,27 @@ func (s *ruleStore[T]) Insert(pattern string, v T) error {
 	return nil
 }
 
-func (s *ruleStore[T]) Get(url string) []T {
+// Match returns the values whose pattern matches url and for which keep
+// returns true. keep may be called for values whose pattern does not match:
+// it runs before the regexp match, which costs more. keep runs under the
+// store's read lock, so it must not call Insert or Compact.
+func (s *ruleStore[T]) Match(url string, keep func(T) bool) []T {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	matches := s.tree.Get(url)
-	res := make([]T, 0, len(s.generic)+len(matches))
-	res = append(res, s.generic...)
-	res = append(res, matches...)
+	var res []T
+	for _, v := range s.generic {
+		if keep(v) {
+			res = append(res, v)
+		}
+	}
+	for _, v := range s.tree.Get(url) {
+		if keep(v) {
+			res = append(res, v)
+		}
+	}
 	for _, rule := range s.regexp {
-		if rule.regexp.MatchString(url) {
+		if keep(rule.value) && rule.regexp.MatchString(url) {
 			res = append(res, rule.value)
 		}
 	}
