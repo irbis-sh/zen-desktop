@@ -102,6 +102,8 @@ func (t *traverser[T]) traversePrefix(prefix string, url string) {
 			if wildcard := t.n.getEdge(tokenWildcard); wildcard != nil {
 				t.data = append(t.data, wildcard.traverse(url)...)
 			}
+			// firstCh may select a special token's edge; see the tokens'
+			// comment for why that's harmless.
 			if ch := t.n.getEdge(firstCh); ch != nil {
 				t.data = append(t.data, ch.traverse(url)...)
 			}
@@ -116,6 +118,9 @@ func (t *traverser[T]) traversePrefix(prefix string, url string) {
 	}
 
 	switch prefix[0] {
+	case tokenAnchor:
+		// An anchor here can only match the end of the URL, handled above.
+		return
 	case tokenWildcard:
 		if len(prefix) == 1 {
 			t.traverseWildcardTail(url)
@@ -177,12 +182,10 @@ func (t *traverser[T]) traverseWildcardTail(url string) {
 	separator := n.getEdge(tokenSeparator)
 	wildcard := n.getEdge(tokenWildcard)
 
-	// Build a set of literal first-characters from the node's edges.
-	var literalSet byteset.Set
+	// Build a set of the first characters of the node's edges.
+	var edgeChars byteset.Set
 	for _, e := range n.edges {
-		if e.label > tokenMaxSpecial {
-			literalSet.Add(e.label)
-		}
+		edgeChars.Add(e.label)
 	}
 
 	for i := 0; i < len(url); i++ {
@@ -194,7 +197,9 @@ func (t *traverser[T]) traverseWildcardTail(url string) {
 		if wildcard != nil {
 			t.data = append(t.data, wildcard.traverse(url[i:])...)
 		}
-		if literalSet.Has(ch) {
+		// ch may select a special token's edge; see the tokens' comment for
+		// why that's harmless.
+		if edgeChars.Has(ch) {
 			if child := n.getEdge(ch); child != nil {
 				t.data = append(t.data, child.traverse(url[i:])...)
 			}

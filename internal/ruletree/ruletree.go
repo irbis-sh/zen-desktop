@@ -25,7 +25,7 @@ type Tree[T Data] struct {
 	frozen []domainEntry[T]
 
 	root *node[T]
-	// domainBoundaryRoot stores patterns beginning with tokenDomainBoundary (||).
+	// domainBoundaryRoot stores patterns beginning with domainBoundary (||).
 	domainBoundaryRoot *node[T]
 	// anchorRoot stores pattern beginning with tokenAnchor (|).
 	anchorRoot *node[T]
@@ -61,30 +61,22 @@ func (t *Tree[T]) insertTree(pattern string, v T) {
 		return
 	}
 
-	// Special tokens are control bytes, so a literal one in the pattern would
-	// be read as a special token.
-	for i := 0; i < len(pattern); i++ {
-		if pattern[i] <= tokenMaxSpecial {
-			return
-		}
-	}
-
-	tokens := tokenize(pattern)
-	if strings.IndexByte(tokens[1:], tokenDomainBoundary) >= 0 {
-		return
-	}
-
 	var parent *node[T]
 	var n *node[T]
 
-	switch tokens[0] {
-	case tokenDomainBoundary:
-		n, tokens = t.domainBoundaryRoot, tokens[1:]
-	case tokenAnchor:
-		n, tokens = t.anchorRoot, tokens[1:]
+	switch {
+	case strings.HasPrefix(pattern, domainBoundary):
+		n, pattern = t.domainBoundaryRoot, pattern[len(domainBoundary):]
+	case pattern[0] == tokenAnchor:
+		n, pattern = t.anchorRoot, pattern[1:]
 	default:
 		n = t.root
 	}
+	if strings.Contains(pattern, domainBoundary) {
+		return
+	}
+
+	tokens := tokenize(pattern)
 
 	for {
 		if len(tokens) == 0 {

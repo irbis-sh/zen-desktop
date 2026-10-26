@@ -1,86 +1,35 @@
 package ruletree
 
-import "testing"
+import (
+	"testing"
+	"unsafe"
+)
 
 func TestTokenize(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		s      string
-		tokens []token
+		s    string
+		want string
 	}{
-		{
-			"abc123",
-			[]token{'a', 'b', 'c', '1', '2', '3'},
-		},
-		{
-			"*",
-			[]token{tokenWildcard},
-		},
-		{
-			"a*b",
-			[]token{'a', tokenWildcard, 'b'},
-		},
-		{
-			"*a*",
-			[]token{tokenWildcard, 'a', tokenWildcard},
-		},
-		{
-			"**",
-			[]token{tokenWildcard},
-		},
-		{
-			"a**b",
-			[]token{'a', tokenWildcard, 'b'},
-		},
-		{
-			"***a***",
-			[]token{tokenWildcard, 'a', tokenWildcard},
-		},
-		{
-			"||",
-			[]token{tokenDomainBoundary},
-		},
-		{
-			"|||||",
-			[]token{tokenDomainBoundary, tokenDomainBoundary, tokenAnchor},
-		},
-		{
-			"||example.com",
-			[]token{tokenDomainBoundary, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'},
-		},
-		{
-			"|",
-			[]token{tokenAnchor},
-		},
-		{
-			"example|",
-			[]token{'e', 'x', 'a', 'm', 'p', 'l', 'e', tokenAnchor},
-		},
-		{
-			"^",
-			[]token{tokenSeparator},
-		},
-		{
-			"a^b",
-			[]token{'a', tokenSeparator, 'b'},
-		},
-		{
-			"*||^|",
-			[]token{tokenWildcard, tokenDomainBoundary, tokenSeparator, tokenAnchor},
-		},
-		{
-			"a*b||c^d|e",
-			[]token{'a', tokenWildcard, 'b', tokenDomainBoundary, 'c', tokenSeparator, 'd', tokenAnchor, 'e'},
-		},
-		{
-			"||example.com/ads/*",
-			[]token{tokenDomainBoundary, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', '/', 'a', 'd', 's', '/', tokenWildcard},
-		},
+		{"abc123", "abc123"},
+		{"a*b^c|", "a*b^c|"},
+		{"**", "*"},
+		{"a**b", "a*b"},
+		{"***a***", "*a*"},
 	}
 
 	for _, test := range tests {
-		if got := tokenize(test.s); got != string(test.tokens) {
-			t.Errorf("tokenize(%q) = %q, want %q", test.s, got, test.tokens)
+		if got := tokenize(test.s); got != test.want {
+			t.Errorf("tokenize(%q) = %q, want %q", test.s, got, test.want)
 		}
+	}
+}
+
+func TestTokenizeSharesMemory(t *testing.T) {
+	t.Parallel()
+
+	s := "example.com/ads/*^|"
+	if got := tokenize(s); unsafe.StringData(got) != unsafe.StringData(s) {
+		t.Error("tokenize copied a pattern without a run of wildcards")
 	}
 }
