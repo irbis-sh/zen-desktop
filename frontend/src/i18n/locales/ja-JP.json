@@ -47,6 +47,9 @@
     "trustedListsWarning": "信頼済みリストでは、<code>trusted-</code> スクリプトレットや JavaScript ルールのような強力なブロック機能を使用できますが、悪意のある第三者に改ざんされると<strong>プライバシーとセキュリティを損なう可能性があります</strong>。信頼できる提供元のリストにのみこのオプションを有効にしてください。"
   },
   "donate": "寄付",
+  "errorBoundary": {
+    "errorMessage": "予期しないエラー: {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "デバッグデータのエクスポートに失敗しました: {{error}}",
     "label": "デバッグデータをエクスポート",

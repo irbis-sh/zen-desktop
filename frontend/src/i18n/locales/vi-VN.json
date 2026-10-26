@@ -47,6 +47,9 @@
     "trustedListsWarning": "Các danh sách đáng tin cậy có thể sử dụng khả năng chặn mạnh mẽ như đoạn mã <code>trusted-</code> và quy tắc JavaScript nhưng <strong>có thể gây gián đoạn quyền riêng tư và bảo mật</strong> nếu bị bên độc hại chiếm đoạt. Chỉ bật tùy chọn này cho danh sách từ nguồn bạn tin cậy."
   },
   "donate": "Ủng hộ",
+  "errorBoundary": {
+    "errorMessage": "Lỗi không mong muốn: {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "Không thể xuất dữ liệu gỡ lỗi: {{error}}",
     "label": "Xuất dữ liệu gỡ lỗi",

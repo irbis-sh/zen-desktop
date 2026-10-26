@@ -47,6 +47,9 @@
     "trustedListsWarning": "受信任列表可以使用强大的拦截功能，例如 <code>trusted-</code> 脚本片段和 JavaScript 规则，但<strong>若被恶意方劫持，可能会破坏隐私和安全</strong>。仅对您信任的来源启用此选项。"
   },
   "donate": "捐赠",
+  "errorBoundary": {
+    "errorMessage": "意外错误：{{error}}"
+  },
   "exportDebugDataButton": {
     "error": "导出调试数据失败：{{error}}",
     "label": "导出调试数据",

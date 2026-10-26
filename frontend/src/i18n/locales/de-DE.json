@@ -47,6 +47,9 @@
     "trustedListsWarning": "Vertraute Listen können leistungsstarke Blockierfunktionen wie <code>trusted-</code> Scriptlets und JavaScript-Regeln verwenden, <strong>können jedoch den Datenschutz und die Sicherheit beeinträchtigen</strong>, wenn sie von einer böswilligen Partei missbraucht werden. Aktivieren Sie diese Option nur für Listen aus Quellen, denen Sie vertrauen."
   },
   "donate": "Spenden",
+  "errorBoundary": {
+    "errorMessage": "Unerwarteter Fehler: {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "Debug-Daten konnten nicht exportiert werden: {{error}}",
     "label": "Debug-Daten exportieren",

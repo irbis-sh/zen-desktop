@@ -47,6 +47,9 @@
     "trustedListsWarning": "信任清單可以使用強大的攔截功能，例如 <code>trusted-</code> 腳本片段和 JavaScript 規則，但<strong>若被惡意方劫持，可能會破壞隱私和安全</strong>。僅對您信任的來源啟用此選項。"
   },
   "donate": "贊助",
+  "errorBoundary": {
+    "errorMessage": "未預期的錯誤：{{error}}"
+  },
   "exportDebugDataButton": {
     "error": "匯出除錯資料失敗：{{error}}",
     "label": "匯出除錯資料",

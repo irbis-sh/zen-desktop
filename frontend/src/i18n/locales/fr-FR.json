@@ -12,7 +12,7 @@
     },
     "update": {
       "restart": "Redémarrer",
-      "restartFailed": "Échec du redémarrage",
+      "restartFailed": "Échec du redémarrage : {{error}}",
       "restarting": "Redémarrage...",
       "updateAvailable": "Mise à jour disponible"
     }
@@ -47,6 +47,9 @@
     "trustedListsWarning": "Les listes de confiance peuvent utiliser des capacités de blocage puissantes, telles que les scriptlets <code>trusted-</code> et les règles JavaScript, mais <strong>peuvent perturber la confidentialité et la sécurité</strong> si elles sont détournées par un acteur malveillant. N'activez cette option que pour les listes provenant de sources auxquelles vous faites confiance."
   },
   "donate": "Faire un don",
+  "errorBoundary": {
+    "errorMessage": "Erreur inattendue : {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "Échec de l'exportation des données de débogage : {{error}}",
     "label": "Exporter les données de débogage",

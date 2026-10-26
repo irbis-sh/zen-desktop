@@ -47,6 +47,9 @@
     "trustedListsWarning": "Güvenilen listeler, <code>trusted-</code> scriptlet'ler ve JavaScript kuralları gibi güçlü engelleme özellikleri kullanabilir; ancak kötü niyetli bir tarafça ele geçirilirse <strong>gizlilik ve güvenliği tehlikeye atabilir</strong>. Bu seçeneği yalnızca güvendiğiniz kaynaklardan gelen listeler için etkinleştirin."
   },
   "donate": "Bağış yap",
+  "errorBoundary": {
+    "errorMessage": "Beklenmeyen hata: {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "Hata ayıklama verileri dışa aktarılamadı: {{error}}",
     "label": "Hata ayıklama verilerini dışa aktar",

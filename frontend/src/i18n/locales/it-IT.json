@@ -47,6 +47,9 @@
     "trustedListsWarning": "Le liste attendibili possono utilizzare potenti capacità di blocco, come scriptlet <code>trusted-</code> e regole JavaScript ma <strong>potrebbero compromettere la privacy e la sicurezza</strong> se compromesse da terzi malevoli. Abilita questa opzione solo per liste provenienti da fonti affidabili."
   },
   "donate": "Dona",
+  "errorBoundary": {
+    "errorMessage": "Errore imprevisto: {{error}}"
+  },
   "exportDebugDataButton": {
     "error": "Impossibile esportare i dati di debug: {{error}}",
     "label": "Esporta dati di debug",
