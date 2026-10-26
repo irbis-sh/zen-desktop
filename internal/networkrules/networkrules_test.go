@@ -621,6 +621,73 @@ func TestExceptionConditions(t *testing.T) {
 	})
 }
 
+func TestContentTypes(t *testing.T) {
+	t.Parallel()
+
+	negatedRules := []string{`/adserver.$~stylesheet,~xmlhttprequest`}
+
+	tests := []struct {
+		name      string
+		rules     []string
+		url       string
+		headers   http.Header
+		wantBlock bool
+	}{
+		{
+			name:      "negated types block other types",
+			rules:     negatedRules,
+			url:       "https://example.com/adserver.js",
+			headers:   http.Header{"Sec-Fetch-Dest": []string{"script"}},
+			wantBlock: true,
+		},
+		{
+			name:    "negated types do not block the first negated type",
+			rules:   negatedRules,
+			url:     "https://example.com/adserver.css",
+			headers: http.Header{"Sec-Fetch-Dest": []string{"style"}},
+		},
+		{
+			name:    "negated types do not block the second negated type",
+			rules:   negatedRules,
+			url:     "https://example.com/adserver.json",
+			headers: http.Header{"Sec-Fetch-Dest": []string{"empty"}},
+		},
+		{
+			name:  "negated type does not block a request without fetch metadata",
+			rules: []string{`||example.com^$~image`},
+			url:   "https://example.com/",
+		},
+		{
+			name:  "negated ping does not block a request without fetch metadata",
+			rules: []string{`||example.com^$~ping`},
+			url:   "https://example.com/",
+		},
+		{
+			name:  "negated websocket does not block a request without fetch metadata",
+			rules: []string{`||example.com^$~websocket`},
+			url:   "https://example.com/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			nr := New()
+			for _, r := range tt.rules {
+				if _, err := nr.ParseRule(r, nil); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, tt.url, tt.headers))
+			if shouldBlock != tt.wantBlock {
+				t.Errorf("shouldBlock = %t, want %t", shouldBlock, tt.wantBlock)
+			}
+		})
+	}
+}
+
 func TestSharedModifiers(t *testing.T) {
 	t.Parallel()
 

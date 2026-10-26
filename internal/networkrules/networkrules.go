@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/irbis-sh/zen-desktop/internal/networkrules/contenttype"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/exceptionrule"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 )
@@ -26,10 +27,11 @@ func New() *NetworkRules {
 
 func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, shouldBlock bool, redirectURL string) {
 	reqURL := renderURLWithoutPort(req.URL)
+	reqType := contenttype.FromRequest(req)
 
 	primaryRules := nr.primaryStore.Get(reqURL)
 	primaryRules = filter(primaryRules, func(r *rule.Rule) bool {
-		return r.ShouldMatchReq(req)
+		return r.ShouldMatchReq(req, reqType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, false, ""
@@ -37,7 +39,7 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 
 	exceptions := nr.exceptionStore.Get(reqURL)
 	exceptions = filter(exceptions, func(er *exceptionrule.ExceptionRule) bool {
-		return er.ShouldMatchReq(req)
+		return er.ShouldMatchReq(req, reqType)
 	})
 
 	initialURL := req.URL.String()
@@ -88,10 +90,11 @@ outer:
 
 func (nr *NetworkRules) ModifyRes(req *http.Request, res *http.Response) ([]rule.Rule, error) {
 	url := renderURLWithoutPort(req.URL)
+	resType := contenttype.FromResponse(req, res)
 
 	primaryRules := nr.primaryStore.Get(url)
 	primaryRules = filter(primaryRules, func(r *rule.Rule) bool {
-		return r.ShouldMatchRes(res)
+		return r.ShouldMatchRes(res, resType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, nil
@@ -99,7 +102,7 @@ func (nr *NetworkRules) ModifyRes(req *http.Request, res *http.Response) ([]rule
 
 	exceptions := nr.exceptionStore.Get(url)
 	exceptions = filter(exceptions, func(er *exceptionrule.ExceptionRule) bool {
-		return er.ShouldMatchRes(res)
+		return er.ShouldMatchRes(res, resType)
 	})
 
 	var appliedRules []rule.Rule

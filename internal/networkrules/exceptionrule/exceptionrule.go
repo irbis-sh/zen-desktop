@@ -3,6 +3,7 @@ package exceptionrule
 import (
 	"net/http"
 
+	"github.com/irbis-sh/zen-desktop/internal/networkrules/contenttype"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 )
 
@@ -52,12 +53,12 @@ func (er *ExceptionRule) Cancels(r *rule.Rule) bool {
 	return true
 }
 
-// ShouldMatchReq returns true if the rule should match the request.
-func (er *ExceptionRule) ShouldMatchReq(req *http.Request) bool {
-	return er.ModifiersMatchReq(req)
+// ShouldMatchReq reports whether the rule matches a request of type t.
+func (er *ExceptionRule) ShouldMatchReq(req *http.Request, t contenttype.Type) bool {
+	return er.ModifiersMatchReq(req, t)
 }
 
-// ShouldMatchRes returns true if the rule should match the response.
-func (er *ExceptionRule) ShouldMatchRes(res *http.Response) bool {
-	return er.ModifiersMatchRes(res)
+// ShouldMatchRes reports whether the rule matches a response of type t.
+func (er *ExceptionRule) ShouldMatchRes(res *http.Response, t contenttype.Type) bool {
+	return er.ModifiersMatchRes(res, t)
 }
