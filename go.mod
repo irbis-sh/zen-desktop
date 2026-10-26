@@ -6,19 +6,19 @@ module github.com/irbis-sh/zen-desktop
 go 1.27.3
 
 require (
-	github.com/andybalholm/brotli v1.2.0
+	github.com/andybalholm/brotli v1.2.7
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/getlantern/elevate v0.0.0-20220903142053-479ab992b264
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.2.4
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hectane/go-acl v0.0.0-20230122075934-ca0b05cb1adb
-	github.com/klauspost/compress v1.18.0
+	github.com/klauspost/compress v1.20.3
 	github.com/refraction-networking/utls v1.8.2
 	github.com/spyzhov/ajson v0.9.6
-	github.com/tdewolff/parse/v2 v2.8.4
+	github.com/tdewolff/parse/v2 v2.8.20
 	github.com/wailsapp/wails/v2 v2.14.0 // Use one minor version behind latest for stability, unless there are urgently needed features/bugfixes
-	golang.org/x/net v0.56.0
-	golang.org/x/sys v0.46.0
+	golang.org/x/net v0.61.0
+	golang.org/x/sys v0.49.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9
 )
@@ -64,6 +64,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 )
