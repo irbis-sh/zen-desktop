@@ -48,7 +48,7 @@ func TestParseModifiers(t *testing.T) {
 		}
 	})
 
-	t.Run("document modifiers set document flag only", func(t *testing.T) {
+	t.Run("document modifiers set document type and flag", func(t *testing.T) {
 		t.Parallel()
 
 		for _, modifier := range []string{"document", "doc"} {
@@ -60,7 +60,7 @@ func TestParseModifiers(t *testing.T) {
 					t.Fatalf("ParseModifiers(%q) = %v, want nil", modifier, err)
 				}
 
-				assertRuleBuckets(t, &r, false, true, 0, nil, nil, nil)
+				assertRuleBuckets(t, &r, false, true, contenttype.Mask(contenttype.Document), nil, nil, nil)
 			})
 		}
 	})
@@ -126,6 +126,14 @@ func TestParseModifiers(t *testing.T) {
 		if got := r.types(); got != want {
 			t.Errorf("types = %#x, want %#x", got, want)
 		}
+	})
+
+	t.Run("negated document clears document type without document flag", func(t *testing.T) {
+		t.Parallel()
+
+		r := newTestRule(t, "~document")
+
+		assertRuleBuckets(t, r, false, false, contenttype.All&^contenttype.Mask(contenttype.Document), nil, nil, nil)
 	})
 
 	t.Run("negated content types narrow positive ones", func(t *testing.T) {

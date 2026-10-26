@@ -34,7 +34,7 @@ func (nr *NetworkRules) ParseRule(rawRule string, filterName *string) (isExcepti
 
 			// Derive the pattern from the raw rule so the rule tree's domain
 			// key shares the raw rule's memory instead of keeping a copy.
-			const modifiers = "$document"
+			const modifiers = "$all"
 			hostsRule := "||" + host + "^" + modifiers
 			pattern := hostsRule[:len(hostsRule)-len(modifiers)]
 			r := &rule.Rule{

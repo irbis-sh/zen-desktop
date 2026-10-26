@@ -48,6 +48,8 @@ func (m Mask) Matches(t Type) bool {
 var (
 	// modifierTypes maps content type modifier names to their types.
 	modifierTypes = map[string]Type{
+		"document":       Document,
+		"doc":            Document,
 		"xmlhttprequest": XMLHTTPRequest,
 		"xhr":            XMLHTTPRequest,
 		"font":           Font,

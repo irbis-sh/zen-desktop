@@ -121,15 +121,15 @@ func (rm *Rule) ParseModifiers(modifiers []string) error {
 					excluded |= contenttype.Mask(t)
 				} else {
 					included |= contenttype.Mask(t)
+					if t == contenttype.Document {
+						mods.document = true
+					}
 				}
 				continue
 			}
 
 			// Other flag modifiers.
 			switch name {
-			case "document", "doc":
-				mods.document = true
-				continue
 			case "important":
 				mods.important = true
 				continue
