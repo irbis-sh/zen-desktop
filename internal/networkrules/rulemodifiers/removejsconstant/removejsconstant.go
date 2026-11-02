@@ -88,7 +88,7 @@ func (rc *Modifier) Cancels(modifier rulemodifiers.Modifier) bool {
 
 // removeFromInlineHTML removes the specified JS constants from inline scripts in a HTML response.
 func removeFromInlineHTML(res *http.Response, keys [][]string) error {
-	return httprewrite.StreamRewrite(res, func(original io.ReadCloser, modified *io.PipeWriter) {
+	return httprewrite.StreamRewriteHTML(res, func(original io.ReadCloser, modified *io.PipeWriter) {
 		defer original.Close()
 
 		z := html.NewTokenizer(original)

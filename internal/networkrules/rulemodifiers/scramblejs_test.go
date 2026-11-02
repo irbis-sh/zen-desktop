@@ -94,6 +94,41 @@ var v = "key2"`)
 			t.Error("resulting body contains keys that should've been scrambled")
 		}
 	})
+
+	t.Run("leaves scripts in legacy encodings unchanged", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name        string
+			contentType string
+			body        string
+		}{
+			{"Shift_JIS JS", "text/javascript", "var key1 = \"\x95\x5c\";"},
+			{"ISO-2022-JP JS", "text/javascript", "var key1 = \"\x1b$BI=<(\x1b(B\";"},
+			{"Shift_JIS inline script", "text/html", "<html><head><script>var key1 = \"\x95\x5c\";</script></head></html>"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				m := &ScrambleJSModifier{}
+				m.Parse("scramblejs=key1")
+
+				res := newHTTPResponse(tt.contentType, []byte(tt.body))
+				if _, err := m.ModifyRes(res); err != nil {
+					t.Fatalf("ModifyRes error: %v", err)
+				}
+				got, err := io.ReadAll(res.Body)
+				if err != nil {
+					t.Fatalf("failed to read modified body: %v", err)
+				}
+				if string(got) != tt.body {
+					t.Errorf("body = %q, want %q", got, tt.body)
+				}
+			})
+		}
+	})
 }
 
 func newHTTPResponse(contentType string, body []byte) *http.Response {

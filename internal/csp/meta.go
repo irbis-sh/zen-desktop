@@ -16,7 +16,7 @@ func patchMetaCSPsBatch(res *http.Response, operations []PatchOperation) error {
 		return nil
 	}
 
-	err := httprewrite.StreamRewrite(res, func(src io.ReadCloser, dst *io.PipeWriter) {
+	err := httprewrite.StreamRewriteHTML(res, func(src io.ReadCloser, dst *io.PipeWriter) {
 		defer src.Close()
 
 		z := html.NewTokenizer(src)

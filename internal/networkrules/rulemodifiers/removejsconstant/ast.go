@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/irbis-sh/zen-desktop/internal/httprewrite"
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/js"
 )
 
 // stripKeys removes the specified key definitions from the JavaScript code.
 func stripKeys(script []byte, keys [][]string) ([]byte, error) {
+	if !httprewrite.IsUTF8Script(script) {
+		return script, nil
+	}
 	// TODO performance optimizations:
 	// - prune multiple keys in one pass
 	// - check whether at least one key is present before parsing (trie, Aho-Corasick)
