@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.29.0
+
+### What's New
+
+* **Fixed garbled text on non-UTF-8 sites**
+  Zen used to convert every page it modified to UTF-8. Some sites use other encodings, such as some Chinese and Japanese forums. On those sites, this garbled the page text and replies you posted. Zen now keeps each page's original encoding. Thanks to @cmhdream and u/WittyWanderer420 for reporting this!
+* **Szia!**
+  Zen is now available in Hungarian, thanks to @gellert234-dev!
+* **Filter rule fixes**
+  Zen sometimes applied filter rules to the wrong kinds of requests. It now matches rules to requests the same way uBlock Origin and AdGuard do. As a result, tracking parameters are now also removed from links you click, and rules meant only for page loads no longer affect other requests.
+  If you wrote your own `@@...$document` rule to unblock a site, it now unblocks only the page itself, not the rest of the site's content. To unblock everything, use `@@||example.com^` instead. The block page's "Allow" button already does this.
+* **Lower memory use**
+  Zen now uses about 12 MB less memory with the default filter lists.
+* Other minor bugfixes and improvements.
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.28.0...v0.29.0
+
 ## v0.28.0
 
 ### What's New
