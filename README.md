@@ -14,6 +14,7 @@
 There is, simply, no way, to ignore privacy. Because a citizenry’s freedoms are interdependent, to surrender your own privacy is really to surrender everyone’s.
 
 Edward Snowden, Permanent Record
+
 </blockquote>
 
 ![GitHub License](https://img.shields.io/github/license/irbis-sh/zen-desktop)
@@ -54,10 +55,10 @@ Unsure which version to download? Learn at [Apple's website](https://support.app
 
 #### 🍺 Homebrew
 
-Zen is available via [Homebrew](https://formulae.brew.sh/cask/zen-privacy) for both Intel and Apple Silicon. To install it, run:
+Zen is available via [Homebrew](https://formulae.brew.sh/cask/irbis-zen) for both Intel and Apple Silicon. To install it, run:
 
 ```bash
-brew install --cask zen-privacy
+brew install --cask irbis-zen
 ```
 
 ### Linux
