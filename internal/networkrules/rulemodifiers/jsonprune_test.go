@@ -64,6 +64,13 @@ func TestJsonPruneModifier(t *testing.T) {
 				want:     `{"keep":true}`,
 				modified: true,
 			},
+			{
+				name:     "keeps non-ASCII text after the first 1024 bytes",
+				modifier: `jsonprune=$.removeMe`,
+				input:    `{"removeMe":1,"text":"` + strings.Repeat("x", 1100) + `é 😀"}`,
+				want:     `{"text":"` + strings.Repeat("x", 1100) + `é 😀"}`,
+				modified: true,
+			},
 		}
 
 		for _, tt := range tests {

@@ -1,15 +1,16 @@
 package httprewrite
 
 import (
+	"bufio"
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
-	"mime"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/andybalholm/brotli"
 	"github.com/hashicorp/go-multierror"
@@ -17,22 +18,45 @@ import (
 	"golang.org/x/net/html/charset"
 )
 
-// StreamRewrite decodes the HTTP response body and passes it to the processor
-// for transformation in a streaming fashion.
+// StreamRewriteHTML decompresses the body of a text/html response and passes it to the processor
+// for transformation in a streaming fashion. The processor writes the transformed output to dst
+// and is responsible for closing both streams.
 //
-// It automatically handles decompression and character set conversion to UTF-8.
-// The processor receives the unpacked (decompressed and decoded) response body as an io.ReadCloser and
-// writes the transformed output to the provided io.PipeWriter. The processor
-// is responsible for closing both streams.
-func StreamRewrite(res *http.Response, processor func(src io.ReadCloser, dst *io.PipeWriter)) error {
-	rawBodyReader, mimeType, err := getRawBodyReader(res)
+// The processor gets the body in its original character encoding, so the browser decodes the page
+// as it would without Zen. UTF-16 is the exception: it is converted to UTF-8 and Content-Type is
+// relabelled. Processors must only insert ASCII and find insertion points by matching ASCII markup.
+// Before parsing or matching an inline script, they must check it with [IsUTF8Script].
+func StreamRewriteHTML(res *http.Response, processor func(src io.ReadCloser, dst *io.PipeWriter)) error {
+	body, err := decompressBody(res)
 	if err != nil {
-		return fmt.Errorf("get raw body reader: %v", err)
+		return err
+	}
+
+	// Browsers only take UTF-16 from a byte order mark or the header, never from <meta>,
+	// so a short preview is enough. It's 3 bytes so that it also holds a UTF-8 byte order mark,
+	// which wins over a contradicting header, as in browsers.
+	// A longer preview would hold back the start of the page until it arrives.
+	bufBody := bufio.NewReader(body)
+	preview, err := bufBody.Peek(3)
+	if err != nil && err != io.EOF {
+		return fmt.Errorf("read body preview: %v", err)
+	}
+
+	var src io.Reader = bufBody
+	// In UTF-16, ASCII characters take two bytes each, so the processors could neither insert ASCII
+	// nor find tags. Converting to UTF-8 is safe: browsers submit forms from UTF-16 pages as UTF-8
+	// anyway, so servers get the same bytes.
+	if enc, name, _ := charset.DetermineEncoding(preview, res.Header.Get("Content-Type")); name == "utf-16le" || name == "utf-16be" {
+		src = enc.NewDecoder().Reader(bufBody)
+		res.Header.Set("Content-Type", "text/html; charset=utf-8")
 	}
 
 	reader, writer := io.Pipe()
 
-	go processor(rawBodyReader, writer)
+	go processor(struct {
+		io.Reader
+		io.Closer
+	}{src, body}, writer)
 
 	res.Body = reader
 	// Content-Length cannot be determined ahead of time.
@@ -41,24 +65,22 @@ func StreamRewrite(res *http.Response, processor func(src io.ReadCloser, dst *io
 	res.Header.Del("Content-Length")
 	res.Header.Del("Content-Encoding")
 	res.TransferEncoding = []string{"chunked"}
-	res.Header.Set("Content-Type", fmt.Sprintf("%s; charset=utf-8", mimeType))
 	return nil
 }
 
-// BufferRewrite reads and decodes the HTTP response body, applies a transformation
+// BufferRewrite reads and decompresses the HTTP response body, applies a transformation
 // to it using the provided processor function, and replaces the original body
 // with the transformed version.
 //
-// It automatically handles decompression and character set conversion to UTF-8.
-// The processor receives the fully buffered, unpacked (decompressed and decoded) body as input and returns
-// a modified byte slice.
+// The processor gets the body in its original character encoding, and Content-Type is left alone.
 func BufferRewrite(res *http.Response, processor func(src []byte) []byte) error {
-	rawBodyReader, mimeType, err := getRawBodyReader(res)
+	body, err := decompressBody(res)
 	if err != nil {
-		return fmt.Errorf("get raw body reader: %v", err)
+		return err
 	}
+	defer body.Close()
 
-	rawBody, err := io.ReadAll(rawBodyReader)
+	rawBody, err := io.ReadAll(body)
 	if err != nil {
 		return fmt.Errorf("read body: %v", err)
 	}
@@ -70,41 +92,35 @@ func BufferRewrite(res *http.Response, processor func(src []byte) []byte) error 
 	res.Header.Set("Content-Length", fmt.Sprint(len(processedBody)))
 	res.TransferEncoding = nil
 	res.Header.Del("Content-Encoding")
-	res.Header.Set("Content-Type", fmt.Sprintf("%s; charset=utf-8", mimeType))
 	return nil
 }
 
-// getRawBodyReader extracts an uncompressed, UTF-8 decoded body from a potentially compressed and non-UTF-8 encoded HTTP response.
-func getRawBodyReader(res *http.Response) (body io.ReadCloser, mimeType string, err error) {
+// IsUTF8Script reports whether script is valid UTF-8 and contains no ESC (0x1B) bytes.
+// Rewriters that parse or match JS as bytes must only change scripts that pass. In legacy
+// multi-byte encodings, part of a character can read as JS syntax, such as the backslash (0x5C)
+// in Shift_JIS "表" (0x95 0x5C). ESC rules out ISO-2022-JP, which is 7-bit and would otherwise pass.
+func IsUTF8Script(script []byte) bool {
+	return utf8.Valid(script) && bytes.IndexByte(script, 0x1b) == -1
+}
+
+// decompressBody returns a reader of the decompressed response body.
+// Closing it closes the original body.
+func decompressBody(res *http.Response) (io.ReadCloser, error) {
 	encoding := res.Header.Get("Content-Encoding")
-	contentType := res.Header.Get("Content-Type")
-	mimeType, params, err := mime.ParseMediaType(contentType)
+	if encoding == "" {
+		return res.Body, nil
+	}
+	decompressed, err := decompressReader(res.Body, encoding)
 	if err != nil {
-		return nil, "", fmt.Errorf("parse content type %q: %v", contentType, err)
+		return nil, fmt.Errorf("create decompressed reader for encoding %q: %v", encoding, err)
 	}
-	if encoding == "" && strings.ToLower(params["charset"]) == "utf-8" {
-		// The body is already UTF-8 encoded and not compressed.
-		return res.Body, mimeType, nil
-	}
-
-	decompressedReader, err := decompressReader(res.Body, encoding)
-	if err != nil {
-		return nil, "", fmt.Errorf("create decompressed reader for encoding %q: %v", encoding, err)
-	}
-
-	decodedReader, err := charset.NewReader(decompressedReader, contentType)
-	if err != nil {
-		decompressedReader.Close()
-		return nil, "", fmt.Errorf("create decoded reader for content type %q: %v", contentType, err)
-	}
-
 	return struct {
 		io.Reader
 		io.Closer
 	}{
-		decodedReader,
-		&multiCloser{[]io.Closer{decompressedReader, res.Body}},
-	}, mimeType, nil
+		decompressed,
+		&multiCloser{[]io.Closer{decompressed, res.Body}},
+	}, nil
 }
 
 // decompressReader decompresses a reader using the specified compression algorithm.
@@ -128,8 +144,6 @@ func decompressReader(reader io.ReadCloser, compressionAlg string) (io.ReadClose
 			return nil, fmt.Errorf("create zstd reader: %v", err)
 		}
 		return io.NopCloser(zstdReader), nil
-	case "":
-		return reader, nil
 	default:
 		return nil, errors.New("unsupported encoding")
 	}

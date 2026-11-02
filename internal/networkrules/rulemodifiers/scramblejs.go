@@ -91,7 +91,7 @@ func (s *ScrambleJSModifier) Cancels(modifier Modifier) bool {
 
 // replaceInInlineHTML replaces matched keys with unique random values in HTML responses.
 func replaceInInlineHTML(res *http.Response, keys []*regexp.Regexp) error {
-	return httprewrite.StreamRewrite(res, func(original io.ReadCloser, modified *io.PipeWriter) {
+	return httprewrite.StreamRewriteHTML(res, func(original io.ReadCloser, modified *io.PipeWriter) {
 		defer original.Close()
 		z := html.NewTokenizer(original)
 
@@ -130,6 +130,9 @@ func replaceInJS(res *http.Response, keys []*regexp.Regexp) error {
 
 // replaceKeys replaces each occurrence of keys with unique random strings.
 func replaceKeys(script []byte, keys []*regexp.Regexp) []byte {
+	if !httprewrite.IsUTF8Script(script) {
+		return script
+	}
 	// anfragment: This is potentially inefficient when running on large script arrays/multiple keys
 	// due to multiple passes/script array copies. Preprocess keys into an Aho-Corasick or build a single regexp
 	// if this gets determined as a bottleneck.
