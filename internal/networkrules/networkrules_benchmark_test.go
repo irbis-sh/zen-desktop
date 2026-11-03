@@ -81,6 +81,20 @@ func loadRules(b *testing.B) *networkrules.NetworkRules {
 			b.Fatal(err)
 		}
 	}
+	// The default lists also have a few rules with a bare "*" pattern, which
+	// match every URL. The lists above have none, so add the ones Zen parses.
+	for _, rule := range []string{
+		"*$ping,third-party",
+		"*$third-party,domain=adblock.turtlecute.org",
+		"*$script,third-party,domain=scnlog.me",
+		"*$script,third-party,domain=ziperto.com",
+		"*$script,third-party,domain=apne.co",
+		"*$third-party,xmlhttprequest,domain=sanet.st",
+	} {
+		if _, err := nr.ParseRule(rule, nil); err != nil {
+			b.Fatal(err)
+		}
+	}
 	// Match against compacted rules, as the app does after loading its lists.
 	nr.Compact()
 	return nr

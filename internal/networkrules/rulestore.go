@@ -3,6 +3,7 @@ package networkrules
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/irbis-sh/zen-desktop/internal/ruletree"
@@ -16,7 +17,8 @@ type ruleStore[T comparable] struct {
 	// the block page's allow button.
 	mu   sync.RWMutex
 	tree *ruletree.Tree[T]
-	// generic is rules with an empty pattern, which match for every URL.
+	// generic is rules whose pattern is empty or only "*", which match for every
+	// URL.
 	generic []T
 	regexp  []regexpRule[T]
 }
@@ -33,9 +35,10 @@ func newRuleStore[T comparable]() *ruleStore[T] {
 }
 
 func (s *ruleStore[T]) Insert(pattern string, v T) error {
-	// The pattern is either generic (empty), regexp, or regular.
 	switch {
-	case pattern == "":
+	// A pattern of only "*" matches every URL, like an empty one. In the tree it
+	// would match once for every position the walk starts from.
+	case strings.Trim(pattern, "*") == "":
 		s.mu.Lock()
 		s.generic = append(s.generic, v)
 		s.mu.Unlock()

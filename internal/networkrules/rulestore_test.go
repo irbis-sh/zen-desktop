@@ -14,6 +14,8 @@ func TestRuleStoreMatch(t *testing.T) {
 	for _, r := range []struct{ pattern, value string }{
 		{"", "generic"},
 		{"", "generic-rejected"},
+		{"*", "star"},
+		{"**", "double-star"},
 		{"||example.com^", "tree"},
 		{"||example.com^", "tree-rejected"},
 		{"||other.com^", "tree-unmatched"},
@@ -30,8 +32,14 @@ func TestRuleStoreMatch(t *testing.T) {
 		return !strings.HasSuffix(v, "-rejected")
 	})
 	slices.Sort(got)
-	if want := []string{"generic", "regexp", "tree"}; !slices.Equal(got, want) {
+	if want := []string{"double-star", "generic", "regexp", "star", "tree"}; !slices.Equal(got, want) {
 		t.Errorf("Match = %q, want %q", got, want)
+	}
+
+	// Match can't show where "*" rules are stored, because Tree.Get removes
+	// duplicates.
+	if want := []string{"generic", "generic-rejected", "star", "double-star"}; !slices.Equal(s.generic, want) {
+		t.Errorf("generic = %q, want %q", s.generic, want)
 	}
 }
 
