@@ -215,6 +215,35 @@ func TestRegexpRules(t *testing.T) {
 	})
 }
 
+func TestStarPatternRules(t *testing.T) {
+	t.Parallel()
+
+	nr := New()
+	if _, err := nr.ParseRule(`*$third-party`, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		site      string
+		wantBlock bool
+	}{
+		{name: "blocks third-party request", site: "cross-site", wantBlock: true},
+		{name: "allows first-party request", site: "same-origin", wantBlock: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			headers := http.Header{"Sec-Fetch-Site": []string{tt.site}}
+			_, shouldBlock, _ := nr.ModifyReq(newTestRequest(t, "https://cdn.example.net/app.js", headers))
+			if shouldBlock != tt.wantBlock {
+				t.Errorf("shouldBlock = %v, want %v", shouldBlock, tt.wantBlock)
+			}
+		})
+	}
+}
+
 func TestExceptionRules(t *testing.T) {
 	t.Parallel()
 
