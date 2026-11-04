@@ -20,6 +20,7 @@ import { setConstant } from './set-constant';
 import { setCookie, setCookieReload } from './set-cookie';
 import { setLocalStorageItem } from './set-local-storage-item';
 import { setSessionStorageItem } from './set-session-storage-item';
+import { trustedSetCookie, trustedSetCookieReload } from './trusted-set-cookie';
 
 const logger = createLogger('index');
 
@@ -53,6 +54,8 @@ const scriptletNameToFunction = new Map<string, Function>([
   ['set-cookie', setCookie],
   ['ubo-set-cookie', setCookie],
   ['set-cookie-reload', setCookieReload],
+  ['trusted-set-cookie', trustedSetCookie],
+  ['trusted-set-cookie-reload', trustedSetCookieReload],
 ]);
 
 export default function (name: string, ...args: string[]): void {
