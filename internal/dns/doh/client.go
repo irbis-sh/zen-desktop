@@ -45,7 +45,8 @@ type Client struct {
 	now func() time.Time
 
 	mu sync.Mutex
-	// lastWorked is the address of the last connection whose TLS handshake completed.
+	// lastWorked is the address of the last connection whose TLS handshake completed since
+	// the last Reset.
 	lastWorked netip.Addr
 	// silentSince is when the current stretch without a valid response began: the last
 	// response, or the last time the client moved to new connections (Reset, or the
@@ -123,6 +124,8 @@ func (c *Client) newTransport() *http.Transport {
 		DialTLSContext: c.dialTLS,
 		// A custom dialler turns off automatic HTTP/2.
 		ForceAttemptHTTP2: true,
+		// A DNS message is too small for gzip to help.
+		DisableCompression: true,
 		HTTP2: &http.HTTP2Config{
 			SendPingTimeout: 15 * time.Second,
 			PingTimeout:     5 * time.Second,
@@ -208,6 +211,10 @@ func (c *Client) Reset() {
 	c.mu.Lock()
 	c.silentSince = c.now()
 	c.connErr = nil
+	// The address that worked on the old network says nothing about the new one. If it was
+	// IPv6 and the new network has no IPv6, it would fail at once, and dialTLS would report
+	// that error rather than the IPv4 addresses' errors.
+	c.lastWorked = netip.Addr{}
 	// CloseIdleConnections leaves busy connections open, and HTTP/2 sends new queries on
 	// them too. Without a new transport, queries after a network change or sleep would
 	// keep landing on a busy connection that may be dead.

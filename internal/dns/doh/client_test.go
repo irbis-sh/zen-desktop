@@ -50,6 +50,9 @@ func TestQuerySendsPaddedPOST(t *testing.T) {
 			t.Errorf("%s = %q, want %q", h, v, mediaType)
 		}
 	}
+	if v := got.Header.Get("Accept-Encoding"); v != "" {
+		t.Errorf("Accept-Encoding = %q, want none", v)
+	}
 	if len(body)%paddingBlock != 0 {
 		t.Errorf("query is %d bytes, want a multiple of %d", len(body), paddingBlock)
 	}
@@ -207,6 +210,10 @@ func TestQueryMovesToNextAddress(t *testing.T) {
 			}
 			if got := c.order([]netip.Addr{addr1, addr2})[0]; got != addr2 {
 				t.Errorf("first address after the query = %s, want %s, which last worked", got, addr2)
+			}
+			c.Reset()
+			if got := c.order([]netip.Addr{addr1, addr2})[0]; got != addr1 {
+				t.Errorf("first address after Reset = %s, want %s", got, addr1)
 			}
 		})
 	}
