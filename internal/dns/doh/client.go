@@ -228,7 +228,9 @@ func (c *Client) Close() {
 func (c *Client) renewIfSilent() {
 	c.mu.Lock()
 	now := c.now()
-	if now.Sub(c.silentSince) <= silenceLimit {
+	// A negative stretch means the wall clock stepped back. It counts as silence, or the
+	// check would wait out the step as well.
+	if d := now.Sub(c.silentSince); d >= 0 && d <= silenceLimit {
 		c.mu.Unlock()
 		return
 	}

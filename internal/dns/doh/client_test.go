@@ -326,6 +326,10 @@ func TestQueryOpensNewConnectionAfterSilence(t *testing.T) {
 	if d := n.dials.Load(); d != 2 {
 		t.Errorf("%d dials after the silence limit, want 2", d)
 	}
+	query(-time.Hour)
+	if d := n.dials.Load(); d != 3 {
+		t.Errorf("%d dials after the clock stepped back, want 3", d)
+	}
 }
 
 func TestResetOpensNewConnection(t *testing.T) {
