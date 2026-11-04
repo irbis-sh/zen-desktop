@@ -52,7 +52,7 @@ func (h *HeaderModifier) Parse(modifier string) error {
 	return nil
 }
 
-func (h *HeaderModifier) ShouldMatchReq(_ *http.Request) bool {
+func (h *HeaderModifier) ShouldMatchReq(_ Request) bool {
 	return false
 }
 

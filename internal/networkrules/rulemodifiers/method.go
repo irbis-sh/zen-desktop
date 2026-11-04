@@ -42,7 +42,7 @@ func (m *MethodModifier) Parse(modifier string) error {
 	return nil
 }
 
-func (m *MethodModifier) ShouldMatchReq(req *http.Request) bool {
+func (m *MethodModifier) ShouldMatchReq(req Request) bool {
 	matches := false
 	for _, entry := range m.entries {
 		if entry.MatchesMethod(req.Method) {

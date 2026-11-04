@@ -70,12 +70,16 @@ func loadRules(b *testing.B) *networkrules.NetworkRules {
 		}
 	}
 	// The default lists have about 2,400 generic rules (no URL pattern), mostly
-	// $removeparam, a third of them limited by $domain. The lists above have
-	// none, so add a similar set.
+	// $removeparam, a third of them limited by $domain. Those average about five
+	// domains, and one in twenty domains ends in ".*". The lists above have none
+	// of this, so add a similar set.
 	for i := range 2400 {
 		rule := fmt.Sprintf("$removeparam=param%d", i)
-		if i%3 == 0 {
-			rule += fmt.Sprintf(",domain=site%d.com", i)
+		switch {
+		case i%12 == 0:
+			rule += fmt.Sprintf(",domain=site%d.*", i)
+		case i%3 == 0:
+			rule += fmt.Sprintf(",domain=a%[1]d.com|b%[1]d.com|c%[1]d.com|d%[1]d.com|e%[1]d.com", i)
 		}
 		if _, err := nr.ParseRule(rule, nil); err != nil {
 			b.Fatal(err)

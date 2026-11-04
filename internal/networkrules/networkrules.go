@@ -9,6 +9,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/contenttype"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/exceptionrule"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
+	"github.com/irbis-sh/zen-desktop/internal/networkrules/rulemodifiers"
 )
 
 type NetworkRules struct {
@@ -29,16 +30,17 @@ func New() *NetworkRules {
 func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, shouldBlock bool, redirectURL string) {
 	reqURL := renderURLWithoutPort(req.URL)
 	reqType := contenttype.FromRequest(req)
+	matchReq := rulemodifiers.NewRequest(req)
 
 	primaryRules := nr.primaryStore.Match(reqURL, func(r *rule.Rule) bool {
-		return r.ShouldMatchReq(req, reqType)
+		return r.ShouldMatchReq(matchReq, reqType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, false, ""
 	}
 
 	exceptions := nr.exceptionStore.Match(reqURL, func(er *exceptionrule.ExceptionRule) bool {
-		return er.ShouldMatchReq(req, reqType)
+		return er.ShouldMatchReq(matchReq, reqType)
 	})
 
 	clickedLink := fetchmeta.IsUserActivatedNavigation(req)

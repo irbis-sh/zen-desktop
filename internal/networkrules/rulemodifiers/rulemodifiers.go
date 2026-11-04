@@ -16,7 +16,7 @@ type Modifier interface {
 // ConditionModifier restrict when a rule applies based on request/response metadata.
 type ConditionModifier interface {
 	Modifier
-	ShouldMatchReq(*http.Request) bool
+	ShouldMatchReq(Request) bool
 	ShouldMatchRes(*http.Response) bool
 }
 

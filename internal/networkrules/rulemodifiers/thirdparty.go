@@ -18,7 +18,7 @@ func (m *ThirdPartyModifier) Parse(modifier string) error {
 	return nil
 }
 
-func (m *ThirdPartyModifier) ShouldMatchReq(req *http.Request) bool {
+func (m *ThirdPartyModifier) ShouldMatchReq(req Request) bool {
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site
 	switch req.Header.Get("Sec-Fetch-Site") {
 	case "cross-site":
