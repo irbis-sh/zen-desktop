@@ -73,60 +73,68 @@ func TestQuerySendsPaddedPOST(t *testing.T) {
 func TestQueryRejectsBadResponses(t *testing.T) {
 	t.Parallel()
 
-	tests := map[string]func(w http.ResponseWriter, q dnsmessage.Message){
-		"status": func(w http.ResponseWriter, _ dnsmessage.Message) {
-			http.Error(w, "server error", http.StatusInternalServerError)
-		},
-		"content type": func(w http.ResponseWriter, q dnsmessage.Message) {
+	tests := map[string]struct {
+		respond func(w http.ResponseWriter, q dnsmessage.Message)
+		// want is part of the error, so that each case fails only the check it is for.
+		want string
+	}{
+		"status": {func(w http.ResponseWriter, q dnsmessage.Message) {
+			a := answerFor(q)
+			b, _ := a.Pack()
+			w.Header().Set("Content-Type", mediaType)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(b)
+		}, "status"},
+		"content type": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			a := answerFor(q)
 			b, _ := a.Pack()
 			w.Header().Set("Content-Type", "text/html")
 			w.Write(b)
-		},
-		"ID": func(w http.ResponseWriter, q dnsmessage.Message) {
+		}, "content type"},
+		"ID": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			a := answerFor(q)
 			a.ID = 1
 			writeMessage(w, a)
-		},
-		"question": func(w http.ResponseWriter, q dnsmessage.Message) {
+		}, "isn't an answer"},
+		"question": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			a := answerFor(q)
 			a.Questions[0].Name = dnsmessage.MustNewName("other.example.")
 			writeMessage(w, a)
-		},
-		"question type": func(w http.ResponseWriter, q dnsmessage.Message) {
+		}, "different question"},
+		"question type": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			a := answerFor(q)
 			a.Questions[0].Type = dnsmessage.TypeAAAA
 			writeMessage(w, a)
-		},
-		"question class": func(w http.ResponseWriter, q dnsmessage.Message) {
+		}, "different question"},
+		"question class": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			a := answerFor(q)
 			a.Questions[0].Class = dnsmessage.ClassCHAOS
 			writeMessage(w, a)
-		},
-		"not a response": func(w http.ResponseWriter, q dnsmessage.Message) {
+		}, "different question"},
+		"not a response": {func(w http.ResponseWriter, q dnsmessage.Message) {
 			writeMessage(w, q)
-		},
-		"too large": func(w http.ResponseWriter, _ dnsmessage.Message) {
+		}, "isn't an answer"},
+		"too large": {func(w http.ResponseWriter, _ dnsmessage.Message) {
 			w.Header().Set("Content-Type", mediaType)
 			w.Write(make([]byte, maxMessageSize+1))
-		},
+		}, "larger than"},
 	}
 
-	for name, respond := range tests {
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			srv := newTestServer(t, func(w http.ResponseWriter, _ *http.Request, q dnsmessage.Message) {
 				if q.Questions[0].Name.String() == "bad.example." {
-					respond(w, q)
+					tt.respond(w, q)
 					return
 				}
 				writeAnswer(w, q)
 			})
 			c, n := newTestClient(t, srv, map[netip.Addr]behaviour{addr1: connect})
 
-			if _, err := c.Query(t.Context(), question("bad.example.")); err == nil {
-				t.Fatal("Query accepted the bad response")
+			if _, err := c.Query(t.Context(), question("bad.example.")); err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("error = %v, want one containing %q", err, tt.want)
 			}
 			if _, err := c.Query(t.Context(), question("ok.example.")); err != nil {
 				t.Fatalf("Query after the bad response: %v", err)
@@ -258,6 +266,21 @@ func TestQueryTimeoutReportsLastConnectionError(t *testing.T) {
 	_, err := c.Query(ctx, question("ok.example."))
 	if err == nil || !strings.Contains(err.Error(), "certificate") {
 		t.Errorf("error = %v, want the TLS error", err)
+	}
+}
+
+func TestQueryTimeoutIgnoresLaterAddressErrors(t *testing.T) {
+	t.Parallel()
+
+	srv := newTestServer(t, answerAll)
+	// addr2 stands in for an IPv6 address on a network without IPv6.
+	c, _ := newTestClient(t, srv, map[netip.Addr]behaviour{addr1: hang, addr2: refuse})
+
+	ctx, cancel := context.WithTimeout(t.Context(), 2*staggerDelay)
+	defer cancel()
+	_, err := c.Query(ctx, question("ok.example."))
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("error = %v, want %v", err, context.DeadlineExceeded)
 	}
 }
 

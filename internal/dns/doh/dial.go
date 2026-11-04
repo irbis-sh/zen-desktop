@@ -40,6 +40,11 @@ var errNoAddresses = errors.New("no addresses to connect to")
 // doesn't hold up the other addresses. The cost is on links with a round trip over about
 // 125 ms: the next address starts before the first handshake ends, and the extra
 // connections are thrown away.
+//
+// If every address fails, dialTLS reports the error from the first address in the order.
+// The others are fallbacks, and their errors can hide the real problem: on a network
+// without IPv6, the IPv6 addresses fail at once with "no route to host", while the IPv4
+// addresses time out or fail TLS.
 func (c *Client) dialTLS(ctx context.Context, _, addr string) (net.Conn, error) {
 	_, port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -55,26 +60,26 @@ func (c *Client) dialTLS(ctx context.Context, _, addr string) (net.Conn, error) 
 	}
 
 	type result struct {
-		conn *tls.Conn
-		addr netip.Addr
-		err  error
+		conn  *tls.Conn
+		index int
+		err   error
 	}
 	results := make(chan result)
 	next, running := 0, 0
 	start := func() {
-		addr := addrs[next]
+		index := next
 		next++
 		running++
 		go func() {
-			conn, err := c.connect(ctx, addr, port)
-			results <- result{conn, addr, err}
+			conn, err := c.connect(ctx, addrs[index], port)
+			results <- result{conn, index, err}
 		}()
 	}
 
 	start()
 	timer := time.NewTimer(staggerDelay)
 	defer timer.Stop()
-	var firstErr error
+	var firstAddrErr error
 	for running > 0 {
 		select {
 		case <-timer.C:
@@ -90,13 +95,13 @@ func (c *Client) dialTLS(ctx context.Context, _, addr string) (net.Conn, error) 
 					}
 				}()
 				c.mu.Lock()
-				c.connErr, c.lastWorked = nil, r.addr
+				c.connErr, c.lastWorked = nil, addrs[r.index]
 				c.mu.Unlock()
 				return r.conn, nil
 			}
-			c.connFailed(ctx, r.err)
-			if firstErr == nil {
-				firstErr = r.err
+			if r.index == 0 {
+				firstAddrErr = r.err
+				c.connFailed(ctx, r.err)
 			}
 		}
 		// The stagger delay passed or an attempt failed: either way, the next address gets a go.
@@ -105,7 +110,7 @@ func (c *Client) dialTLS(ctx context.Context, _, addr string) (net.Conn, error) 
 			timer.Reset(staggerDelay)
 		}
 	}
-	return nil, firstErr
+	return nil, firstAddrErr
 }
 
 // addrs returns the addresses to dial, in order: the one that last worked, then IPv4,
