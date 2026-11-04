@@ -93,6 +93,16 @@ func TestQueryRejectsBadResponses(t *testing.T) {
 			a.Questions[0].Name = dnsmessage.MustNewName("other.example.")
 			writeMessage(w, a)
 		},
+		"question type": func(w http.ResponseWriter, q dnsmessage.Message) {
+			a := answerFor(q)
+			a.Questions[0].Type = dnsmessage.TypeAAAA
+			writeMessage(w, a)
+		},
+		"question class": func(w http.ResponseWriter, q dnsmessage.Message) {
+			a := answerFor(q)
+			a.Questions[0].Class = dnsmessage.ClassCHAOS
+			writeMessage(w, a)
+		},
 		"not a response": func(w http.ResponseWriter, q dnsmessage.Message) {
 			writeMessage(w, q)
 		},
@@ -269,7 +279,7 @@ func TestQueryTimeoutAfterSuccessReportsDeadline(t *testing.T) {
 	}
 }
 
-func TestQueryClosesIdleConnectionsAfterSilence(t *testing.T) {
+func TestQueryOpensNewConnectionAfterSilence(t *testing.T) {
 	t.Parallel()
 
 	srv := newTestServer(t, answerAll)
@@ -312,45 +322,59 @@ func TestResetOpensNewConnection(t *testing.T) {
 	}
 }
 
-func TestResetOpensNewConnectionWhileBusy(t *testing.T) {
+func TestNewConnectionWhileBusy(t *testing.T) {
 	t.Parallel()
 
-	arrived := make(chan struct{})
-	srv := newTestServer(t, func(w http.ResponseWriter, r *http.Request, q dnsmessage.Message) {
-		if q.Questions[0].Name.String() == "hang.example." {
-			close(arrived)
-		}
-		answerOrHang(w, r, q)
-	})
-	c, n := newTestClient(t, srv, map[netip.Addr]behaviour{addr1: connect})
-	if _, err := c.Query(t.Context(), question("ok.example.")); err != nil {
-		t.Fatalf("Query: %v", err)
+	// Each case runs with a query hanging on the only connection. Without a new transport,
+	// the next query would share that busy connection.
+	tests := map[string]func(c *Client, sleep func(time.Duration)){
+		"Reset":   func(c *Client, _ func(time.Duration)) { c.Reset() },
+		"silence": func(_ *Client, sleep func(time.Duration)) { sleep(silenceLimit + time.Second) },
 	}
 
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan struct{})
-	go func() {
-		c.Query(ctx, question("hang.example."))
-		close(done)
-	}()
-	t.Cleanup(func() {
-		cancel()
-		<-done
-	})
-	<-arrived
+	for name, renew := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	// Without Reset, the next query would share the busy connection.
-	c.Reset()
-	if _, err := c.Query(t.Context(), question("ok.example.")); err != nil {
-		t.Fatalf("Query after Reset: %v", err)
-	}
-	if d := n.dials.Load(); d != 2 {
-		t.Errorf("%d dials, want 2", d)
-	}
-	select {
-	case <-done:
-		t.Error("Reset ended the running query")
-	default:
+			arrived := make(chan struct{})
+			srv := newTestServer(t, func(w http.ResponseWriter, r *http.Request, q dnsmessage.Message) {
+				if q.Questions[0].Name.String() == "hang.example." {
+					close(arrived)
+				}
+				answerOrHang(w, r, q)
+			})
+			c, n := newTestClient(t, srv, map[netip.Addr]behaviour{addr1: connect})
+			var slept atomic.Int64
+			c.now = func() time.Time { return time.Now().Add(time.Duration(slept.Load())) }
+			if _, err := c.Query(t.Context(), question("ok.example.")); err != nil {
+				t.Fatalf("Query: %v", err)
+			}
+
+			ctx, cancel := context.WithCancel(t.Context())
+			done := make(chan struct{})
+			go func() {
+				c.Query(ctx, question("hang.example."))
+				close(done)
+			}()
+			t.Cleanup(func() {
+				cancel()
+				<-done
+			})
+			<-arrived
+
+			renew(c, func(d time.Duration) { slept.Add(int64(d)) })
+			if _, err := c.Query(t.Context(), question("ok.example.")); err != nil {
+				t.Fatalf("Query after %s: %v", name, err)
+			}
+			if d := n.dials.Load(); d != 2 {
+				t.Errorf("%d dials, want 2", d)
+			}
+			select {
+			case <-done:
+				t.Errorf("%s ended the running query", name)
+			default:
+			}
+		})
 	}
 }
 

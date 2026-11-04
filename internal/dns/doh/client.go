@@ -20,7 +20,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-// silenceLimit is how long the client goes without a response before it closes its idle
+// silenceLimit is how long the client goes without a response before it moves to new
 // connections. After sleep, a connection can be dead without the OS knowing, and a query
 // sent on it would wait out its whole budget. The HTTP/2 ping doesn't catch this in time:
 // it starts only after 15 s without traffic.
@@ -48,7 +48,7 @@ type Client struct {
 	// lastWorked is the address of the last connection whose TLS handshake completed.
 	lastWorked netip.Addr
 	// silentSince is when the current stretch without a valid response began: the last
-	// response, or the last time the client closed its connections (Reset, or the
+	// response, or the last time the client moved to new connections (Reset, or the
 	// silence check).
 	silentSince time.Time
 	// connErr is the error of the most recent connection attempt, or nil if it succeeded.
@@ -126,8 +126,8 @@ func (c *Client) newTransport() *http.Transport {
 			SendPingTimeout: 15 * time.Second,
 			PingTimeout:     5 * time.Second,
 		},
-		// This also closes the connections of a transport that Reset replaced, once
-		// their queries finish. Nothing else closes them.
+		// This also closes the connections of a transport that Reset or the silence
+		// check replaced, once their queries finish. Nothing else closes them.
 		IdleConnTimeout: 90 * time.Second,
 		// Without a limit, each query that finds no connection dials its own, and a page
 		// load after start, Reset or the silence check opens dozens of connections only
@@ -150,7 +150,7 @@ func (c *Client) Query(ctx context.Context, q dnsmessage.Question) (*dnsmessage.
 	if err != nil {
 		return nil, fmt.Errorf("pack query: %w", err)
 	}
-	c.closeIdleIfSilent()
+	c.renewIfSilent()
 
 	msg, err := c.exchange(ctx, q, query)
 	if err != nil && ctx.Err() == nil {
@@ -204,11 +204,7 @@ func (c *Client) exchange(ctx context.Context, q dnsmessage.Question, query []by
 // Reset makes later queries use new connections. Queries already running finish or time
 // out on their current connections.
 func (c *Client) Reset() {
-	// CloseIdleConnections leaves busy connections open. Without a new transport, queries
-	// after a network change would keep landing on busy connections from the old network.
-	old := c.transport.Swap(c.newTransport())
-	// This also cancels dials that no query is waiting for.
-	old.CloseIdleConnections()
+	c.renewTransport()
 	c.mu.Lock()
 	c.silentSince = c.now()
 	c.connErr = nil
@@ -220,8 +216,10 @@ func (c *Client) Close() {
 	c.transport.Load().CloseIdleConnections()
 }
 
-// closeIdleIfSilent closes idle connections if no response has come for silenceLimit.
-func (c *Client) closeIdleIfSilent() {
+// renewIfSilent moves to new connections if no response has come for silenceLimit. Unlike
+// Reset, it keeps connErr: during an outage, the new dial can outlast the query, which
+// should still report the last real error.
+func (c *Client) renewIfSilent() {
 	c.mu.Lock()
 	now := c.now()
 	silent := now.Sub(c.silentSince) > silenceLimit
@@ -232,6 +230,16 @@ func (c *Client) closeIdleIfSilent() {
 	}
 	c.mu.Unlock()
 	if silent {
-		c.transport.Load().CloseIdleConnections()
+		c.renewTransport()
 	}
+}
+
+// renewTransport makes later queries use new connections.
+func (c *Client) renewTransport() {
+	// CloseIdleConnections leaves busy connections open, and HTTP/2 sends new queries on
+	// them too. Without a new transport, queries after a network change or sleep would
+	// keep landing on a busy connection that may be dead.
+	old := c.transport.Swap(c.newTransport())
+	// This also cancels dials that no query is waiting for.
+	old.CloseIdleConnections()
 }
