@@ -258,7 +258,7 @@ func isNoopModifier(modifier string) bool {
 }
 
 // ShouldMatchReq reports whether the rule matches a request of type t.
-func (rm *Rule) ShouldMatchReq(req *http.Request, t contenttype.Type) bool {
+func (rm *Rule) ShouldMatchReq(req rulemodifiers.Request, t contenttype.Type) bool {
 	if !rm.types().Matches(t) {
 		return false
 	}

@@ -16,7 +16,7 @@ func TestMethodModifier(t *testing.T) {
 		req := http.Request{
 			Method: "GET",
 		}
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=GET should match a GET request")
 		}
 	})
@@ -29,7 +29,7 @@ func TestMethodModifier(t *testing.T) {
 		req := http.Request{
 			Method: "GET",
 		}
-		if m.ShouldMatchReq(&req) {
+		if m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=~GET should not match a GET request")
 		}
 	})
@@ -42,7 +42,7 @@ func TestMethodModifier(t *testing.T) {
 		req := http.Request{
 			Method: "GET",
 		}
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=get should match a GET request")
 		}
 	})
@@ -56,17 +56,17 @@ func TestMethodModifier(t *testing.T) {
 		req := http.Request{
 			Method: "GET",
 		}
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=GET|POST should match a GET request")
 		}
 
 		req.Method = "POST"
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=GET|POST should match a POST request")
 		}
 
 		req.Method = "HEAD"
-		if m.ShouldMatchReq(&req) {
+		if m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=GET|POST should not match a HEAD request")
 		}
 	})
@@ -80,22 +80,22 @@ func TestMethodModifier(t *testing.T) {
 		req := http.Request{
 			Method: "GET",
 		}
-		if m.ShouldMatchReq(&req) {
+		if m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=~GET|~POST should not match a GET request")
 		}
 
 		req.Method = "POST"
-		if m.ShouldMatchReq(&req) {
+		if m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=~GET|~POST should not match a POST request")
 		}
 
 		req.Method = "HEAD"
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=~GET|~POST should match a HEAD request")
 		}
 
 		req.Method = "PUT"
-		if !m.ShouldMatchReq(&req) {
+		if !m.ShouldMatchReq(Request{Request: &req}) {
 			t.Error("method=~GET|~POST should match a PUT request")
 		}
 	})

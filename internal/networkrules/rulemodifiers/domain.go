@@ -4,11 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
-
-	"golang.org/x/net/publicsuffix"
 )
 
 var (
@@ -53,23 +50,14 @@ func (m *DomainModifier) Parse(modifier string) error {
 	return nil
 }
 
-func (m *DomainModifier) ShouldMatchReq(req *http.Request) bool {
-	var hostname string
-	referer := req.Header.Get("Referer")
-	// Allow empty "Referer" header to make inverted rules work.
-	if referer != "" {
-		url, err := url.Parse(referer)
-		if err != nil {
-			return false
-		}
-		hostname = url.Hostname()
-	} else {
-		hostname = req.URL.Hostname()
+func (m *DomainModifier) ShouldMatchReq(req Request) bool {
+	if !req.sourceHostOK {
+		return false
 	}
 
 	matches := false
 	for _, entry := range m.entries {
-		if entry.MatchDomain(hostname) {
+		if entry.matches(req) {
 			matches = true
 			break
 		}
@@ -85,9 +73,12 @@ func (m *DomainModifier) ShouldMatchRes(_ *http.Response) bool {
 }
 
 type domainModifierEntry struct {
-	regular string
-	tld     string
-	regexp  *regexp.Regexp
+	// suffix is the domain with a leading dot, such as ".example.com". It is
+	// built once at parse time because every request checks every entry.
+	suffix string
+	// label is the part before ".*" in an entry like "example.*".
+	label  string
+	regexp *regexp.Regexp
 }
 
 func (m *domainModifierEntry) Parse(entry string) error {
@@ -103,35 +94,25 @@ func (m *domainModifierEntry) Parse(entry string) error {
 	}
 
 	if strings.HasSuffix(entry, ".*") {
-		m.tld = strings.TrimSuffix(entry, ".*")
-		if len(m.tld) == 0 {
-			return errors.New("tld is empty")
+		m.label = strings.TrimSuffix(entry, ".*")
+		if len(m.label) == 0 {
+			return errors.New("label is empty")
 		}
 		return nil
 	}
 
-	m.regular = entry
+	m.suffix = "." + entry
 	return nil
 }
 
-func (m *domainModifierEntry) MatchDomain(domain string) bool {
+func (m *domainModifierEntry) matches(req Request) bool {
 	switch {
-	case m.regular != "":
-		return m.regular == domain || strings.HasSuffix(domain, "."+m.regular)
-	case m.tld != "":
-		eTLD1, err := publicsuffix.EffectiveTLDPlusOne(domain)
-		if err != nil {
-			return false
-		}
-
-		dotIndex := strings.Index(eTLD1, ".")
-		if dotIndex == -1 {
-			return false
-		}
-
-		return eTLD1[:dotIndex] == m.tld
+	case m.suffix != "":
+		return req.sourceHost == m.suffix[1:] || strings.HasSuffix(req.sourceHost, m.suffix)
+	case m.label != "":
+		return req.sourceLabel == m.label
 	case m.regexp != nil:
-		return m.regexp.MatchString(domain)
+		return m.regexp.MatchString(req.sourceHost)
 	default:
 		return false
 	}

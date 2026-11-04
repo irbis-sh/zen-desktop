@@ -39,6 +39,10 @@ func TestDomainModifier(t *testing.T) {
 		{"Multiple inverted domains - match", "domain=~example.com|~example.org", "http://example.net/", true},
 		{"Multiple inverted domains - no match com", "domain=~example.com|~example.org", "http://example.com/", false},
 		{"Multiple inverted domains - no match org", "domain=~example.com|~example.org", "http://example.org/", false},
+		{"Unparsable Referer - no match", "domain=example.com", "https://example.com:abc/", false},
+		{"Unparsable Referer - no inverted match", "domain=~example.com", "https://example.com:abc/", false},
+		{"Referer without scheme - no match", "domain=example.com", "example.com/page", false},
+		{"Referer without scheme - inverted match", "domain=~example.com", "example.com/page", true},
 	}
 
 	for _, tt := range tests {
@@ -46,7 +50,7 @@ func TestDomainModifier(t *testing.T) {
 			t.Parallel()
 			m := newDomainModifier(t, tt.modifier)
 			req := newRequestWithReferer(tt.referer)
-			if got := m.ShouldMatchReq(req); got != tt.shouldMatch {
+			if got := m.ShouldMatchReq(NewRequest(req)); got != tt.shouldMatch {
 				t.Errorf("domainModifier{%s}.ShouldMatchReq(%s) = %v, want %v", tt.modifier, tt.referer, got, tt.shouldMatch)
 			}
 		})
@@ -65,7 +69,7 @@ func TestDomainModifier(t *testing.T) {
 		}
 
 		want := true
-		if got := m.ShouldMatchReq(reqWithoutReferer); got != want {
+		if got := m.ShouldMatchReq(NewRequest(reqWithoutReferer)); got != want {
 			t.Errorf("domainModifier{%s}.ShouldMatchReq() = %v, want %v", modifier, got, want)
 		}
 	})
@@ -100,7 +104,7 @@ func TestDomainModifier(t *testing.T) {
 		}
 
 		want := false
-		got := m.ShouldMatchReq(req)
+		got := m.ShouldMatchReq(NewRequest(req))
 
 		if got != want {
 			t.Errorf("domainModifier{%q}.ShouldMatchReq() = %v, want %v", modifier, got, want)

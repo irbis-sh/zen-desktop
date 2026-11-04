@@ -69,28 +69,7 @@ func loadRules(b *testing.B) *networkrules.NetworkRules {
 			b.Fatal(err)
 		}
 	}
-	// The default lists have about 2,400 generic rules (no URL pattern), mostly
-	// $removeparam, a third of them limited by $domain. The lists above have
-	// none, so add a similar set.
-	for i := range 2400 {
-		rule := fmt.Sprintf("$removeparam=param%d", i)
-		if i%3 == 0 {
-			rule += fmt.Sprintf(",domain=site%d.com", i)
-		}
-		if _, err := nr.ParseRule(rule, nil); err != nil {
-			b.Fatal(err)
-		}
-	}
-	// The default lists also have a few rules with a bare "*" pattern, which
-	// match every URL. The lists above have none, so add the ones Zen parses.
-	for _, rule := range []string{
-		"*$ping,third-party",
-		"*$third-party,domain=adblock.turtlecute.org",
-		"*$script,third-party,domain=scnlog.me",
-		"*$script,third-party,domain=ziperto.com",
-		"*$script,third-party,domain=apne.co",
-		"*$third-party,xmlhttprequest,domain=sanet.st",
-	} {
+	for _, rule := range syntheticRules() {
 		if _, err := nr.ParseRule(rule, nil); err != nil {
 			b.Fatal(err)
 		}
@@ -98,6 +77,35 @@ func loadRules(b *testing.B) *networkrules.NetworkRules {
 	// Match against compacted rules, as the app does after loading its lists.
 	nr.Compact()
 	return nr
+}
+
+// syntheticRules returns rules of the kinds the default lists have but EasyList
+// and EasyPrivacy don't.
+func syntheticRules() []string {
+	// The default lists have about 2,400 generic rules (no URL pattern), mostly
+	// $removeparam, a third of them limited by $domain. Those average about five
+	// domains, and one in twenty domains ends in ".*".
+	var rules []string
+	for i := range 2400 {
+		rule := fmt.Sprintf("$removeparam=param%d", i)
+		switch {
+		case i%12 == 0:
+			rule += fmt.Sprintf(",domain=site%d.*", i)
+		case i%3 == 0:
+			rule += fmt.Sprintf(",domain=a%[1]d.com|b%[1]d.com|c%[1]d.com|d%[1]d.com|e%[1]d.com", i)
+		}
+		rules = append(rules, rule)
+	}
+	// They also have a few rules with a bare "*" pattern, which match every URL.
+	// These are the ones Zen parses.
+	return append(rules,
+		"*$ping,third-party",
+		"*$third-party,domain=adblock.turtlecute.org",
+		"*$script,third-party,domain=scnlog.me",
+		"*$script,third-party,domain=ziperto.com",
+		"*$script,third-party,domain=apne.co",
+		"*$third-party,xmlhttprequest,domain=sanet.st",
+	)
 }
 
 func loadURLs(b *testing.B) []*url.URL {

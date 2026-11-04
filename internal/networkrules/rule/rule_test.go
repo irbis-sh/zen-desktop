@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/contenttype"
+	"github.com/irbis-sh/zen-desktop/internal/networkrules/rulemodifiers"
 )
 
 func TestParseModifiers(t *testing.T) {
@@ -330,7 +331,7 @@ func TestShouldMatchReq(t *testing.T) {
 			t.Parallel()
 
 			req := newTestRequest(map[string]string{"Referer": tt.referer})
-			if got := r.ShouldMatchReq(req, tt.reqType); got != tt.want {
+			if got := r.ShouldMatchReq(rulemodifiers.NewRequest(req), tt.reqType); got != tt.want {
 				t.Errorf("ShouldMatchReq() = %t, want %t", got, tt.want)
 			}
 		})
