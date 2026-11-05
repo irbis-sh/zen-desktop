@@ -551,6 +551,14 @@ func (p *Proxy) tunnel(w net.Conn, r *http.Request) {
 	linkBidirectionalTunnel(w, remoteConn)
 }
 
+// copyBufPool holds the buffers writeResp copies bodies with. io.Copy would
+// allocate one per response, unless the writer has ReadFrom, which HTTP/2's
+// ResponseWriter and flushWriter don't.
+var copyBufPool = sync.Pool{New: func() any {
+	b := make([]byte, 32<<10)
+	return &b
+}}
+
 // writeResp writes the response (status code, headers, and body) to the ResponseWriter.
 //
 // writeResp closes resp.Body to populate trailers for HTTP/1.1 chunked responses.
@@ -581,7 +589,12 @@ func writeResp(w http.ResponseWriter, resp *http.Response) {
 			rc := http.NewResponseController(w)
 			dst = &flushWriter{w: w, flush: rc.Flush}
 		}
-		_, err := io.Copy(dst, resp.Body)
+		bufp := copyBufPool.Get().(*[]byte)
+		_, err := io.CopyBuffer(dst, resp.Body, *bufp)
+		// The buffer is safe to reuse after a failed Write too. The HTTP/2 server encodes DATA
+		// frames on the goroutine that closes streams, so it can't read the buffer once Write
+		// has returned (go.dev/issue/58446).
+		copyBufPool.Put(bufp)
 		// Close the body before reading trailers;
 		// resp.Trailer is only populated after the body is fully consumed and closed.
 		resp.Body.Close()

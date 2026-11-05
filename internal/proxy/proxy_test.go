@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -17,6 +18,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -315,6 +317,84 @@ func TestLocalEndpointImmuneToFilter(t *testing.T) {
 	}
 }
 
+// TestWriteRespOverHTTP2 sends responses over one HTTP/2 connection, half of them reset
+// mid-body. Every client has its own fill byte, so a copy buffer used by two responses at
+// once shows up as a corrupted body, or as a race under -race. A reset is the risky case:
+// a failed Write must not return while the server can still read from the buffer, or the
+// next response would overwrite it mid-send.
+func TestWriteRespOverHTTP2(t *testing.T) {
+	t.Parallel()
+
+	const (
+		clients  = 8
+		rounds   = 25
+		bodySize = 256 << 10 // Several trips through the 32 KB copy buffer.
+	)
+
+	aborted := make(chan struct{}, clients*rounds)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/whole/{fill}", func(w http.ResponseWriter, r *http.Request) {
+		body := io.LimitReader(fillReader(r.PathValue("fill")[0]), bodySize)
+		writeResp(w, &http.Response{StatusCode: http.StatusOK, ContentLength: bodySize, Body: io.NopCloser(body)})
+	})
+	mux.HandleFunc("/endless/{fill}", func(w http.ResponseWriter, r *http.Request) {
+		// The body never ends, so the only correct way out of writeResp is the abort panic.
+		// It must carry on to the server, which resets the stream because of it.
+		defer func() {
+			v := recover()
+			if v == http.ErrAbortHandler {
+				aborted <- struct{}{}
+			}
+			if v != nil {
+				panic(v)
+			}
+		}()
+		writeResp(w, &http.Response{StatusCode: http.StatusOK, ContentLength: -1, Body: io.NopCloser(fillReader(r.PathValue("fill")[0]))})
+	})
+
+	srv := httptest.NewUnstartedServer(mux)
+	srv.EnableHTTP2 = true
+	srv.StartTLS()
+	defer srv.Close()
+	client := srv.Client()
+	client.Timeout = backstopTimeout
+
+	var wg sync.WaitGroup
+	for i := range clients {
+		fill := 'a' + byte(i)
+		wg.Go(func() {
+			for range rounds {
+				if i%2 == 0 {
+					if _, err := readHTTP2(client, fmt.Sprintf("%s/endless/%c", srv.URL, fill), 64<<10); err != nil {
+						t.Errorf("reading start of body: %v", err)
+						return
+					}
+					select {
+					case <-aborted:
+					case <-time.After(backstopTimeout):
+						t.Error("a handler did not abort after a client reset its stream")
+						return
+					}
+					continue
+				}
+
+				// One byte past the end, so that the read reaches EOF.
+				body, err := readHTTP2(client, fmt.Sprintf("%s/whole/%c", srv.URL, fill), bodySize+1)
+				if err != nil {
+					t.Errorf("reading body: %v", err)
+					return
+				}
+				if !bytes.Equal(body, bytes.Repeat([]byte{fill}, bodySize)) {
+					t.Errorf("body for fill %c is corrupted", fill)
+					return
+				}
+			}
+		})
+	}
+	wg.Wait()
+}
+
 // backstopTimeout keeps a regression from hanging CI. It sits far above every delay
 // these tests exercise, so it never fires on a healthy path.
 const backstopTimeout = 10 * time.Second
@@ -572,4 +652,29 @@ func (selfSignedCertGenerator) GetCertificate(host string) (*tls.Certificate, er
 		Certificate: [][]byte{der},
 		PrivateKey:  key,
 	}, nil
+}
+
+// fillReader is an endless body of one repeated byte. It has no WriteTo, like a body from
+// upstream. A bytes.Reader has one, and io.CopyBuffer would then skip writeResp's buffer.
+type fillReader byte
+
+func (f fillReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = byte(f)
+	}
+	return len(p), nil
+}
+
+// readHTTP2 GETs url and reads at most limit bytes of the body. It fails if the server didn't
+// answer over HTTP/2. Closing a body that has more to come resets the stream.
+func readHTTP2(client *http.Client, url string, limit int64) ([]byte, error) {
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.ProtoMajor != 2 {
+		return nil, fmt.Errorf("got %s, want HTTP/2", resp.Proto)
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, limit))
 }
