@@ -5,7 +5,7 @@ import { BrowserOpenURL } from 'wails/runtime/runtime';
 
 import './index.css';
 
-const LINK = 'https://opencollective.com/zen-privacy';
+const LINK = 'https://opencollective.com/irbis-sh';
 
 export function DonateButton() {
   const { t } = useTranslation();
