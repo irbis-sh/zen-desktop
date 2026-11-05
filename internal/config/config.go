@@ -562,8 +562,9 @@ func (c *Config) update(fn func() error) error {
 
 // saveLocked saves the config to disk.
 // The caller must hold c's write lock.
+
 func (c *Config) saveLocked() error {
-	configData, err := json.Marshal(c)
+	configData, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
 	}
@@ -574,3 +575,4 @@ func (c *Config) saveLocked() error {
 	}
 	return nil
 }
+
