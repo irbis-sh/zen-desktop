@@ -68,8 +68,14 @@ func (m *DomainModifier) ShouldMatchReq(req Request) bool {
 	return matches
 }
 
-func (m *DomainModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *DomainModifier) ShouldMatchRes(res *http.Response) bool {
+    if res == nil || res.Request == nil {
+        return false
+    }
+
+    req := Request{}
+    // Populate req using the project's existing request conversion logic.
+    return m.ShouldMatchReq(req)
 }
 
 type domainModifierEntry struct {
