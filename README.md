@@ -135,12 +135,12 @@ Zen exists thanks to the support of many incredible people and organizations, in
 
 - Our contributors
   <a href="https://github.com/irbis-sh/zen-desktop/graphs/contributors">
-  <img src="https://opencollective.com/zen-privacy/contributors.svg?width=890&button=false" alt="Avatars of all GitHub contributors to Zen" />
+  <img src="https://opencollective.com/irbis-sh/contributors.svg?width=890&button=false" alt="Avatars of all GitHub contributors to Zen" />
   </a>
 
 - Our sponsors
-  <a href="https://opencollective.com/zen-privacy#backers" target="_blank" rel="noreferrer noopener">
-  <img src="https://opencollective.com/zen-privacy/backers.svg?width=890&button=false" alt="Avatars of all backers of Zen on Open Collective" />
+  <a href="https://opencollective.com/irbis-sh#backers" target="_blank" rel="noreferrer noopener">
+  <img src="https://opencollective.com/irbis-sh/backers.svg?width=890&button=false" alt="Avatars of all backers of Zen on Open Collective" />
   </a>
 
 - [SignPath](https://signpath.io) and [SignPath Foundation](https://signpath.org/), who generously provide a free Windows certificate and code signing

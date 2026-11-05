@@ -3,5 +3,5 @@ export const SOCIAL_LINKS = {
   BLUESKY: 'https://bsky.app/profile/irbis.sh',
   REDDIT: 'https://www.reddit.com/r/IrbisZen/',
   DISCORD: 'https://discord.gg/zGeQVatAUm',
-  OPEN_COLLECTIVE: 'https://opencollective.com/zen-privacy',
+  OPEN_COLLECTIVE: 'https://opencollective.com/irbis-sh',
 };
