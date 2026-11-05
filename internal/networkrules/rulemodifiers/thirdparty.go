@@ -30,6 +30,9 @@ func (m *ThirdPartyModifier) ShouldMatchReq(req Request) bool {
 	}
 }
 
-func (m *ThirdPartyModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *ThirdPartyModifier) ShouldMatchRes(res *http.Response) bool {
+    if res == nil || res.Request == nil {
+        return false
+    }
+    return m.ShouldMatchReq(Request{Header: res.Request.Header})
 }
