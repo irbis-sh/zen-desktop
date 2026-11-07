@@ -114,3 +114,37 @@ func TestMethodModifier(t *testing.T) {
 		}
 	})
 }
+
+func TestMethodModifierShouldMatchRes(t *testing.T) {
+	t.Parallel()
+
+	m := MethodModifier{}
+	if err := m.Parse("method=GET"); err != nil {
+		t.Fatal(err)
+	}
+	res := &http.Response{Request: &http.Request{Method: "GET"}}
+	if !m.ShouldMatchRes(res) {
+		t.Error("MethodModifier.ShouldMatchRes(res) = false, want true")
+	}
+	res.Request.Method = "POST"
+	if m.ShouldMatchRes(res) {
+		t.Error("MethodModifier.ShouldMatchRes(res) = true, want false")
+	}
+
+	inv := MethodModifier{}
+	if err := inv.Parse("method=~GET"); err != nil {
+		t.Fatal(err)
+	}
+	res.Request.Method = "GET"
+	if inv.ShouldMatchRes(res) {
+		t.Error("inverted MethodModifier.ShouldMatchRes(res) = true, want false")
+	}
+	res.Request.Method = "POST"
+	if !inv.ShouldMatchRes(res) {
+		t.Error("inverted MethodModifier.ShouldMatchRes(res) = false, want true")
+	}
+
+	if m.ShouldMatchRes(nil) {
+		t.Error("MethodModifier.ShouldMatchRes(nil) = true, want false")
+	}
+}

@@ -68,8 +68,23 @@ func (m *DomainModifier) ShouldMatchReq(req Request) bool {
 	return matches
 }
 
-func (m *DomainModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *DomainModifier) ShouldMatchRes(res *http.Response) bool {
+	if res == nil || res.Request == nil {
+		return false
+	}
+	// Derive source host from the response's request, mirroring ShouldMatchReq.
+	srcReq := NewRequest(res.Request)
+	matches := false
+	for _, entry := range m.entries {
+		if entry.matches(srcReq) {
+			matches = true
+			break
+		}
+	}
+	if m.inverted {
+		return !matches
+	}
+	return matches
 }
 
 type domainModifierEntry struct {

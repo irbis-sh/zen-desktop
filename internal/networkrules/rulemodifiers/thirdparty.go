@@ -30,6 +30,16 @@ func (m *ThirdPartyModifier) ShouldMatchReq(req Request) bool {
 	}
 }
 
-func (m *ThirdPartyModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+func (m *ThirdPartyModifier) ShouldMatchRes(res *http.Response) bool {
+	if res == nil || res.Request == nil {
+		return false
+	}
+	switch res.Request.Header.Get("Sec-Fetch-Site") {
+	case "cross-site":
+		return !m.inverted
+	case "same-origin", "same-site":
+		return m.inverted
+	default:
+		return false
+	}
 }

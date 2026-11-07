@@ -128,3 +128,37 @@ func newRequestWithReferer(referer string) *http.Request {
 		},
 	}
 }
+
+func TestDomainModifierShouldMatchRes(t *testing.T) {
+	t.Parallel()
+
+	m := newDomainModifier(t, "domain=example.com")
+	res := &http.Response{
+		Request: &http.Request{
+			URL: &url.URL{Scheme: "https", Host: "example.com"},
+		},
+	}
+	if !m.ShouldMatchRes(res) {
+		t.Error("domainModifier.ShouldMatchRes(res) = false, want true")
+	}
+
+	res.Request.URL.Host = "other.com"
+	if m.ShouldMatchRes(res) {
+		t.Error("domainModifier.ShouldMatchRes(res) = true, want false")
+	}
+
+	// inverted
+	inv := newDomainModifier(t, "domain=~example.com")
+	res.Request.URL.Host = "example.com"
+	if inv.ShouldMatchRes(res) {
+		t.Error("inverted domainModifier.ShouldMatchRes(res) = true, want false")
+	}
+	res.Request.URL.Host = "other.com"
+	if !inv.ShouldMatchRes(res) {
+		t.Error("inverted domainModifier.ShouldMatchRes(res) = false, want true")
+	}
+
+	if m.ShouldMatchRes(nil) {
+		t.Error("domainModifier.ShouldMatchRes(nil) = true, want false")
+	}
+}
