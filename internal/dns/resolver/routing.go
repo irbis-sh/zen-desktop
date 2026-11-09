@@ -33,8 +33,9 @@ func (r *Resolver) SetRouting(domains []string, vpnHandlesAllDNS bool) {
 	r.routing.Store(&routing{domains: kept, vpnHandlesAllDNS: vpnHandlesAllDNS})
 }
 
-// isPublicSuffix needs more than publicsuffix.PublicSuffix(d) == d, because for an unlisted
-// name such as corp, PublicSuffix applies the default rule and returns ("corp", false).
+// isPublicSuffix reports whether d is a public suffix. That takes more than
+// publicsuffix.PublicSuffix(d) == d, because for an unlisted name such as corp,
+// PublicSuffix applies the default rule and returns ("corp", false).
 func isPublicSuffix(d string) bool {
 	suffix, icann := publicsuffix.PublicSuffix(d)
 	return suffix == d && (icann || strings.Contains(d, "."))

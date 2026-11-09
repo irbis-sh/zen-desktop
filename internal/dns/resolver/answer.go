@@ -75,8 +75,9 @@ func interpret(msg *dnsmessage.Message, q dnsmessage.Question) verdict {
 	return verdict{addrs: addrs, ttl: addrTTL}
 }
 
-// isUnspecified unmaps first because [netip.Addr.IsUnspecified], unlike the checks in
-// isLocal, is false for ::ffff:0.0.0.0.
+// isUnspecified reports whether a is an unspecified address. It unmaps the address first,
+// because [netip.Addr.IsUnspecified], unlike the checks in isLocal, is false for
+// ::ffff:0.0.0.0.
 func isUnspecified(a netip.Addr) bool { return a.Unmap().IsUnspecified() }
 
 func isLocal(a netip.Addr) bool {

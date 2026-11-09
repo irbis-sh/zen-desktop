@@ -46,7 +46,8 @@ func New(client *doh.Client, systemDomains []string) *Resolver {
 	})
 }
 
-// newResolver lets tests replace the DoH client and the OS resolver.
+// newResolver returns a resolver like [New] does, from any DoH client and OS lookup, so
+// that tests can replace them.
 func newResolver(
 	client dohClient,
 	systemDomains []string,
@@ -69,7 +70,7 @@ func newResolver(
 	return r
 }
 
-// NetResolver returns the net.Resolver the proxy dials with.
+// NetResolver returns the [net.Resolver] the proxy dials with.
 func (r *Resolver) NetResolver() *net.Resolver {
 	return r.netResolver
 }
