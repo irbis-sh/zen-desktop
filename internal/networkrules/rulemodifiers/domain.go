@@ -72,19 +72,8 @@ func (m *DomainModifier) ShouldMatchRes(res *http.Response) bool {
 	if res == nil || res.Request == nil {
 		return false
 	}
-	// Derive source host from the response's request, mirroring ShouldMatchReq.
-	srcReq := NewRequest(res.Request)
-	matches := false
-	for _, entry := range m.entries {
-		if entry.matches(srcReq) {
-			matches = true
-			break
-		}
-	}
-	if m.inverted {
-		return !matches
-	}
-	return matches
+	// Reuse the request-side logic so the Referer validity check stays shared.
+	return m.ShouldMatchReq(NewRequest(res.Request))
 }
 
 type domainModifierEntry struct {
