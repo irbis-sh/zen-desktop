@@ -46,3 +46,26 @@ func TestNewRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestNewRequestNilURL(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil URL without Referer declines", func(t *testing.T) {
+		t.Parallel()
+		req := &http.Request{Header: http.Header{}}
+		got := NewRequest(req)
+		if got.sourceHost != "" || got.sourceHostOK {
+			t.Errorf("NewRequest() = (%q, %t), want (\"\", false)", got.sourceHost, got.sourceHostOK)
+		}
+	})
+
+	t.Run("nil URL with Referer parses Referer", func(t *testing.T) {
+		t.Parallel()
+		req := &http.Request{Header: http.Header{}}
+		req.Header.Set("Referer", "https://www.example.co.uk/page")
+		got := NewRequest(req)
+		if got.sourceHost != "www.example.co.uk" || !got.sourceHostOK {
+			t.Errorf("NewRequest() = (%q, %t), want (\"www.example.co.uk\", true)", got.sourceHost, got.sourceHostOK)
+		}
+	})
+}

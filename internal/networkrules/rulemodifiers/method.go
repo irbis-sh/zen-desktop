@@ -56,6 +56,7 @@ func (m *MethodModifier) ShouldMatchReq(req Request) bool {
 	return matches
 }
 
+// ShouldMatchRes reports whether m matches res.
 func (m *MethodModifier) ShouldMatchRes(res *http.Response) bool {
 	if res == nil || res.Request == nil {
 		return false
