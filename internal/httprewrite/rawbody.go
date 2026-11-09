@@ -123,6 +123,11 @@ func decompressBody(res *http.Response) (io.ReadCloser, error) {
 	}, nil
 }
 
+// zstdMaxWindow is 8 MiB, the largest window RFC 9659 allows in HTTP and the limit Chromium and Firefox
+// enforce. A frame sets its own window and the decoder allocates it up front, so without a limit a
+// few bytes can cost hundreds of MiB.
+const zstdMaxWindow = 8 << 20
+
 // decompressReader decompresses a reader using the specified compression algorithm.
 // It does not decompress data encoded with multiple algorithms.
 func decompressReader(reader io.ReadCloser, compressionAlg string) (io.ReadCloser, error) {
@@ -139,11 +144,14 @@ func decompressReader(reader io.ReadCloser, compressionAlg string) (io.ReadClose
 	case "br":
 		return io.NopCloser(brotli.NewReader(reader)), nil
 	case "zstd":
-		zstdReader, err := zstd.NewReader(reader)
+		// One goroutine, so decoding runs inside Read. The default starts goroutines that keep running until
+		// the body ends or the decoder is closed, and Close waits for them, so it hangs while upstream stalls.
+		// Bodies arrive slower than they decode, so the extra goroutines wouldn't speed anything up.
+		zstdReader, err := zstd.NewReader(reader, zstd.WithDecoderConcurrency(1), zstd.WithDecoderMaxWindow(zstdMaxWindow))
 		if err != nil {
 			return nil, fmt.Errorf("create zstd reader: %v", err)
 		}
-		return io.NopCloser(zstdReader), nil
+		return zstdReader.IOReadCloser(), nil
 	default:
 		return nil, errors.New("unsupported encoding")
 	}
