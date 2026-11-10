@@ -68,8 +68,13 @@ func (m *DomainModifier) ShouldMatchReq(req Request) bool {
 	return matches
 }
 
-func (m *DomainModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+// ShouldMatchRes reports whether m matches res.
+func (m *DomainModifier) ShouldMatchRes(res *http.Response) bool {
+	if res.Request == nil {
+		return false
+	}
+	// Reuse the request-side logic so the Referer validity check stays shared.
+	return m.ShouldMatchReq(NewRequest(res.Request))
 }
 
 type domainModifierEntry struct {

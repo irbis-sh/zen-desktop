@@ -56,8 +56,14 @@ func (m *MethodModifier) ShouldMatchReq(req Request) bool {
 	return matches
 }
 
-func (m *MethodModifier) ShouldMatchRes(_ *http.Response) bool {
-	return false
+// ShouldMatchRes reports whether m matches res.
+func (m *MethodModifier) ShouldMatchRes(res *http.Response) bool {
+	if res.Request == nil {
+		return false
+	}
+	// Reuse the request-side logic so response matching stays in sync with
+	// request matching.
+	return m.ShouldMatchReq(NewRequest(res.Request))
 }
 
 type methodModifierEntry struct {

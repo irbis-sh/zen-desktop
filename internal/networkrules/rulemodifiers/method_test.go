@@ -2,6 +2,7 @@ package rulemodifiers
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 )
 
@@ -113,4 +114,35 @@ func TestMethodModifier(t *testing.T) {
 			t.Error("method=~GET|POST should return an error")
 		}
 	})
+}
+
+func TestMethodModifierShouldMatchRes(t *testing.T) {
+	t.Parallel()
+
+	m := MethodModifier{}
+	if err := m.Parse("method=GET"); err != nil {
+		t.Fatal(err)
+	}
+	res := &http.Response{Request: &http.Request{Method: "GET", URL: &url.URL{Scheme: "https", Host: "example.com"}}}
+	if !m.ShouldMatchRes(res) {
+		t.Error("MethodModifier.ShouldMatchRes(res) = false, want true")
+	}
+	res.Request.Method = "POST"
+	if m.ShouldMatchRes(res) {
+		t.Error("MethodModifier.ShouldMatchRes(res) = true, want false")
+	}
+
+	inv := MethodModifier{}
+	if err := inv.Parse("method=~GET"); err != nil {
+		t.Fatal(err)
+	}
+	res.Request.Method = "GET"
+	if inv.ShouldMatchRes(res) {
+		t.Error("inverted MethodModifier.ShouldMatchRes(res) = true, want false")
+	}
+	res.Request.Method = "POST"
+	if !inv.ShouldMatchRes(res) {
+		t.Error("inverted MethodModifier.ShouldMatchRes(res) = false, want true")
+	}
+
 }
