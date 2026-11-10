@@ -17,8 +17,10 @@ import { preventWindowOpen } from './prevent-window-open';
 import { preventXHR } from './prevent-xhr';
 import { sanitizeClipboard } from './sanitize-clipboard';
 import { setConstant } from './set-constant';
+import { setCookie, setCookieReload } from './set-cookie';
 import { setLocalStorageItem } from './set-local-storage-item';
 import { setSessionStorageItem } from './set-session-storage-item';
+import { trustedSetCookie, trustedSetCookieReload } from './trusted-set-cookie';
 
 const logger = createLogger('index');
 
@@ -49,6 +51,11 @@ const scriptletNameToFunction = new Map<string, Function>([
   ['no-topics', noTopics],
   ['no-protected-audience', noProtectedAudience],
   ['sanitize-clipboard', sanitizeClipboard],
+  ['set-cookie', setCookie],
+  ['ubo-set-cookie', setCookie],
+  ['set-cookie-reload', setCookieReload],
+  ['trusted-set-cookie', trustedSetCookie],
+  ['trusted-set-cookie-reload', trustedSetCookieReload],
 ]);
 
 export default function (name: string, ...args: string[]): void {

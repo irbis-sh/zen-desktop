@@ -32,6 +32,6 @@ export function parseRegexpFromString(input: string, flags?: string): RegExp | n
   }
 }
 
-function escapeRegexp(input: string): string {
+export function escapeRegexp(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

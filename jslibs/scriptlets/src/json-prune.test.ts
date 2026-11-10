@@ -4,13 +4,16 @@ import { jsonPrune } from './json-prune';
 
 describe('json-prune', () => {
   let originalJSONParse: typeof JSON.parse;
+  let originalResponseJson: typeof Response.prototype.json;
 
   beforeAll(() => {
     originalJSONParse = JSON.parse;
+    originalResponseJson = Response.prototype.json;
   });
 
   afterEach(() => {
     JSON.parse = originalJSONParse;
+    Response.prototype.json = originalResponseJson;
   });
 
   test('removes root object prop', () => {
