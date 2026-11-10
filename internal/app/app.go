@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	goruntime "runtime"
@@ -18,6 +19,8 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/certstore"
 	"github.com/irbis-sh/zen-desktop/internal/config"
 	"github.com/irbis-sh/zen-desktop/internal/constants"
+	"github.com/irbis-sh/zen-desktop/internal/dns/doh"
+	"github.com/irbis-sh/zen-desktop/internal/dns/resolver"
 	"github.com/irbis-sh/zen-desktop/internal/filter/whitelistserver"
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
 	"github.com/irbis-sh/zen-desktop/internal/hwkey"
@@ -70,7 +73,9 @@ type App struct {
 	systrayMgr      *systray.Manager
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
-	restartMu       sync.Mutex
+	// resolver is nil when the proxy uses the OS resolver.
+	resolver  *resolver.Resolver
+	restartMu sync.Mutex
 	// pendingRestart records an armed restart.
 	pendingRestart      bool
 	pendingRestartStart bool
@@ -261,7 +266,19 @@ func (a *App) StartProxy() (err error) {
 
 	routingPolicy := routing.NewPolicy(a.config.GetRouting())
 
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector))
+	a.resolver = newResolver(a.config.GetDNS())
+	var netResolver *net.Resolver
+	if a.resolver != nil {
+		defer func() {
+			if err != nil {
+				a.resolver.Close()
+				a.resolver = nil
+			}
+		}()
+		netResolver = a.resolver.NetResolver()
+	}
+
+	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector), netResolver)
 	if err != nil {
 		return fmt.Errorf("create proxy: %v", err)
 	}
@@ -291,6 +308,24 @@ func (a *App) StartProxy() (err error) {
 		a.frontendEvents.OnCASystemTrustUnavailable(trustCaveat)
 	}
 
+	return nil
+}
+
+// newResolver returns the resolver dnsConfig selects, or nil for the OS resolver. It
+// logs Server only once DoHServer has accepted it, which makes it one of the constants.
+// It never logs CustomURL, which can hold an account ID, as NextDNS's do, nor an unknown
+// Server, which may be a URL pasted into the wrong field.
+func newResolver(dnsConfig config.DNSConfig) *resolver.Resolver {
+	url, bootstrap, ok := dnsConfig.DoHServer()
+	switch {
+	case ok:
+		log.Printf("resolving upstream hosts through DoH server %s", dnsConfig.Server)
+		return resolver.New(doh.NewClient(url, bootstrap), dnsConfig.SystemDomains)
+	case dnsConfig.Server == config.DNSServerCustom:
+		log.Println("custom DNS server has no URL, using the OS resolver")
+	case dnsConfig.Server != "" && dnsConfig.Server != config.DNSServerSystem:
+		log.Println("unknown DNS server in config, using the OS resolver")
+	}
 	return nil
 }
 
@@ -338,6 +373,13 @@ func (a *App) StopProxy() (err error) {
 
 	if err := a.proxy.Stop(); err != nil {
 		return fmt.Errorf("stop proxy: %w", err)
+	}
+
+	// The nil check also covers a second StopProxy after the whitelist server failed to
+	// stop, which leaves proxyOn set.
+	if a.resolver != nil {
+		a.resolver.Close()
+		a.resolver = nil
 	}
 
 	if err := a.whitelistSrv.Stop(); err != nil {

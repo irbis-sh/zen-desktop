@@ -10,6 +10,8 @@ export function ExportDebugData():Promise<string>;
 
 export function GetCAInstalled():Promise<boolean>;
 
+export function GetDNS():Promise<config.DNSConfig>;
+
 export function GetFilterLists():Promise<Array<config.FilterList>>;
 
 export function GetFilterListsByLocales(arg1:Array<string>):Promise<Array<config.FilterList>>;

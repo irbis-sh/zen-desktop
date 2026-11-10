@@ -18,6 +18,10 @@ export function GetCAInstalled() {
   return window['go']['config']['Config']['GetCAInstalled']();
 }
 
+export function GetDNS() {
+  return window['go']['config']['Config']['GetDNS']();
+}
+
 export function GetFilterLists() {
   return window['go']['config']['Config']['GetFilterLists']();
 }
