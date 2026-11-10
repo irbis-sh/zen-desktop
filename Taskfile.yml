@@ -25,7 +25,8 @@ tasks:
   test-go:
     desc: Run Go tests.
     cmds:
-      - go test -cover -race ./...
+      # No -cover: combined with -race it makes the internal/ruletree tests about 9 times slower.
+      - go test -race ./...
 
   test:
     desc: Run Go, scriptlets, and extended-css tests.
