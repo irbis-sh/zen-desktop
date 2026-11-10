@@ -23,6 +23,8 @@ type migration struct {
 //     remove entries.
 //   - Never change a migration once it is merged. Builds from master may have
 //     run it already, so ship a fix as a new migration.
+//   - Make the same change to default-config.json. A fresh install records
+//     every migration as applied without running any.
 var migrations = []migration{}
 
 // RunMigrations brings the config, and any other state migrations touch, up to
@@ -42,35 +44,28 @@ const appliedMigrationsFile = "applied_migrations"
 // runMigrations runs the migrations past the count in the applied_migrations
 // file, then records the new count.
 func (c *Config) runMigrations() {
-	appliedFile := filepath.Join(ConfigDir, appliedMigrationsFile)
-
 	var applied int
 	// recorded is the file's content, so that an unchanged count isn't rewritten.
 	// Each write truncates the file first, and a crash at that moment empties it.
 	var recorded string
-	if c.firstLaunch {
-		// The default config already reflects every migration in this build.
-		applied = len(migrations)
-	} else {
-		data, err := os.ReadFile(appliedFile)
-		switch {
-		case os.IsNotExist(err):
-			// Updating from a build before the file existed.
-		case err != nil:
-			// Possibly temporary, such as wrong ownership after running as root.
-			// Leave the file alone and try again on the next launch.
-			log.Printf("error reading applied migrations file: %v", err)
-			return
-		default:
-			recorded = string(data)
-			applied, err = strconv.Atoi(strings.TrimSpace(recorded))
-			if err != nil || applied < 0 {
-				// There is no telling which migrations have run. Running them
-				// again could undo the user's settings, so count them all as
-				// applied: the pending ones are lost, but later ones still run.
-				log.Printf("invalid applied migrations file %q, counting all migrations as applied", recorded)
-				applied = len(migrations)
-			}
+	data, err := os.ReadFile(filepath.Join(ConfigDir, appliedMigrationsFile))
+	switch {
+	case os.IsNotExist(err):
+		// Updating from a build before the file existed.
+	case err != nil:
+		// Possibly temporary, such as wrong ownership after running as root.
+		// Leave the file alone and try again on the next launch.
+		log.Printf("error reading applied migrations file: %v", err)
+		return
+	default:
+		recorded = string(data)
+		applied, err = strconv.Atoi(strings.TrimSpace(recorded))
+		if err != nil || applied < 0 {
+			// There is no telling which migrations have run. Running them
+			// again could undo the user's settings, so count them all as
+			// applied: the pending ones are lost, but later ones still run.
+			log.Printf("invalid applied migrations file %q, counting all migrations as applied", recorded)
+			applied = len(migrations)
 		}
 	}
 
@@ -85,11 +80,15 @@ func (c *Config) runMigrations() {
 
 	// After a downgrade, the file counts migrations this build doesn't have.
 	// Keep that count, or they would run again after the next upgrade.
-	count := strconv.Itoa(max(applied, len(migrations)))
-	if count == recorded {
+	count := max(applied, len(migrations))
+	if strconv.Itoa(count) == recorded {
 		return
 	}
-	if err := os.WriteFile(appliedFile, []byte(count), 0644); err != nil {
+	if err := writeAppliedMigrations(count); err != nil {
 		log.Printf("error writing applied migrations file: %v", err)
 	}
+}
+
+func writeAppliedMigrations(count int) error {
+	return os.WriteFile(filepath.Join(ConfigDir, appliedMigrationsFile), []byte(strconv.Itoa(count)), 0644)
 }

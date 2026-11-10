@@ -452,24 +452,21 @@ func (c *Config) runLegacyMigrations() {
 	lastMigrationFile := filepath.Join(ConfigDir, "last_migration")
 
 	var lastMigration string
-	if c.firstLaunch {
+	if _, err := os.Stat(filepath.Join(ConfigDir, appliedMigrationsFile)); err == nil {
+		// Either the config was created by a build that keeps applied_migrations,
+		// or such a build has run the whole legacy list. Since then, a rollback
+		// to an older build may have lowered last_migration.
 		lastMigration = lastLegacyVersion
-	} else if _, err := os.Stat(filepath.Join(ConfigDir, appliedMigrationsFile)); err == nil {
-		// A build that keeps applied_migrations has run the whole legacy list. Since
-		// then, a rollback to an older build may have lowered last_migration.
-		lastMigration = lastLegacyVersion
-	} else {
-		if _, err := os.Stat(lastMigrationFile); !os.IsNotExist(err) {
-			lastMigrationData, err := os.ReadFile(lastMigrationFile)
-			if err != nil {
-				log.Printf("failed to read last migration file: %v", err)
-				return
-			}
-			lastMigration = string(lastMigrationData)
-		} else {
-			// Should trigger when updating from pre v0.3.0
-			lastMigration = "v0.0.0"
+	} else if _, err := os.Stat(lastMigrationFile); !os.IsNotExist(err) {
+		lastMigrationData, err := os.ReadFile(lastMigrationFile)
+		if err != nil {
+			log.Printf("failed to read last migration file: %v", err)
+			return
 		}
+		lastMigration = string(lastMigrationData)
+	} else {
+		// Should trigger when updating from pre v0.3.0
+		lastMigration = "v0.0.0"
 	}
 
 	lastMigrationV, err := semver.ParseTolerant(lastMigration)
@@ -494,7 +491,15 @@ func (c *Config) runLegacyMigrations() {
 		}
 	}
 
-	if err := os.WriteFile(lastMigrationFile, []byte(lastLegacyVersion), 0644); err != nil {
+	if err := writeLastMigration(); err != nil {
 		log.Printf("error writing last migration file: %v", err)
 	}
+}
+
+// writeLastMigration records the last legacy migration in the last_migration
+// file, so that builds before v0.29.0, which only read that file, don't run
+// the legacy list again after a downgrade.
+func writeLastMigration() error {
+	lastLegacyVersion := legacyMigrations[len(legacyMigrations)-1].version
+	return os.WriteFile(filepath.Join(ConfigDir, "last_migration"), []byte(lastLegacyVersion), 0644)
 }
