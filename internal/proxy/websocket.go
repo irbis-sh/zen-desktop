@@ -55,6 +55,9 @@ func websocketHandshake(req *http.Request, targetConn io.ReadWriter, clientConn 
 		return err
 	}
 
+	// Reading the 101 can buffer bytes past it: a server that speaks first may send its
+	// first frame in the same packet. Those bytes go to the client before the tunnel
+	// starts, which reads targetConn itself rather than this buffer.
 	targetReader := bufio.NewReader(targetConn)
 
 	resp, err := http.ReadResponse(targetReader, req)
@@ -69,6 +72,14 @@ func websocketHandshake(req *http.Request, targetConn io.ReadWriter, clientConn 
 	if err != nil {
 		log.Printf("writing websocket response to client(%s): %v", redacted.Redacted(req.URL.Host), err)
 		return err
+	}
+
+	if n := targetReader.Buffered(); n > 0 {
+		buffered, _ := targetReader.Peek(n)
+		if _, err := clientConn.Write(buffered); err != nil {
+			log.Printf("writing buffered websocket data to client(%s): %v", redacted.Redacted(req.URL.Host), err)
+			return err
+		}
 	}
 
 	return nil
