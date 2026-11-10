@@ -36,9 +36,6 @@ func parseSourceHost(req *http.Request) (host string, ok bool) {
 	// Without this fallback, domain=~example.com would apply to navigations to
 	// example.com itself.
 	if referer == "" {
-		if req.URL == nil {
-			return "", false
-		}
 		return req.URL.Hostname(), true
 	}
 	u, err := url.Parse(referer)

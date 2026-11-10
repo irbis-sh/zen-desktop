@@ -70,7 +70,7 @@ func (m *DomainModifier) ShouldMatchReq(req Request) bool {
 
 // ShouldMatchRes reports whether m matches res.
 func (m *DomainModifier) ShouldMatchRes(res *http.Response) bool {
-	if res == nil || res.Request == nil {
+	if res.Request == nil {
 		return false
 	}
 	// Reuse the request-side logic so the Referer validity check stays shared.

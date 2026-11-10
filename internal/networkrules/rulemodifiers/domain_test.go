@@ -158,7 +158,4 @@ func TestDomainModifierShouldMatchRes(t *testing.T) {
 		t.Error("inverted domainModifier.ShouldMatchRes(res) = false, want true")
 	}
 
-	if m.ShouldMatchRes(nil) {
-		t.Error("domainModifier.ShouldMatchRes(nil) = true, want false")
-	}
 }

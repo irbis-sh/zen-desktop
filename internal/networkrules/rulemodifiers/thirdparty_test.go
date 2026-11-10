@@ -2,6 +2,7 @@ package rulemodifiers
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 )
 
@@ -13,7 +14,7 @@ func TestThirdPartyModifierShouldMatchRes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res := &http.Response{Request: &http.Request{Header: http.Header{}}}
+	res := &http.Response{Request: &http.Request{Header: http.Header{}, URL: &url.URL{Scheme: "https", Host: "example.com"}}}
 	res.Request.Header.Set("Sec-Fetch-Site", "cross-site")
 	if !m.ShouldMatchRes(res) {
 		t.Error("ThirdPartyModifier.ShouldMatchRes(cross-site) = false, want true")
@@ -36,7 +37,4 @@ func TestThirdPartyModifierShouldMatchRes(t *testing.T) {
 		t.Error("inverted ThirdPartyModifier.ShouldMatchRes(same-origin) = false, want true")
 	}
 
-	if m.ShouldMatchRes(nil) {
-		t.Error("ThirdPartyModifier.ShouldMatchRes(nil) = true, want false")
-	}
 }

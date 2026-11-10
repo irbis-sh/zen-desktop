@@ -32,7 +32,7 @@ func (m *ThirdPartyModifier) ShouldMatchReq(req Request) bool {
 
 // ShouldMatchRes reports whether m matches res.
 func (m *ThirdPartyModifier) ShouldMatchRes(res *http.Response) bool {
-	if res == nil || res.Request == nil {
+	if res.Request == nil {
 		return false
 	}
 	// Reuse the request-side logic so response matching stays in sync with
