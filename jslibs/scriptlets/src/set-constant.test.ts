@@ -35,10 +35,10 @@ describe('set-constant', () => {
     setConstant('test.prop3.prop4', '56');
     setConstant('test.prop3.prop5', '516');
 
-    expect((window as any).test.prop1).toBe('123');
-    expect((window as any).test.prop2).toBe('321');
-    expect((window as any).test.prop3.prop4).toBe('56');
-    expect((window as any).test.prop3.prop5).toBe('516');
+    expect((window as any).test.prop1).toBe(123);
+    expect((window as any).test.prop2).toBe(321);
+    expect((window as any).test.prop3.prop4).toBe(56);
+    expect((window as any).test.prop3.prop5).toBe(516);
   });
 
   test('nested properties survive an overwrite', () => {
@@ -49,8 +49,8 @@ describe('set-constant', () => {
     (window as any).test.prop1 = '';
     (window as any).test.prop2 = '';
 
-    expect((window as any).test.prop1).toBe('123');
-    expect((window as any).test.prop2).toBe('321');
+    expect((window as any).test.prop1).toBe(123);
+    expect((window as any).test.prop2).toBe(321);
   });
 
   test('nested properties survive a root property overwrite (root property is initially undefined)', () => {
@@ -62,8 +62,8 @@ describe('set-constant', () => {
     (window as any).test = {};
 
     expect((window as any).test).toBeDefined();
-    expect((window as any).test.prop1).toBe('123');
-    expect((window as any).test.prop2).toBe('321');
+    expect((window as any).test.prop1).toBe(123);
+    expect((window as any).test.prop2).toBe(321);
   });
 
   test("doesn't overwrite functions", () => {
@@ -96,7 +96,7 @@ describe('set-constant', () => {
     (window as any).test = { prop1: { prop2: {} } };
     setConstant('test.prop1.prop2.prop3', '123', 'jest');
 
-    expect((window as any).test.prop1.prop2.prop3).toBe('123');
+    expect((window as any).test.prop1.prop2.prop3).toBe(123);
   });
 
   test('wraps the value if valueWrapper is set', () => {
@@ -104,6 +104,27 @@ describe('set-constant', () => {
 
     expect(typeof (window as any).PROPERTY).toBe('function');
     expect((window as any).PROPERTY()).toBe('yes');
+  });
+
+  test.each([
+    ['0', 0],
+    ['32767', 32767],
+    ['-32767', -32767],
+    ['-1', -1],
+  ])('sets %s as a number', (value, expected) => {
+    setConstant('PROPERTY', value);
+
+    expect((window as any).PROPERTY).toBe(expected);
+  });
+
+  test.each(['32768', '-32768', '1abc', '1.5', '+1', ' 1'])('rejects the number-like value %p', (value) => {
+    expect(() => setConstant('PROPERTY', value)).toThrow('Invalid value');
+  });
+
+  test('wraps a number with asFunction', () => {
+    setConstant('PROPERTY', '5', '', 'asFunction');
+
+    expect((window as any).PROPERTY()).toBe(5);
   });
 
   test('errors out on invalid value', () => {

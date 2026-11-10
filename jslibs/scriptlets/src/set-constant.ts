@@ -69,9 +69,6 @@ export function setConstant(
     case '':
       fakeValue = '';
       break;
-    case '-1':
-      fakeValue = -1;
-      break;
     case 'yes':
       fakeValue = 'yes';
       break;
@@ -79,9 +76,10 @@ export function setConstant(
       fakeValue = 'no';
       break;
     default: {
-      const int = parseInt(value, 10);
-      if (!isNaN(int) && int >= 0 && int <= 32767) {
-        fakeValue = value;
+      // uBO's range. AdGuard accepts -1 as its only negative number, but a small
+      // number carries no code or data, so the wider range is harmless.
+      if (/^-?\d+$/.test(value) && Math.abs(Number(value)) <= 32767) {
+        fakeValue = Number(value);
         break;
       }
       throw new Error('Invalid value');
