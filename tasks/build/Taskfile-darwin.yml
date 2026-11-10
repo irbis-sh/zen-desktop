@@ -50,6 +50,12 @@ tasks:
     cmds:
       - wails build -platform "darwin/{{default .ARCH64 .ARCH}}" -m -skipbindings -ldflags "-X 'github.com/irbis-sh/zen-desktop/internal/config.Version={{.GIT_TAG}}' -X 'github.com/irbis-sh/zen-desktop/internal/constants.InstanceID={{.INSTANCE_ID}}' -X 'github.com/irbis-sh/zen-desktop/internal/selfupdate.NoSelfUpdate=true'" -tags prod
 
+  app-signed-ci:
+    desc: Build and sign the .app bundle without notarising it. Only recommended for use in CI/CD pipelines.
+    cmds:
+      - task: app
+      - task: sign-app-ci
+
   app-signed-local:
     desc: >-
       Build and sign the .app bundle with a local identity, without notarising, to test the Secure Enclave key.

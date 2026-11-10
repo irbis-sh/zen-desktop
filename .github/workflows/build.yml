@@ -92,8 +92,10 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install macOS dependencies
+        if: github.event_name != 'pull_request'
         run: task build:deps
       - name: Set up keychain profile
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         env:
           CI_KEYCHAIN_PWD: ${{ secrets.PROD_MACOS_CI_KEYCHAIN_PWD }}
           CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
@@ -103,7 +105,23 @@ jobs:
           CERTIFICATE=$CERTIFICATE \
           CERTIFICATE_PWD=$CERTIFICATE_PWD \
           task build:setup-keychain
+      - name: Build & archive macOS artifacts without notarising
+        if: ${{ github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork }}
+        env:
+          CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
+          PROVISIONING_PROFILE: ${{ secrets.PROD_MACOS_PROVISIONING_PROFILE }}
+        run: |
+          task build:app-signed-ci ARCH=${{ matrix.arch }}
+          tar -czvf Zen_darwin_${{ matrix.arch }}.tar.gz -C build/bin Zen.app
+      - name: Build & archive macOS artifacts without signing
+        # Without a provisioning profile, this build cannot reach the Secure Enclave key.
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          task build:app ARCH=${{ matrix.arch }}
+          tar -czvf Zen_darwin_${{ matrix.arch }}.tar.gz -C build/bin Zen.app
       - name: Build & archive macOS artifacts
+        if: github.event_name != 'pull_request'
         env:
           CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
           NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
@@ -262,6 +280,7 @@ jobs:
       # Needed to create a draft release and upload assets with gh.
       contents: write
     name: Attest & Release
+    if: ${{ !github.event.pull_request.head.repo.fork }}
     needs: [build-linux, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
