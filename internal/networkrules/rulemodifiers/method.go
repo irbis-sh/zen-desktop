@@ -61,17 +61,9 @@ func (m *MethodModifier) ShouldMatchRes(res *http.Response) bool {
 	if res == nil || res.Request == nil {
 		return false
 	}
-	matches := false
-	for _, entry := range m.entries {
-		if entry.MatchesMethod(res.Request.Method) {
-			matches = true
-			break
-		}
-	}
-	if m.inverted {
-		return !matches
-	}
-	return matches
+	// Reuse the request-side logic so response matching stays in sync with
+	// request matching.
+	return m.ShouldMatchReq(NewRequest(res.Request))
 }
 
 type methodModifierEntry struct {
