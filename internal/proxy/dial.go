@@ -14,11 +14,6 @@ import (
 // Hosts without a dot, such as "nas" or "localhost", stay with the OS: Go's resolver
 // would first try them under each search domain, and on a typical Mac that is "local",
 // an mDNS lookup that takes about 5 s to fail.
-//
-// The host is dialled with a trailing dot, so that Go doesn't try it under the search
-// domains either. Otherwise, after an NXDOMAIN for "malware.example", Go would ask for
-// "malware.example.local.", which the resolver sends to the OS in plaintext. Callers
-// have already taken the TLS server name from addr, so the dot doesn't reach it.
 func (p *Proxy) dial(ctx context.Context, network, addr string) (net.Conn, error) {
 	if p.dnsDialer == nil {
 		return p.netDialer.DialContext(ctx, network, addr)
@@ -33,6 +28,10 @@ func (p *Proxy) dial(ctx context.Context, network, addr string) (net.Conn, error
 		return p.netDialer.DialContext(ctx, network, addr)
 	}
 
+	// The trailing dot stops Go from trying the name under the search domains too.
+	// Otherwise, after an NXDOMAIN for "malware.example", Go would ask for
+	// "malware.example.local.", which the resolver sends to the OS in plaintext. Callers
+	// have already taken the TLS server name from addr, so the dot doesn't reach it.
 	name := strings.TrimSuffix(host, ".")
 	conn, err := p.dnsDialer.DialContext(ctx, network, net.JoinHostPort(name+".", port))
 	if err != nil {

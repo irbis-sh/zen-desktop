@@ -47,8 +47,10 @@ func (p *Proxy) proxyWebsocket(w http.ResponseWriter, req *http.Request) {
 	hijackAndTunnelWebsocket(w, req, p.dial)
 }
 
-// hijackAndTunnelWebsocket dials with req's context. After the hijack, that context ends
-// when the handler returns, which is after the dial.
+// hijackAndTunnelWebsocket takes over the client's connection, opens one to the upstream
+// with dial, and passes the handshake and then the frames between the two. It dials with
+// req's context. After the hijack, that context ends when the handler returns, which is
+// after the dial.
 func hijackAndTunnelWebsocket(w http.ResponseWriter, req *http.Request, dial func(ctx context.Context, network, addr string) (net.Conn, error)) {
 	hj, ok := w.(http.Hijacker)
 	if !ok {

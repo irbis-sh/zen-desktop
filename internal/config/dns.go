@@ -23,9 +23,10 @@ type dohPreset struct {
 	bootstrap []netip.Addr
 }
 
-// dnsPresets were checked on 2026-11-10: every IPv4 address answered a DoH query with
-// the URL's host as the TLS server name. The IPv6 addresses are the ones each provider
-// publishes in DNS, and DoH over them is unchecked.
+// dnsPresets maps each preset DNSServer to its DoH server. The servers were checked on
+// 2026-11-10: every IPv4 address answered a DoH query with the URL's host as the TLS
+// server name. The IPv6 addresses are the ones each provider publishes in DNS, and DoH
+// over them is unchecked.
 var dnsPresets = map[DNSServer]dohPreset{
 	DNSServerQuad9: {
 		url:       "https://dns.quad9.net/dns-query",
@@ -58,6 +59,7 @@ func addrs(s ...string) []netip.Addr {
 	return a
 }
 
+// DNSConfig holds the DNS settings.
 type DNSConfig struct {
 	// Server is DNSServerSystem when empty.
 	Server DNSServer `json:"server"`

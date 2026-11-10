@@ -401,6 +401,7 @@ func (c *Config) SetIgnoredHosts(hosts []string) error {
 	})
 }
 
+// GetDNS returns the DNS settings.
 func (c *Config) GetDNS() DNSConfig {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
