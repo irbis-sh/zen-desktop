@@ -30,8 +30,15 @@ type ActionModifier interface {
 
 // QueryModifier modifies request query parameters.
 // According to terminology, they are also "action modifiers", but are implemented separately for performance reasons.
+//
+// A QueryModifier may only remove parameters. Rules are matched with MayModify
+// before any of them runs, which relies on this: a parameter absent then can't
+// appear later.
 type QueryModifier interface {
 	Modifier
 	ModifyQuery(url.Values) bool
+	// MayModify reports whether ModifyQuery could change query. It may return
+	// true when ModifyQuery wouldn't, but never the reverse.
+	MayModify(url.Values) bool
 	Cancels(Modifier) bool
 }

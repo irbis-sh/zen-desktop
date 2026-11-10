@@ -123,6 +123,7 @@ func newDomainModifier(t *testing.T, domain string) DomainModifier {
 
 func newRequestWithReferer(referer string) *http.Request {
 	return &http.Request{
+		URL: &url.URL{Scheme: "https", Host: "cdn.example.net"},
 		Header: http.Header{
 			"Referer": []string{referer},
 		},

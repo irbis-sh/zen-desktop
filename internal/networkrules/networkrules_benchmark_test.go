@@ -82,11 +82,22 @@ func loadRules(b *testing.B) *networkrules.NetworkRules {
 // syntheticRules returns rules of the kinds the default lists have but EasyList
 // and EasyPrivacy don't.
 func syntheticRules() []string {
-	// The default lists have about 2,400 generic rules (no URL pattern), mostly
-	// $removeparam, a third of them limited by $domain. Those average about five
-	// domains, and one in twenty domains ends in ".*".
+	// The default lists have about 1,800 generic rules (no URL pattern), nearly
+	// all $removeparam. About 1,600 remove one parameter by name, a third of
+	// them limited by $domain. Those average about five domains, and one in
+	// twenty domains ends in ".*". About 160 are regexps, which are tried on
+	// every query, most of them limited by $domain.
 	var rules []string
-	for i := range 2400 {
+	for i := range 1760 {
+		if i%11 == 0 {
+			// Four in five regexps are limited by $domain.
+			rule := fmt.Sprintf("$removeparam=/^param%d_/", i)
+			if i%55 != 0 {
+				rule += fmt.Sprintf(",domain=a%[1]d.com|b%[1]d.com|c%[1]d.com|d%[1]d.com|e%[1]d.com", i)
+			}
+			rules = append(rules, rule)
+			continue
+		}
 		rule := fmt.Sprintf("$removeparam=param%d", i)
 		switch {
 		case i%12 == 0:

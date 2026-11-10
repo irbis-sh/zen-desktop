@@ -33,7 +33,7 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 	matchReq := rulemodifiers.NewRequest(req)
 
 	primaryRules := nr.primaryStore.Match(reqURL, func(r *rule.Rule) bool {
-		return r.ShouldMatchReq(matchReq, reqType)
+		return r.MayModifyReq(matchReq) && r.ShouldMatchReq(matchReq, reqType)
 	})
 	if len(primaryRules) == 0 {
 		return nil, false, ""
@@ -45,11 +45,7 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 
 	clickedLink := fetchmeta.IsUserActivatedNavigation(req)
 	initialURL := req.URL.String()
-
-	var query url.Values
-	if req.URL.RawQuery != "" {
-		query = req.URL.Query()
-	}
+	query := matchReq.Query
 
 	var queryModified bool
 outer:
@@ -69,11 +65,9 @@ outer:
 		}
 
 		modified := r.ModifyReq(req)
-		if query != nil {
-			if r.ModifyReqQuery(query) {
-				queryModified = true
-				modified = true
-			}
+		if r.ModifyReqQuery(query) {
+			queryModified = true
+			modified = true
 		}
 
 		if modified {
