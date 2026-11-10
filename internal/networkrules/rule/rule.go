@@ -262,6 +262,21 @@ func (rm *Rule) ShouldMatchReq(req rulemodifiers.Request, t contenttype.Type) bo
 	if !rm.types().Matches(t) {
 		return false
 	}
+	if len(rm.ActionModifiers()) == 0 && len(rm.QueryModifiers()) > 0 {
+		// The rule only removes query parameters, so it matches only if it could
+		// remove one. Lists have many such rules without a URL pattern, and most
+		// requests have none of their parameters.
+		var mayModify bool
+		for _, qm := range rm.QueryModifiers() {
+			if qm.MayModify(req.Query) {
+				mayModify = true
+				break
+			}
+		}
+		if !mayModify {
+			return false
+		}
+	}
 	for _, m := range rm.conditions() {
 		if !m.ShouldMatchReq(req) {
 			return false

@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-// Request is what condition modifiers see. Every rule checks the same request,
+// Request is what rules are matched against. Every rule checks the same request,
 // so values that cost something to derive are worked out once, not per rule.
 type Request struct {
 	*http.Request
@@ -22,13 +22,21 @@ type Request struct {
 	// sourceLabel is the label before sourceHost's public suffix, such as
 	// "example" for www.example.co.uk. It is empty if there is no such label.
 	sourceLabel string
+	// Query is the request's parsed query, or nil if it has none. Rules are
+	// matched against it before any of them runs; ModifyReq then removes
+	// parameters from it.
+	Query url.Values
 }
 
-// NewRequest derives the values condition modifiers need from req. Call it
+// NewRequest derives the values rules are matched against from req. Call it
 // before any rule changes req, and don't change req while the result is in use.
 func NewRequest(req *http.Request) Request {
 	host, ok := parseSourceHost(req)
-	return Request{Request: req, sourceHost: host, sourceHostOK: ok, sourceLabel: labelBeforeSuffix(host)}
+	var query url.Values
+	if req.URL.RawQuery != "" {
+		query = req.URL.Query()
+	}
+	return Request{Request: req, sourceHost: host, sourceHostOK: ok, sourceLabel: labelBeforeSuffix(host), Query: query}
 }
 
 func parseSourceHost(req *http.Request) (host string, ok bool) {

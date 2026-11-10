@@ -28,69 +28,97 @@ func TestRemoveParamModifier(t *testing.T) {
 			url      string
 			want     string
 			modified bool
+			// mayModify is what MayModify returns before ModifyQuery runs. It
+			// must be true when modified is, and may be true when it isn't.
+			mayModify bool
 		}{
 			{
-				name:     "generic removes all params",
-				modifier: mustParse("removeparam"),
-				url:      "https://example.com/?id=123&name=test",
-				want:     "https://example.com/",
-				modified: true,
+				name:      "generic removes all params",
+				modifier:  mustParse("removeparam"),
+				url:       "https://example.com/?id=123&name=test",
+				want:      "https://example.com/",
+				modified:  true,
+				mayModify: true,
 			},
 			{
-				name:     "exact removes the specified param",
-				modifier: mustParse("removeparam=id"),
-				url:      "https://example.com/?id=123&known=1&name=test",
-				want:     "https://example.com/?known=1&name=test",
-				modified: true,
+				name:      "exact removes the specified param",
+				modifier:  mustParse("removeparam=id"),
+				url:       "https://example.com/?id=123&known=1&name=test",
+				want:      "https://example.com/?known=1&name=test",
+				modified:  true,
+				mayModify: true,
 			},
 			{
-				name:     "exact leaves the URL unchanged if the param is not found",
-				modifier: mustParse("removeparam=unknown"),
-				url:      "https://example.com/?id=123&name=test&known=1",
-				want:     "https://example.com/?id=123&name=test&known=1",
-				modified: false,
+				name:      "exact leaves the URL unchanged if the param is not found",
+				modifier:  mustParse("removeparam=unknown"),
+				url:       "https://example.com/?id=123&name=test&known=1",
+				want:      "https://example.com/?id=123&name=test&known=1",
+				modified:  false,
+				mayModify: false,
 			},
 			{
-				name:     "exact leaves the URL unchanged if the URL has no query params",
-				modifier: mustParse("removeparam=id"),
-				url:      "https://example.com:443/",
-				want:     "https://example.com:443/",
-				modified: false,
+				name:      "exact leaves the URL unchanged if the URL has no query params",
+				modifier:  mustParse("removeparam=id"),
+				url:       "https://example.com:443/",
+				want:      "https://example.com:443/",
+				modified:  false,
+				mayModify: false,
 			},
 			{
-				name:     "exact inverse removes all params except the specified one",
-				modifier: mustParse("removeparam=~id"),
-				url:      "https://example.com/?id=123&name=test&known=1",
-				want:     "https://example.com/?id=123",
-				modified: true,
+				name:      "exact inverse removes all params except the specified one",
+				modifier:  mustParse("removeparam=~id"),
+				url:       "https://example.com/?id=123&name=test&known=1",
+				want:      "https://example.com/?id=123",
+				modified:  true,
+				mayModify: true,
 			},
 			{
-				name:     "regexp removes matching params",
-				modifier: mustParse("removeparam=/id=\\d+/"),
-				url:      "https://example.com/?id=123&name=test",
-				want:     "https://example.com/?name=test",
-				modified: true,
+				name:      "regexp removes matching params",
+				modifier:  mustParse("removeparam=/id=\\d+/"),
+				url:       "https://example.com/?id=123&name=test",
+				want:      "https://example.com/?name=test",
+				modified:  true,
+				mayModify: true,
 			},
 			{
-				name:     "regexp leaves the URL unchanged if the param is not found",
-				modifier: mustParse("removeparam=/id=[a-z]+/"),
-				url:      "https://example.com/?id=123&name=test",
-				want:     "https://example.com/?id=123&name=test",
-				modified: false,
+				name:      "regexp leaves the URL unchanged if the param is not found",
+				modifier:  mustParse("removeparam=/id=[a-z]+/"),
+				url:       "https://example.com/?id=123&name=test",
+				want:      "https://example.com/?id=123&name=test",
+				modified:  false,
+				mayModify: true,
 			},
 			{
-				name:     "regexp only removes matching params for values with the same key",
-				modifier: mustParse("removeparam=/id=\\d+/"),
-				url:      "https://example.com/?id=test0&id=1&id=2&id=3&id=test1&id=test2",
-				want:     "https://example.com/?id=test0&id=test1&id=test2",
-				modified: true,
+				name:      "regexp only removes matching params for values with the same key",
+				modifier:  mustParse("removeparam=/id=\\d+/"),
+				url:       "https://example.com/?id=test0&id=1&id=2&id=3&id=test1&id=test2",
+				want:      "https://example.com/?id=test0&id=test1&id=test2",
+				modified:  true,
+				mayModify: true,
 			},
 			{
-				name:     "inverse regexp removes non-matching params",
-				modifier: mustParse("removeparam=~/id=\\d+/"),
-				url:      "https://example.com/?id=123&name=test&known=1",
-				want:     "https://example.com/?id=123",
-				modified: true,
+				name:      "inverse regexp removes non-matching params",
+				modifier:  mustParse("removeparam=~/id=\\d+/"),
+				url:       "https://example.com/?id=123&name=test&known=1",
+				want:      "https://example.com/?id=123",
+				modified:  true,
+				mayModify: true,
+			},
+			{
+				name:      "exact is case sensitive",
+				modifier:  mustParse("removeparam=id"),
+				url:       "https://example.com/?ID=123",
+				want:      "https://example.com/?ID=123",
+				modified:  false,
+				mayModify: false,
+			},
+			{
+				name:      "generic leaves the URL unchanged if the URL has no query params",
+				modifier:  mustParse("removeparam"),
+				url:       "https://example.com/",
+				want:      "https://example.com/",
+				modified:  false,
+				mayModify: false,
 			},
 		}
 
@@ -104,6 +132,10 @@ func TestRemoveParamModifier(t *testing.T) {
 				}
 
 				q := u.Query()
+
+				if mayModify := tt.modifier.MayModify(q); mayModify != tt.mayModify {
+					t.Errorf("MayModify() = %v, want %v", mayModify, tt.mayModify)
+				}
 
 				modified := tt.modifier.ModifyQuery(q)
 				if modified != tt.modified {

@@ -45,11 +45,7 @@ func (nr *NetworkRules) ModifyReq(req *http.Request) (appliedRules []rule.Rule, 
 
 	clickedLink := fetchmeta.IsUserActivatedNavigation(req)
 	initialURL := req.URL.String()
-
-	var query url.Values
-	if req.URL.RawQuery != "" {
-		query = req.URL.Query()
-	}
+	query := matchReq.Query
 
 	var queryModified bool
 outer:
@@ -69,11 +65,9 @@ outer:
 		}
 
 		modified := r.ModifyReq(req)
-		if query != nil {
-			if r.ModifyReqQuery(query) {
-				queryModified = true
-				modified = true
-			}
+		if r.ModifyReqQuery(query) {
+			queryModified = true
+			modified = true
 		}
 
 		if modified {

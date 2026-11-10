@@ -123,6 +123,14 @@ func (rm *RemoveParamModifier) ModifyQuery(query url.Values) bool {
 	return modified
 }
 
+func (rm *RemoveParamModifier) MayModify(query url.Values) bool {
+	if rm.kind == removeparamKindExact {
+		_, ok := query[rm.param]
+		return ok
+	}
+	return len(query) > 0
+}
+
 func (rm *RemoveParamModifier) Cancels(modifier Modifier) bool {
 	other, ok := modifier.(*RemoveParamModifier)
 	if !ok {
