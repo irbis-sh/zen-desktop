@@ -8,7 +8,7 @@ import (
 
 // TestPatternlessRemoveParam covers $removeparam rules without a URL pattern,
 // such as "$removeparam=fbclid". They don't match a request whose query they
-// can't change.
+// can't change, but exceptions to them do.
 func TestPatternlessRemoveParam(t *testing.T) {
 	t.Parallel()
 
@@ -193,6 +193,19 @@ func TestPatternlessRemoveParam(t *testing.T) {
 			url:         "https://example.com/",
 			headers:     http.Header{"X-Test": []string{"1"}},
 			wantApplied: []string{`$removeparam=a,removeheader=request:X-Test`},
+		},
+		{
+			// An exception cancels the whole rule, so it must match even though
+			// it has nothing to remove.
+			name:    "exception without its parameter cancels a rule with an action",
+			rules:   []string{`$removeparam=a,removeheader=request:X-Test`, `@@$removeparam=a`},
+			url:     "https://example.com/",
+			headers: http.Header{"X-Test": []string{"1"}},
+		},
+		{
+			name:  "exception without its parameter cancels a two-parameter rule",
+			rules: []string{`$removeparam=a,removeparam=b`, `@@$removeparam=a`},
+			url:   "https://example.com/?b=1&c=2",
 		},
 	}
 

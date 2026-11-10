@@ -257,25 +257,29 @@ func isNoopModifier(modifier string) bool {
 	return true
 }
 
+// MayModifyReq reports whether the rule may change req. It is false only for a rule
+// that just removes query parameters, none of which req has. Lists have many such
+// rules without a URL pattern, and most requests have none of their parameters.
+//
+// Don't use it to skip exceptions. An exception cancels whole rules (see
+// ExceptionRule.Cancels), so "@@$removeparam=a" must also cancel
+// "$removeparam=a,removeparam=b" on a request that has only b.
+func (rm *Rule) MayModifyReq(req rulemodifiers.Request) bool {
+	if len(rm.ActionModifiers()) > 0 || len(rm.QueryModifiers()) == 0 {
+		return true
+	}
+	for _, qm := range rm.QueryModifiers() {
+		if qm.MayModify(req.Query) {
+			return true
+		}
+	}
+	return false
+}
+
 // ShouldMatchReq reports whether the rule matches a request of type t.
 func (rm *Rule) ShouldMatchReq(req rulemodifiers.Request, t contenttype.Type) bool {
 	if !rm.types().Matches(t) {
 		return false
-	}
-	if len(rm.ActionModifiers()) == 0 && len(rm.QueryModifiers()) > 0 {
-		// The rule only removes query parameters, so it matches only if it could
-		// remove one. Lists have many such rules without a URL pattern, and most
-		// requests have none of their parameters.
-		var mayModify bool
-		for _, qm := range rm.QueryModifiers() {
-			if qm.MayModify(req.Query) {
-				mayModify = true
-				break
-			}
-		}
-		if !mayModify {
-			return false
-		}
 	}
 	for _, m := range rm.conditions() {
 		if !m.ShouldMatchReq(req) {
