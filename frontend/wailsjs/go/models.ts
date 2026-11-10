@@ -13,6 +13,22 @@ export namespace config {
 	    DISABLED = "disabled",
 	    PROMPT = "prompt",
 	}
+	export class DNSConfig {
+	    server: string;
+	    customURL: string;
+	    systemDomains: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new DNSConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.server = source["server"];
+	        this.customURL = source["customURL"];
+	        this.systemDomains = source["systemDomains"];
+	    }
+	}
 	export class FilterList {
 	    name: string;
 	    type: string;

@@ -27,7 +27,7 @@ import (
 )
 
 // TestNetDialerIsBounded pins the property every outbound path leans on: the shared
-// dialer must impose a usable connect timeout. Zero is no timeout at all and hands the
+// dialers must impose a usable connect timeout. Zero is no timeout at all and hands the
 // wait back to the OS - over two minutes on Linux. Negative is degenerate the other
 // way: net.Dialer reads it as an already-expired deadline, so every dial fails at once.
 // The behavioural tests here supply a timeout of their own, so none of them can catch
@@ -35,10 +35,13 @@ import (
 func TestNetDialerIsBounded(t *testing.T) {
 	t.Parallel()
 
-	p := newTestProxy(t)
+	p := newTestProxy(t, &net.Resolver{})
 
 	if p.netDialer.Timeout <= 0 {
 		t.Fatalf("netDialer.Timeout = %v, want > 0: an unbounded dial leaves the wait to the OS connect timeout", p.netDialer.Timeout)
+	}
+	if p.dnsDialer.Timeout <= 0 {
+		t.Fatalf("dnsDialer.Timeout = %v, want > 0: an unbounded dial leaves the wait to the OS connect timeout", p.dnsDialer.Timeout)
 	}
 }
 
@@ -400,10 +403,10 @@ func TestWriteRespOverHTTP2(t *testing.T) {
 const backstopTimeout = 10 * time.Second
 
 // newTestProxy builds a Proxy without starting it.
-func newTestProxy(t *testing.T) *Proxy {
+func newTestProxy(t *testing.T, resolver *net.Resolver) *Proxy {
 	t.Helper()
 
-	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil, "", nil)
+	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil, "", nil, resolver)
 	if err != nil {
 		t.Fatalf("create proxy: %v", err)
 	}
@@ -423,7 +426,7 @@ func startLocalEndpointProxy(t *testing.T, f filter, shouldProxy ShouldProxyFunc
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		io.WriteString(w, localEndpointBody)
 	})
-	p, err := NewProxy(f, selfSignedCertGenerator{}, 0, shouldProxy, localTestHost, handler)
+	p, err := NewProxy(f, selfSignedCertGenerator{}, 0, shouldProxy, localTestHost, handler, nil)
 	if err != nil {
 		t.Fatalf("create proxy: %v", err)
 	}
@@ -515,11 +518,19 @@ func mitmGet(t *testing.T, proxyAddr, target, serverName string) (int, string) {
 func startTestProxy(t *testing.T, configure func(*Proxy)) string {
 	t.Helper()
 
-	p := newTestProxy(t)
+	p := newTestProxy(t, nil)
 
 	if configure != nil {
 		configure(p)
 	}
+
+	return serveTestProxy(t, p)
+}
+
+// serveTestProxy starts p and returns its address. Change p's fields before calling it,
+// for the reason given at startTestProxy.
+func serveTestProxy(t *testing.T, p *Proxy) string {
+	t.Helper()
 
 	port, err := p.Start()
 	if err != nil {

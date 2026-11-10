@@ -48,6 +48,8 @@ Suppose the browser asks for `https://ads.example.com/banner.js`. The PAC script
 
 WebSocket upgrades are filtered before the upgrade - so a rule can still block a `wss://` endpoint - and then tunnelled bidirectionally. Streaming responses (server-sent events, downloads of unknown length) are flushed write-by-write, so a live stream does not get buffered by the proxy.
 
+**Resolving names.** By default the proxy leaves name resolution to the OS. With a DNS-over-HTTPS (DoH) server set in the config, every upstream connection - requests, tunnels and WebSockets - goes through one dial function, which looks the host up with Go's own resolver. That resolver still reads the hosts file and sorts the addresses, but it sends its queries over an in-memory connection to Zen's resolver ([`internal/dns/resolver`](/internal/dns/resolver)) instead of to a DNS server. Zen's resolver answers from its cache or from the DoH server ([`internal/dns/doh`](/internal/dns/doh)). It asks the OS instead for names only the local network knows, such as `printer.local`, and when DoH fails. Hosts without a dot, such as `nas`, skip all of this and are resolved by the OS as before.
+
 ## Matching
 
 The match happens synchronously, on the critical path of every request from every app on the machine. Testing a URL against hundreds of thousands of rules one by one would cost O(rules) per request - too slow for something in front of the whole system.

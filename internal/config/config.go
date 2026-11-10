@@ -132,6 +132,9 @@ type Config struct {
 		Routing      RoutingConfig `json:"routing"`
 	} `json:"proxy"`
 	UpdatePolicy UpdatePolicyType `json:"updatePolicy"`
+	// DNS is at the top level, rather than under Proxy, so that system-wide DNS can use it
+	// too.
+	DNS DNSConfig `json:"dns"`
 
 	Locale string `json:"locale"`
 
@@ -396,6 +399,13 @@ func (c *Config) SetIgnoredHosts(hosts []string) error {
 		c.Proxy.IgnoredHosts = hosts
 		return nil
 	})
+}
+
+func (c *Config) GetDNS() DNSConfig {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.DNS
 }
 
 func (c *Config) GetRouting() RoutingConfig {

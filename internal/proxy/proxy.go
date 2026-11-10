@@ -54,7 +54,8 @@ type Proxy struct {
 	server             *http.Server
 	requestTransport   *http.Transport
 	requestClient      *http.Client
-	netDialer          *net.Dialer
+	netDialer          *net.Dialer // dial upstream only through p.dial, which picks the dialer
+	dnsDialer          *net.Dialer // nil without a resolver
 	shouldProxy        ShouldProxyFunc
 	localHost          string
 	localHandler       http.Handler
@@ -66,7 +67,10 @@ type Proxy struct {
 // the proxy answers for itself: requests to it are served by localHandler
 // instead of being forwarded upstream. Both must be set together or both left
 // empty.
-func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc, localHost string, localHandler http.Handler) (*Proxy, error) {
+//
+// resolver, when set, looks up the upstream hosts that contain a dot (see dial).
+// With resolver nil, the OS resolves every host.
+func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc, localHost string, localHandler http.Handler, resolver *net.Resolver) (*Proxy, error) {
 	if filter == nil {
 		return nil, errors.New("filter is nil")
 	}
@@ -90,8 +94,13 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 		Timeout:   dialTimeout,
 		KeepAlive: dialKeepAlive,
 	}
+	if resolver != nil {
+		d := *p.netDialer
+		d.Resolver = resolver
+		p.dnsDialer = &d
+	}
 	p.requestTransport = &http.Transport{
-		DialContext:           p.netDialer.DialContext,
+		DialContext:           p.dial,
 		ForceAttemptHTTP2:     true,
 		TLSHandshakeTimeout:   tlsHandshakeTimeout,
 		ResponseHeaderTimeout: responseHeaderTimeout,
@@ -535,7 +544,7 @@ func (p *Proxy) addTransparentHost(host string) {
 // tunnel tunnels the connection between the client and the remote server
 // without inspecting the traffic.
 func (p *Proxy) tunnel(w net.Conn, r *http.Request) {
-	remoteConn, err := p.netDialer.DialContext(r.Context(), "tcp", r.Host) // #nosec G704 -- this is a proxy; forwarding connections is its purpose
+	remoteConn, err := p.dial(r.Context(), "tcp", r.Host) // #nosec G704 -- this is a proxy; forwarding connections is its purpose
 	if err != nil {
 		log.Printf("dialing remote(%s): %v", redacted.Redacted(r.Host), err)
 		w.Write([]byte("HTTP/1.1 502 Bad Gateway\r\n\r\n"))
