@@ -226,6 +226,18 @@ func New() (*Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read default config file: %v", err)
 		}
+		// The default config reflects every migration, so record them all as
+		// applied, and do it before writing the config, so that no config exists
+		// without the record. RunMigrations only runs later, and some processes
+		// exit before then, such as zen --uninstall-ca. Without the record, the
+		// next launch would take the config for one from before v0.3.0 and run
+		// every legacy migration over it, which duplicates filter lists.
+		if err := writeAppliedMigrations(len(migrations)); err != nil {
+			return nil, fmt.Errorf("failed to write applied migrations file: %v", err)
+		}
+		if err := writeLastMigration(); err != nil {
+			return nil, fmt.Errorf("failed to write last migration file: %v", err)
+		}
 		if err := os.WriteFile(configFile, configData, 0644); err != nil {
 			return nil, fmt.Errorf("failed to write config file: %v", err)
 		}
@@ -262,9 +274,20 @@ func (c *Config) AddFilterList(list FilterList) error {
 	})
 }
 
+// AddFilterLists adds the lists whose URLs aren't in the config yet. Unlike
+// [Config.AddFilterList], it skips an existing URL without an error, because an import
+// often overlaps with the lists the user already has.
 func (c *Config) AddFilterLists(lists []FilterList) error {
 	return c.update(func() error {
-		c.Filter.FilterLists = append(c.Filter.FilterLists, lists...)
+	outer:
+		for _, list := range lists {
+			for _, existingList := range c.Filter.FilterLists {
+				if existingList.URL == list.URL {
+					continue outer
+				}
+			}
+			c.Filter.FilterLists = append(c.Filter.FilterLists, list)
+		}
 		return nil
 	})
 }

@@ -217,17 +217,17 @@ func TestMigrationV0270MovesAdGuardListsToWindowsBuilds(t *testing.T) {
 
 func TestRunLegacyMigrationsRecordsLastLegacyVersion(t *testing.T) {
 	tests := []struct {
-		name        string
-		firstLaunch bool
+		name string
 		// lastMigration is the content of the last_migration file, or "" to
 		// leave the file out.
 		lastMigration     string
 		appliedMigrations bool
 	}{
-		{"first launch", true, "", false},
+		// New writes applied_migrations along with the default config.
+		{"first launch", "", true},
 		// Builds before the legacy list was frozen wrote their own version.
-		{"written by v0.28.0", false, "v0.28.0", false},
-		{"lowered by a rollback after the counter", false, "v0.20.0", true},
+		{"written by v0.28.0", "v0.28.0", false},
+		{"lowered by a rollback after the counter", "v0.20.0", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -254,7 +254,7 @@ func TestRunLegacyMigrationsRecordsLastLegacyVersion(t *testing.T) {
 				}
 			}
 
-			c := &Config{firstLaunch: tt.firstLaunch}
+			c := &Config{}
 			c.runLegacyMigrations()
 
 			if ran {
