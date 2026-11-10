@@ -41,6 +41,8 @@ const scriptletNameToFunction = new Map<string, Function>([
   ['set-local-storage-item', setLocalStorageItem],
   ['set-session-storage-item', setSessionStorageItem],
   ['set-constant', setConstant],
+  ['set', setConstant],
+  ['ubo-set', setConstant],
   ['json-prune-fetch-response', jsonPruneFetchResponse],
   ['json-prune-xhr-response', jsonPruneXHRResponse],
   ['prevent-window-open', preventWindowOpen],

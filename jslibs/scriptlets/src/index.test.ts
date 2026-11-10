@@ -17,6 +17,13 @@ describe('scriptlet names', () => {
   afterEach(() => {
     jest.clearAllMocks();
     clearCookies();
+    delete (window as any).PROPERTY;
+  });
+
+  test.each(['set-constant', 'set', 'ubo-set'])('%s', (name) => {
+    scriptlet(name, 'PROPERTY', 'true');
+
+    expect((window as any).PROPERTY).toBe(true);
   });
 
   // Together with the rejection test below, each case fails if the name maps to

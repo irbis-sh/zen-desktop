@@ -5,13 +5,44 @@ import { parseRegexpFromString, parseRegexpLiteral } from './helpers/parseRegexp
 
 const logger = createLogger('set-constant');
 
-export function setConstant(
-  property: string,
-  value: string,
-  stack?: string,
-  valueWrapper?: string,
-  setProxyTrap?: boolean,
-) {
+const uboWrappers = new Map([
+  ['function', 'asFunction'],
+  ['callback', 'asCallback'],
+  ['resolved', 'asResolved'],
+  ['rejected', 'asRejected'],
+]);
+
+/**
+ * Parses the arguments that follow the value.
+ *
+ * Zen passes the same argument list for both rule syntaxes, but the two engines
+ * read these arguments differently. AdGuard reads a positional stack, value
+ * wrapper and setProxyTrap. uBO reads name-value pairs, for example
+ * `as, function`. The first argument tells them apart: uBO's pairs start with
+ * `as` or `runAt`, which a stack pattern in a real rule never is. Without this,
+ * `as` would become a stack pattern and the rule would apply only to calls from
+ * a script whose stack contains `as`.
+ */
+function parseOptions(rest: string[]): { stack?: string; valueWrapper?: string; setProxyTrap?: string } {
+  if (rest[0] !== 'as' && rest[0] !== 'runAt') {
+    const [stack, valueWrapper, setProxyTrap] = rest;
+    return { stack, valueWrapper, setProxyTrap };
+  }
+
+  // runAt is ignored: Zen runs scriptlets as soon as its script in <head> runs,
+  // which is close to uBO's default timing.
+  let valueWrapper: string | undefined;
+  for (let i = 0; i < rest.length; i += 2) {
+    if (rest[i] === 'as') {
+      // An unknown wrapper sets the plain value, as in uBO.
+      valueWrapper = uboWrappers.get(rest[i + 1]);
+    }
+  }
+  return { valueWrapper };
+}
+
+export function setConstant(property: string, value: string, ...rest: string[]) {
+  const { stack, valueWrapper, setProxyTrap } = parseOptions(rest);
   if (setProxyTrap !== undefined) {
     logger.warn('setProxyTrap will be ignored');
   }
@@ -31,9 +62,11 @@ export function setConstant(
       fakeValue = null;
       break;
     case 'emptyObj':
+    case '{}':
       fakeValue = {};
       break;
     case 'emptyArr':
+    case '[]':
       fakeValue = [];
       break;
     case 'noopFunc':

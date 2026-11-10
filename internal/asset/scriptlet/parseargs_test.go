@@ -105,6 +105,8 @@ func TestParseUboArgList(t *testing.T) {
 			{`set-local-storage-item, sdfgh45678, `, []string{"set-local-storage-item", "sdfgh45678", ""}},
 			{`aost, Math.random,`, []string{"aost", "Math.random"}},
 			{`'quoted', `, []string{"quoted", ""}},
+			// An empty quoted argument is the empty string.
+			{`set, x, ''`, []string{"set", "x", ""}},
 		}
 
 		for _, test := range testCases {

@@ -146,6 +146,48 @@ describe('set-constant', () => {
     await expect((window as any).PROPERTY).rejects.toBe(5);
   });
 
+  test.each([
+    ['{}', {}],
+    ['[]', []],
+  ])("accepts uBO's %s", (value, expected) => {
+    setConstant('PROPERTY', value);
+
+    expect((window as any).PROPERTY).toEqual(expected);
+  });
+
+  describe("uBO's name-value pairs", () => {
+    test('as, function wraps the value in a function', () => {
+      setConstant('PROPERTY', '1', 'as', 'function');
+
+      expect((window as any).PROPERTY()).toBe(1);
+    });
+
+    test('as, resolved sets a promise', async () => {
+      setConstant('PROPERTY', '1', 'as', 'resolved');
+
+      expect((window as any).PROPERTY).toBeInstanceOf(Promise);
+      await expect((window as any).PROPERTY).resolves.toBe(1);
+    });
+
+    test('as after runAt still applies', () => {
+      setConstant('PROPERTY', '1', 'runAt', 'idle', 'as', 'callback');
+
+      expect((window as any).PROPERTY()()).toBe(1);
+    });
+
+    test('runAt alone sets the plain value', () => {
+      setConstant('PROPERTY', 'true', 'runAt', 'idle');
+
+      expect((window as any).PROPERTY).toBe(true);
+    });
+
+    test('an unknown wrapper sets the plain value', () => {
+      setConstant('PROPERTY', '1', 'as', 'asFunction');
+
+      expect((window as any).PROPERTY).toBe(1);
+    });
+  });
+
   test('errors out on invalid value', () => {
     expect(() => {
       setConstant('PROPERTY', 'invalid');
