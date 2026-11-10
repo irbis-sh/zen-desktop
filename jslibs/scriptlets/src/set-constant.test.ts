@@ -127,6 +127,25 @@ describe('set-constant', () => {
     expect((window as any).PROPERTY()).toBe(5);
   });
 
+  test('sets a resolved promise with asResolved', async () => {
+    setConstant('PROPERTY', 'true', '', 'asResolved');
+
+    // .resolves calls a function and awaits its result, so only this line fails
+    // if the wrapper sets a function again.
+    expect((window as any).PROPERTY).toBeInstanceOf(Promise);
+    await expect((window as any).PROPERTY).resolves.toBe(true);
+  });
+
+  test('sets a rejected promise with asRejected', async () => {
+    setConstant('PROPERTY', '5', '', 'asRejected');
+    // Jest fails the test if the rejection is still unhandled after a macrotask,
+    // so this checks that setConstant handles it.
+    await new Promise((r) => setTimeout(r));
+
+    expect((window as any).PROPERTY).toBeInstanceOf(Promise);
+    await expect((window as any).PROPERTY).rejects.toBe(5);
+  });
+
   test('errors out on invalid value', () => {
     expect(() => {
       setConstant('PROPERTY', 'invalid');

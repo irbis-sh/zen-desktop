@@ -95,10 +95,13 @@ export function setConstant(
       fakeValue = () => () => wrapped;
       break;
     case 'asResolved':
-      fakeValue = () => Promise.resolve(wrapped);
+      fakeValue = Promise.resolve(wrapped);
       break;
     case 'asRejected':
-      fakeValue = () => Promise.reject(wrapped);
+      fakeValue = Promise.reject(wrapped);
+      // Without a handler, the browser logs "Uncaught (in promise)" on every page
+      // the rule runs on. The page's own catch or then still sees the rejection.
+      fakeValue.catch(() => {});
       break;
   }
 
