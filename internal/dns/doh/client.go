@@ -124,7 +124,9 @@ func (c *Client) newTransport() *http.Transport {
 		DialTLSContext: c.dialTLS,
 		// A custom dialler turns off automatic HTTP/2.
 		ForceAttemptHTTP2: true,
-		// A DNS message is too small for gzip to help.
+		// Otherwise net/http asks for gzip. When a server pads its answer to a padded query,
+		// gzip would squeeze out the zero bytes, and the answer's size would give away its
+		// length again.
 		DisableCompression: true,
 		HTTP2: &http.HTTP2Config{
 			SendPingTimeout: 15 * time.Second,
