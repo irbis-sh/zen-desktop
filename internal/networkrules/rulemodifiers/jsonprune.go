@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/irbis-sh/zen-desktop/internal/httprewrite"
@@ -17,6 +18,10 @@ type JSONPruneModifier struct {
 }
 
 var _ ActionModifier = (*JSONPruneModifier)(nil)
+
+var unsupportedFilter = regexp.MustCompile(
+	`\?\s*\(\s*(?:has|key-eq|key-substr)\b`,
+)
 
 var ErrInvalidJSONPruneModifier = errors.New("invalid jsonprune modifier")
 
@@ -31,7 +36,12 @@ func (m *JSONPruneModifier) Parse(modifier string) error {
 		return ErrInvalidJSONPruneModifier
 	}
 
-	commands, err := ajson.ParseJSONPath(raw)
+	noEscapeRaw := strings.ReplaceAll(raw, `\$`, `$`)
+
+	if hasUnsupportedFilter(noEscapeRaw) {
+		return ErrInvalidJSONPruneModifier
+	}
+	commands, err := ajson.ParseJSONPath(noEscapeRaw)
 	if err != nil {
 		return fmt.Errorf("parse JSONPath: %w", err)
 	}
@@ -112,4 +122,8 @@ func isJSONResponse(res *http.Response) bool {
 	}
 
 	return mediaType == "application/json"
+}
+
+func hasUnsupportedFilter(path string) bool {
+	return unsupportedFilter.MatchString(path)
 }

@@ -1,6 +1,7 @@
 package rulemodifiers
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -30,7 +31,7 @@ func TestJsonPruneModifier(t *testing.T) {
 			modified bool
 		}{
 			{
-				name:     "remove top-level field with escaped $",
+				name:     "remove top-level field with bare $",
 				modifier: `jsonprune=$.removeMe`,
 				input:    `{"removeMe":1,"keep":2}`,
 				want:     `{"keep":2}`,
@@ -69,6 +70,14 @@ func TestJsonPruneModifier(t *testing.T) {
 				modifier: `jsonprune=$.removeMe`,
 				input:    `{"removeMe":1,"text":"` + strings.Repeat("x", 1100) + `é 😀"}`,
 				want:     `{"text":"` + strings.Repeat("x", 1100) + `é 😀"}`,
+				modified: true,
+			},
+			{
+				// AdGuard Base: ||pluto.tv/*/session.json$jsonprune=\$.adBreaks.*
+				name:     "remove Pluto TV ad breaks with escaped $",
+				modifier: `jsonprune=\$.adBreaks.*`,
+				input:    `{"adBreaks":{"first":1},"keep":2}`,
+				want:     `{"adBreaks":{},"keep":2}`,
 				modified: true,
 			},
 		}
@@ -140,6 +149,61 @@ func TestJsonPruneModifier(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	t.Run("Parse", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name     string
+			modifier string
+			wantErr  bool
+		}{
+			{
+				name:     "accepts escaped dollar",
+				modifier: `jsonprune=\$.adBreaks`,
+			},
+			{
+				name:     "accepts bare dollar",
+				modifier: `jsonprune=$.adBreaks`,
+			},
+			{
+				name:     "rejects unsupported has filter",
+				modifier: `jsonprune=$.a[?(has key)]`,
+				wantErr:  true,
+			},
+			{
+				name:     "rejects unsupported key-eq filter",
+				modifier: `jsonprune=$.a[?(key-eq key value)]`,
+				wantErr:  true,
+			},
+			{
+				// AdGuard Chinese filter: assets.msn.cn/...$jsonprune=\$.sections..subSections..cards..[?(key-substr 'type' 'nativead')]
+				name:     "reject MSN key-substr filter",
+				modifier: `jsonprune=\$.sections..subSections..cards..[?(key-substr 'type' 'nativead')]`,
+				wantErr:  true,
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				var m JSONPruneModifier
+				err := m.Parse(tt.modifier)
+
+				if tt.wantErr {
+					if !errors.Is(err, ErrInvalidJSONPruneModifier) {
+						t.Errorf("Parse() error = %v, want %v",
+							err, ErrInvalidJSONPruneModifier)
+					}
+					return
+				}
+
+				if err != nil {
+					t.Errorf("Parse() unexpected error: %v", err)
+				}
+			})
+		}
+
 	})
 }
 
