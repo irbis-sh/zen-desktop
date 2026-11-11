@@ -127,7 +127,7 @@ Follow the [getting started guide](docs/index.md#getting-started) to begin worki
 
 ## Contributing
 
-Zen needs your help! You can report bugs, suggest and implement features, improve the codebase, or help translate Zen into your language. Please refer to the [Contributing Guidelines](CONTRIBUTING.md) for more information.
+Zen needs your help! You can report bugs, suggest and implement features, improve the codebase, or help translate Zen into your language. Please refer to the [Contributing Guidelines](CONTRIBUTING.md) for more information. For other ways to help, such as spreading the word or donating, see [docs.irbis.sh/contribute](https://docs.irbis.sh/contribute/).
 
 ## Special Thanks
 
