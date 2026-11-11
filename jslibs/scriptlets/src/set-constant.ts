@@ -151,8 +151,8 @@ export function setConstant(property: string, value: string, ...rest: string[]) 
   }
   stackRe ??= null;
 
-  // Only the trap waits for runAt. An invalid value or stack pattern still
-  // throws now, inside the injected script's try/catch.
+  // Only the trap waits for runAt. An invalid value still throws now, inside
+  // the injected script's try/catch.
   runAt(() => trap(property, value, fakeValue, stackRe), when);
 }
 
@@ -164,6 +164,10 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
   if (!property.includes('.')) {
     let localValue = window[property as any];
     const odesc = Object.getOwnPropertyDescriptor(window, property);
+    if (isLockedWritable(odesc)) {
+      window[property as any] = fakeValue;
+      return;
+    }
     Object.defineProperty(window, property, {
       configurable: true,
       get: () => {
@@ -250,6 +254,10 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
     if (current != undefined && i === rootChain.length - 1) {
       const odesc = Object.getOwnPropertyDescriptor(current, part);
       let localValue = current[part];
+      if (isLockedWritable(odesc)) {
+        current[part] = fakeValue;
+        return;
+      }
       // Setting a getter/setter property plays more nicely with complex websites, YouTube in particular.
       Object.defineProperty(current, part, {
         configurable: true,
@@ -273,6 +281,15 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
     if (current == undefined || current[part] == undefined) {
       // Go up a level and create a proxy for the current property.
       const odesc = Object.getOwnPropertyDescriptor(prev, rootChain[i - 1]);
+      if (odesc?.configurable === false && current != undefined) {
+        // The parent can't take a getter, for example because it is a page's
+        // top-level var, so trap the missing part on the object it holds. This
+        // misses the page replacing that object later, which a trap on the
+        // parent would catch.
+        prev = current;
+        current = current[part];
+        continue;
+      }
       let localValue = current;
       let proxyCache: { capturedValue: any; proxy: any };
       Object.defineProperty(prev, rootChain[i - 1], {
@@ -310,4 +327,15 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
   // For debugging purposes.
   logger.warn('Hit an invariant in setConstant', { property, value, stackRe });
   throw new Error('Invariant hit');
+}
+
+/**
+ * Reports whether a property can't take a getter but can still be assigned.
+ * A page's top-level var or function declaration makes such a property on
+ * window, and a runAt rule can run after the page has declared it. uBO then
+ * sets the value once, without a trap, and so does Zen. The page can
+ * overwrite it later.
+ */
+function isLockedWritable(desc: PropertyDescriptor | undefined): boolean {
+  return desc !== undefined && !desc.configurable && desc.writable === true;
 }

@@ -207,12 +207,40 @@ describe('set-constant', () => {
         expect((window as any).PROPERTY).toBe(true);
       });
 
+      test("sets a page's top-level var once the page has loaded", () => {
+        // A top-level var is non-configurable. jsdom doesn't make it so, so
+        // define one by hand. It can't be deleted, hence the unique name.
+        Object.defineProperty(window, 'LOCKED_VAR', { value: 'original', writable: true, configurable: false });
+        setConstant('LOCKED_VAR', 'true', 'runAt', 'idle');
+
+        Object.defineProperty(document, 'readyState', { configurable: true, value: 'complete' });
+        document.dispatchEvent(new Event('readystatechange'));
+        expect((window as any).LOCKED_VAR).toBe(true);
+      });
+
       test('an invalid value throws without waiting', () => {
         expect(() => {
           setConstant('PROPERTY', 'invalid', 'runAt', 'idle');
         }).toThrow();
       });
     });
+  });
+
+  test('sets a non-configurable nested property', () => {
+    (window as any).test = {};
+    Object.defineProperty((window as any).test, 'prop', { value: 'original', writable: true, configurable: false });
+    setConstant('test.prop', 'true');
+
+    expect((window as any).test.prop).toBe(true);
+  });
+
+  test('traps a missing part below a non-configurable root', () => {
+    // Can't be deleted, hence the unique name.
+    Object.defineProperty(window, 'LOCKED_ROOT', { value: {}, writable: true, configurable: false });
+    setConstant('LOCKED_ROOT.ads.enabled', 'false');
+
+    (window as any).LOCKED_ROOT.ads = { enabled: true };
+    expect((window as any).LOCKED_ROOT.ads.enabled).toBe(false);
   });
 
   test('errors out on invalid value', () => {
