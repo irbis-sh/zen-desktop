@@ -28,6 +28,7 @@ Use `task` commands when available.
 - Prefer `task` commands over manual shell commands
 - Run `task lint` after changes
 - Run `task test` after Go changes
+- Before writing code, read `docs/reference/code-conventions.md` and follow it
 - When committing, follow `.agents/skills/writing-commit-messages/SKILL.md`
 - The app's UI can be driven via a browser (e.g. using MCP) for debugging and testing features, including starting and stopping the proxy, and modifying filter lists or custom rules. When launching in dev mode, watch the output for the log line `Vite Server URL: http://localhost:5173/` and navigate to that URL.
 - In the canonical repo (not a fork), name branches `<github-username>/<description-slug>`. Get the username via `gh api user -q .login` if `gh` is available. No more than 3 words in the slug.
