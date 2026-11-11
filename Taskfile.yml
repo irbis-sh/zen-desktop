@@ -57,6 +57,12 @@ tasks:
     cmds:
       - golangci-lint fmt
 
+  vm:
+    desc: 'Manage the virtual machines for testing Zen on other operating systems. Usage: task vm -- up macos'
+    silent: true
+    cmds:
+      - tasks/vm/vm.sh {{.CLI_ARGS}}
+
   pull-exclusions:
     desc: Pull the updates from the zen-https-exclusions repository.
     cmds:
