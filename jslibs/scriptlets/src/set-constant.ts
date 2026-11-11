@@ -2,6 +2,7 @@ import { isProxyable } from './helpers/isProxyable';
 import { createLogger } from './helpers/logger';
 import { matchStack } from './helpers/matchStack';
 import { parseRegexpFromString, parseRegexpLiteral } from './helpers/parseRegexp';
+import { runAt } from './helpers/runAt';
 
 const logger = createLogger('set-constant');
 
@@ -23,26 +24,32 @@ const uboWrappers = new Map([
  * `as` would become a stack pattern and the rule would apply only to calls from
  * a script whose stack contains `as`.
  */
-function parseOptions(rest: string[]): { stack?: string; valueWrapper?: string; setProxyTrap?: string } {
+function parseOptions(rest: string[]): {
+  stack?: string;
+  valueWrapper?: string;
+  setProxyTrap?: string;
+  when?: string;
+} {
   if (rest[0] !== 'as' && rest[0] !== 'runAt') {
     const [stack, valueWrapper, setProxyTrap] = rest;
     return { stack, valueWrapper, setProxyTrap };
   }
 
-  // runAt is ignored: Zen runs scriptlets as soon as its script in <head> runs,
-  // which is close to uBO's default timing.
   let valueWrapper: string | undefined;
+  let when: string | undefined;
   for (let i = 0; i < rest.length; i += 2) {
     if (rest[i] === 'as') {
       // An unknown wrapper sets the plain value, as in uBO.
       valueWrapper = uboWrappers.get(rest[i + 1]);
+    } else if (rest[i] === 'runAt') {
+      when = rest[i + 1];
     }
   }
-  return { valueWrapper };
+  return { valueWrapper, when };
 }
 
 export function setConstant(property: string, value: string, ...rest: string[]) {
-  const { stack, valueWrapper, setProxyTrap } = parseOptions(rest);
+  const { stack, valueWrapper, setProxyTrap, when } = parseOptions(rest);
   if (setProxyTrap !== undefined) {
     logger.warn('setProxyTrap will be ignored');
   }
@@ -144,6 +151,12 @@ export function setConstant(property: string, value: string, ...rest: string[]) 
   }
   stackRe ??= null;
 
+  // Only the trap waits for runAt. An invalid value or stack pattern still
+  // throws now, inside the injected script's try/catch.
+  runAt(() => trap(property, value, fakeValue, stackRe), when);
+}
+
+function trap(property: string, value: string, fakeValue: any, stackRe: RegExp | null) {
   const fakeLog = () => {
     logger.debug(`Returning fake value for property window.${property}`, { value });
   };
@@ -295,6 +308,6 @@ export function setConstant(property: string, value: string, ...rest: string[]) 
     current = current[part];
   }
   // For debugging purposes.
-  logger.warn('Hit an invariant in setConstant', { property, value, stack });
+  logger.warn('Hit an invariant in setConstant', { property, value, stackRe });
   throw new Error('Invariant hit');
 }

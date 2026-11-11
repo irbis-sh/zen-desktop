@@ -186,6 +186,33 @@ describe('set-constant', () => {
 
       expect((window as any).PROPERTY).toBe(1);
     });
+
+    describe('runAt', () => {
+      beforeEach(() => {
+        // jsdom has finished loading the document by the time tests run.
+        Object.defineProperty(document, 'readyState', { configurable: true, value: 'loading' });
+      });
+
+      afterEach(() => {
+        delete (document as any).readyState;
+      });
+
+      test('idle sets the value once the page has loaded', () => {
+        (window as any).PROPERTY = 'original';
+        setConstant('PROPERTY', 'true', 'runAt', 'idle');
+        expect((window as any).PROPERTY).toBe('original');
+
+        Object.defineProperty(document, 'readyState', { configurable: true, value: 'complete' });
+        document.dispatchEvent(new Event('readystatechange'));
+        expect((window as any).PROPERTY).toBe(true);
+      });
+
+      test('an invalid value throws without waiting', () => {
+        expect(() => {
+          setConstant('PROPERTY', 'invalid', 'runAt', 'idle');
+        }).toThrow();
+      });
+    });
   });
 
   test('errors out on invalid value', () => {
