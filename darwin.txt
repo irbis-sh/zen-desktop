@@ -141,6 +141,10 @@ iwork.apple.com
 mask.icloud.com
 mask-h2.icloud.com
 mask-api.icloud.com
+probe.icloud.com
+pong.icloud.com
+metrics.icloud.com
+apple-native-relay.apple.com
 
 # Apple Intelligence, Siri and Search
 guzzoni.apple.com
@@ -172,6 +176,10 @@ pr-pod14-smp-device.apple.com
 pr-pod15-smp-device.apple.com
 smp-paymentservices.apple.com
 cn-smp-paymentservices.apple.com
+
+# Messages and FaceTime (not present in the support article, found via manual debugging)
+gsas.apple.com
+ess.apple.com
 # </apple-services>
 
 # <misc>
@@ -185,4 +193,3 @@ operacdn.com
 amp-api.music.apple.com
 amp-api-edge.music.apple.com
 # </misc>
-

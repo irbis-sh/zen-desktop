@@ -1,14 +1,1 @@
-build/bin
-build/windows/installer/wails_tools.nsh
-node_modules
-frontend/dist
 .DS_Store
-*.dmg
-*.app
-.env.local
-**/coverage/*
-**/dist/*
-**/tmp/*
-.idea
-**/*.pprof
-**/*.out

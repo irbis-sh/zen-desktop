@@ -1,8 +1,8 @@
 # Code of Conduct
 
-This project follows the [Zen Privacy Community Code of Conduct](https://github.com/ZenPrivacy/community/blob/main/CODE_OF_CONDUCT.md).
+This project follows the [Irbis Code of Conduct](https://docs.irbis.sh/code-of-conduct).
 
-By participating in this repository and its associated social spaces, you agree to abide by the standards and expectations outlined in the community-wide Code of Conduct. These guidelines are in place to foster a respectful, inclusive, and collaborative environment for everyone involved in Zen Privacy projects.
+By participating in this repository and its associated social spaces, you agree to abide by the standards and expectations outlined in the community-wide Code of Conduct. 
 
 If you have any concerns or need to report a violation, please refer to the reporting guidelines provided in the shared document.
 
