@@ -1,6 +1,6 @@
-# https-exclusions
+# zen-https-exclusions
 
-This repository contains hostnames that are excluded from proxying by Zen Personal and Enterprise. Hostnames may be excluded for:
+This repository contains hostnames that are excluded from proxying by Zen. Hostnames may be excluded for:
 - __Security__: sensitive personal data, financial infrastructure, government websites, and more
 - __Compatibility__: hostnames that break when accessed through a proxy due to MITM issues or false-positive bot detection
 
