@@ -31,16 +31,22 @@ linters:
       config:
         G302: "0644"
         G306: "0644"
+    staticcheck:
+      # The defaults, plus ST1020-ST1022: a doc comment starts with the name it documents.
+      checks: ["all", "-ST1000", "-ST1003", "-ST1016"]
   exclusions:
     generated: lax
     presets:
-      - comments
       - common-false-positives
       - legacy
       - std-error-handling
     paths:
       - (^|/)node_modules/
     rules:
+      # Doc comments are checked for form by staticcheck, and are not required to exist.
+      - linters:
+          - revive
+        text: should have comment|should have a package comment|should be of the form
       - linters:
           # These give false positives for Windows API-related identifier names.
           - revive

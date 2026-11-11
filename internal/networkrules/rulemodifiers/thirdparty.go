@@ -4,7 +4,8 @@ import (
 	"net/http"
 )
 
-// https://adguard.com/kb/general/ad-filtering/create-own-filters/#third-party-modifier
+// ThirdPartyModifier implements the third-party modifier:
+// https://docs.irbis.sh/docs/zen/reference/filter-list-syntax/network-rules/#third-party
 type ThirdPartyModifier struct {
 	inverted bool
 }

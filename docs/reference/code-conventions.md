@@ -16,6 +16,8 @@ This document outlines key code conventions followed in this project.
    - In same-package tests, use the unexported constructor, or build the struct directly if it needs no initialisation. In an external test package (`foo_test`), use the exported constructor.
 4. **Function order** <br />
    Follow the stepdown rule: place a function above the functions it calls, so that a file reads top-down and helpers sit below their callers. Where call order does not decide, put exported functions first. Keep the methods of one type together.
+5. **Doc comments** <br />
+   Write doc comments in the form that [Go Doc Comments](https://go.dev/doc/comment) describes, with one exception - an exported name does not need a doc comment if the comment would only restate the name.
 
 ### Tests
 
