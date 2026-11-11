@@ -1,9 +1,11 @@
 package rulemodifiers
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -80,6 +82,14 @@ func TestJsonPruneModifier(t *testing.T) {
 				want:     `{"adBreaks":{},"keep":2}`,
 				modified: true,
 			},
+			{
+				// AdGuard Base: /youtubei/v*/player?$jsonprune=\$..[adPlacements\, adSlots\, playerAds],domain=youtube.com
+				name:     "remove YouTube ad fields with escaped commas",
+				modifier: `jsonprune=\$..[adPlacements\, adSlots\, playerAds]`,
+				input:    `{"player":{"adPlacements":[1],"adSlots":[2],"playerAds":[3],"keep":true}}`,
+				want:     `{"player":{"keep":true}}`,
+				modified: true,
+			},
 		}
 
 		for _, tt := range tests {
@@ -105,8 +115,24 @@ func TestJsonPruneModifier(t *testing.T) {
 				body, _ := io.ReadAll(res.Body)
 				res.Body.Close()
 
-				if string(body) != tt.want {
-					t.Errorf("response body = %q, want %q", string(body), tt.want)
+				if !tt.modified {
+					if string(body) != tt.want {
+						t.Errorf("response body = %q, want %q", body, tt.want)
+					}
+					return
+				}
+				var got, want any
+
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("invalid response JSON: %v", err)
+				}
+
+				if err := json.Unmarshal([]byte(tt.want), &want); err != nil {
+					t.Fatalf("invalid expected JSON: %v", err)
+				}
+
+				if !reflect.DeepEqual(got, want) {
+					t.Errorf("response body = %q, want JSON equivalent to %q", body, tt.want)
 				}
 			})
 		}
