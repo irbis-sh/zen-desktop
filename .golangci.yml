@@ -43,10 +43,10 @@ linters:
     paths:
       - (^|/)node_modules/
     rules:
-      # Doc comments are checked for form by staticcheck, and are not required to exist.
+      # Doc comments are checked for form, and are not required to exist.
       - linters:
           - revive
-        text: should have comment|should have a package comment|should be of the form
+        text: should have comment|should have a package comment
       - linters:
           # These give false positives for Windows API-related identifier names.
           - revive

@@ -32,7 +32,7 @@ This document outlines key code conventions followed in this project.
 3. **Failure messages** <br />
    Put the actual value before the wanted one: `isNewer(%q) = %v, want %v` or `got %d requests, want 0`. Do not use "expected".
 4. **Parallelism** <br />
-   Call `t.Parallel()` first in every test and subtest, unless the test changes process-wide state (`t.Setenv`, package-level variables).
+   Call `t.Parallel()` first in every test and subtest, unless the test or one of its subtests changes process-wide state (`t.Setenv`, package-level variables).
 5. **Assertions** <br />
    Use the standard library only.
 6. **Files** <br />
