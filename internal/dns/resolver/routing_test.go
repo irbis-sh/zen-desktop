@@ -36,7 +36,7 @@ func TestUseOS(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			r := newResolver(&fakeDoH{}, []string{"corp.example"}, nil)
+			r := newTestResolver(&fakeDoH{}, []string{"corp.example"}, nil)
 			r.SetRouting(tt.domain, tt.vpn)
 
 			if got := r.useOS(tt.host); got != tt.want {
@@ -69,7 +69,7 @@ func TestSetRoutingFiltersDomains(t *testing.T) {
 		t.Run(tt.announced, func(t *testing.T) {
 			t.Parallel()
 
-			r := newResolver(&fakeDoH{}, nil, nil)
+			r := newTestResolver(&fakeDoH{}, nil, nil)
 			r.SetRouting([]string{tt.announced}, false)
 
 			if got := r.useOS(tt.probe); got != tt.want {
@@ -80,7 +80,7 @@ func TestSetRoutingFiltersDomains(t *testing.T) {
 	t.Run("empty is not stored", func(t *testing.T) {
 		t.Parallel()
 
-		r := newResolver(&fakeDoH{}, nil, nil)
+		r := newTestResolver(&fakeDoH{}, nil, nil)
 		r.SetRouting([]string{""}, false)
 
 		if n := len(r.routing.Load().domains); n != 0 {
@@ -92,7 +92,7 @@ func TestSetRoutingFiltersDomains(t *testing.T) {
 func TestSystemDomainsAreNotFiltered(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{}, []string{"dev"}, nil)
+	r := newTestResolver(&fakeDoH{}, []string{"dev"}, nil)
 
 	if !r.useOS("internal-tool.dev") {
 		t.Error("a user's own dev domain doesn't go to the OS")
@@ -102,7 +102,7 @@ func TestSystemDomainsAreNotFiltered(t *testing.T) {
 func TestSetRoutingReplacesEarlierState(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{}, nil, nil)
+	r := newTestResolver(&fakeDoH{}, nil, nil)
 	r.SetRouting([]string{"branch.example"}, true)
 	r.SetRouting(nil, false)
 
@@ -114,7 +114,7 @@ func TestSetRoutingReplacesEarlierState(t *testing.T) {
 func TestSetRoutingDuringLookups(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{}, nil, nil)
+	r := newTestResolver(&fakeDoH{}, nil, nil)
 	var wg sync.WaitGroup
 	wg.Go(func() {
 		for range 1000 {

@@ -27,7 +27,7 @@ import (
 func TestServeAnswersGoQuery(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{answer: always(answer(cname(testHost, 300, "cdn.example."), a("cdn.example.", 300, "192.0.2.1")))}, nil, nil)
+	r := newTestResolver(&fakeDoH{answer: always(answer(cname(testHost, 300, "cdn.example."), a("cdn.example.", 300, "192.0.2.1")))}, nil, nil)
 	query := dnsmessage.Message{
 		Header:    dnsmessage.Header{ID: 1234, RecursionDesired: true},
 		Questions: []dnsmessage.Question{question(testHost, dnsmessage.TypeA)},
@@ -60,7 +60,7 @@ func TestServeAnswersGoQuery(t *testing.T) {
 func TestServeCopiesClearRD(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{answer: always(nxdomain())}, nil, nil)
+	r := newTestResolver(&fakeDoH{answer: always(nxdomain())}, nil, nil)
 	query := dnsmessage.Message{Questions: []dnsmessage.Question{question(testHost, dnsmessage.TypeA)}}
 
 	got, err := send(t.Context(), r, &query)
@@ -92,7 +92,7 @@ func TestServeAnswersNOTIMP(t *testing.T) {
 			t.Parallel()
 
 			client := &fakeDoH{}
-			r := newResolver(client, nil, nil)
+			r := newTestResolver(client, nil, nil)
 
 			got, err := ask(t.Context(), r, tt.q)
 			if err != nil {
@@ -134,7 +134,7 @@ func TestServeClosesPipeOnBadQuery(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			r := newResolver(&fakeDoH{}, nil, nil)
+			r := newTestResolver(&fakeDoH{}, nil, nil)
 			conn, err := r.dial(t.Context(), "udp", "")
 			if err != nil {
 				t.Fatal(err)
@@ -176,7 +176,7 @@ func TestDoHOutcomes(t *testing.T) {
 			t.Parallel()
 
 			os := &fakeOS{addrs: []netip.Addr{netip.MustParseAddr("10.0.0.2")}}
-			r := newResolver(&fakeDoH{answer: always(tt.msg)}, nil, os.lookup)
+			r := newTestResolver(&fakeDoH{answer: always(tt.msg)}, nil, os.lookup)
 
 			got, err := ask(t.Context(), r, question(testHost, dnsmessage.TypeA))
 			if err != nil {
@@ -200,7 +200,7 @@ func TestClientErrorGoesToOSAndIsNotCached(t *testing.T) {
 		return nil, errors.New("x509: certificate signed by unknown authority")
 	}}
 	os := &fakeOS{addrs: []netip.Addr{netip.MustParseAddr("192.0.2.1")}}
-	r := newResolver(client, nil, os.lookup)
+	r := newTestResolver(client, nil, os.lookup)
 	q := question(testHost, dnsmessage.TypeA)
 
 	for range 2 {
@@ -236,7 +236,7 @@ func TestCachedAnswerSkipsClient(t *testing.T) {
 			t.Parallel()
 
 			client := &fakeDoH{answer: always(tt.msg)}
-			r := newResolver(client, nil, nil)
+			r := newTestResolver(client, nil, nil)
 			q := question(testHost, dnsmessage.TypeA)
 
 			first, err := ask(t.Context(), r, q)
@@ -262,7 +262,7 @@ func TestCacheNamesIgnoreCaseAndType(t *testing.T) {
 	t.Parallel()
 
 	client := &fakeDoH{answer: always(answer(a(testHost, 60, "192.0.2.1")))}
-	r := newResolver(client, nil, nil)
+	r := newTestResolver(client, nil, nil)
 
 	for _, q := range []dnsmessage.Question{
 		question("news.example.", dnsmessage.TypeA),
@@ -296,7 +296,7 @@ func TestUseOSVerdictExpires(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				client := &fakeDoH{answer: always(tt.msg)}
 				os := &fakeOS{addrs: []netip.Addr{netip.MustParseAddr("10.0.0.2")}}
-				r := newResolver(client, nil, os.lookup)
+				r := newTestResolver(client, nil, os.lookup)
 				q := question(testHost, dnsmessage.TypeA)
 
 				ask(t.Context(), r, q)
@@ -327,7 +327,7 @@ func TestRoutedNameSkipsClientAndCache(t *testing.T) {
 
 	client := &fakeDoH{answer: always(answer(a("Wiki.Corp.Example.", 60, "192.0.2.1")))}
 	os := &fakeOS{addrs: []netip.Addr{netip.MustParseAddr("10.0.0.2")}}
-	r := newResolver(client, []string{"corp.example"}, os.lookup)
+	r := newTestResolver(client, []string{"corp.example"}, os.lookup)
 
 	got, err := ask(t.Context(), r, question("Wiki.Corp.Example.", dnsmessage.TypeA))
 	if err != nil {
@@ -347,7 +347,7 @@ func TestVPNBypassesCachedAnswer(t *testing.T) {
 
 	client := &fakeDoH{answer: always(answer(a(testHost, 60, "192.0.2.1")))}
 	os := &fakeOS{addrs: []netip.Addr{netip.MustParseAddr("10.0.0.2")}}
-	r := newResolver(client, nil, os.lookup)
+	r := newTestResolver(client, nil, os.lookup)
 	q := question(testHost, dnsmessage.TypeA)
 
 	if _, err := ask(t.Context(), r, q); err != nil {
@@ -392,7 +392,7 @@ func TestOSLookups(t *testing.T) {
 			t.Parallel()
 
 			os := &fakeOS{addrs: tt.addrs, err: tt.err}
-			r := newResolver(&fakeDoH{}, nil, os.lookup)
+			r := newTestResolver(&fakeDoH{}, nil, os.lookup)
 
 			got, err := ask(t.Context(), r, question("nas.lan.", tt.qtype))
 			if err != nil {
@@ -416,7 +416,7 @@ func TestNetworkChanged(t *testing.T) {
 	t.Parallel()
 
 	client := &fakeDoH{answer: always(answer(a(testHost, 60, "192.0.2.1")))}
-	r := newResolver(client, nil, nil)
+	r := newTestResolver(client, nil, nil)
 	q := question(testHost, dnsmessage.TypeA)
 
 	if _, err := ask(t.Context(), r, q); err != nil {
@@ -457,7 +457,7 @@ func TestWhenDoHGivesWayToOS(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				start := time.Now()
 				var askedAfter time.Duration
-				r := newResolver(&fakeDoH{answer: tt.client}, nil, func(context.Context, string) ([]netip.Addr, error) {
+				r := newTestResolver(&fakeDoH{answer: tt.client}, nil, func(context.Context, string) ([]netip.Addr, error) {
 					askedAfter = time.Since(start)
 					return []netip.Addr{netip.MustParseAddr("192.0.2.1")}, nil
 				})
@@ -498,7 +498,7 @@ func TestHungOSEndsInSERVFAILBeforeDeadline(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			synctest.Test(t, func(t *testing.T) {
-				r := newResolver(&fakeDoH{answer: hang}, nil, (&fakeOS{hang: true}).lookup)
+				r := newTestResolver(&fakeDoH{answer: hang}, nil, (&fakeOS{hang: true}).lookup)
 				ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 				defer cancel()
 				start := time.Now()
@@ -534,7 +534,7 @@ func TestCancelClosesPipeAtOnce(t *testing.T) {
 			t.Parallel()
 			synctest.Test(t, func(t *testing.T) {
 				os := &fakeOS{hang: true}
-				r := newResolver(&fakeDoH{answer: hang}, nil, os.lookup)
+				r := newTestResolver(&fakeDoH{answer: hang}, nil, os.lookup)
 				ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 				defer cancel()
 
@@ -562,7 +562,7 @@ func TestCancelDuringDoHDoesNotAskOS(t *testing.T) {
 	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		os := &fakeOS{}
-		r := newResolver(&fakeDoH{answer: hang}, nil, os.lookup)
+		r := newTestResolver(&fakeDoH{answer: hang}, nil, os.lookup)
 		ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 		defer cancel()
 
@@ -580,7 +580,7 @@ func TestCancelDuringDoHDoesNotAskOS(t *testing.T) {
 func TestDialRefusesDoneContext(t *testing.T) {
 	t.Parallel()
 
-	r := newResolver(&fakeDoH{}, nil, nil)
+	r := newTestResolver(&fakeDoH{}, nil, nil)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
@@ -593,7 +593,7 @@ func TestPipeClosesWhileWaitingForQuery(t *testing.T) {
 	t.Parallel()
 
 	synctest.Test(t, func(t *testing.T) {
-		r := newResolver(&fakeDoH{}, nil, nil)
+		r := newTestResolver(&fakeDoH{}, nil, nil)
 		ctx, cancel := context.WithTimeout(t.Context(), time.Second)
 		defer cancel()
 		start := time.Now()
@@ -622,7 +622,7 @@ func TestLookupsDropRequestContextValues(t *testing.T) {
 		clientSaw = ctx.Value(key{})
 		return rcode(dnsmessage.RCodeRefused), nil
 	}}
-	r := newResolver(client, nil, func(ctx context.Context, _ string) ([]netip.Addr, error) {
+	r := newTestResolver(client, nil, func(ctx context.Context, _ string) ([]netip.Addr, error) {
 		osSaw = ctx.Value(key{})
 		return nil, nil
 	})
