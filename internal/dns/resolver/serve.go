@@ -101,9 +101,20 @@ func (r *Resolver) resolve(ctx context.Context, q dnsmessage.Question, dohDeadli
 		msg, err := r.client.Query(dohCtx, q)
 		cancel()
 		if err != nil {
+			// Once ctx has ended, the caller has given up, and the error says nothing
+			// about the server. DoH's share of the time ends before ctx does, so running
+			// out of it counts.
+			if ctx.Err() == nil {
+				r.countFailure()
+			}
 			return r.askOS(ctx, name, q.Type)
 		}
 		v = interpret(msg, q)
+		if v.failed {
+			r.countFailure()
+		} else {
+			r.failures.Store(0)
+		}
 		// This comes before the answer is written, because Go retries a SERVFAIL at once
 		// and the retry has to find it.
 		r.cache.put(key, v)

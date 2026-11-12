@@ -26,6 +26,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/hwkey"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
 	"github.com/irbis-sh/zen-desktop/internal/proxy"
+	"github.com/irbis-sh/zen-desktop/internal/redacted"
 	"github.com/irbis-sh/zen-desktop/internal/routing"
 	"github.com/irbis-sh/zen-desktop/internal/selfupdate"
 	"github.com/irbis-sh/zen-desktop/internal/sysproxy"
@@ -320,7 +321,16 @@ func newResolver(dnsConfig config.DNSConfig) *resolver.Resolver {
 	switch {
 	case ok:
 		log.Printf("resolving upstream hosts through DoH server %s", dnsConfig.Server)
-		return resolver.New(doh.NewClient(url, bootstrap), dnsConfig.SystemDomains)
+		return resolver.New(doh.NewClient(url, bootstrap), dnsConfig.SystemDomains, func(s resolver.Status) {
+			if s.Mode != resolver.StatusFailing {
+				log.Printf("DNS status: %s", s.Mode)
+				return
+			}
+			// The error can hold a custom server's URL or host. A certificate error can
+			// also name the network the user is on, since a login page's certificate lists
+			// its domains.
+			log.Printf("DNS status: %s (%s)", s.Mode, redacted.Redacted(s.Error))
+		})
 	case dnsConfig.Server == config.DNSServerCustom:
 		log.Println("custom DNS server has no URL, using the OS resolver")
 	case dnsConfig.Server != "" && dnsConfig.Server != config.DNSServerSystem:

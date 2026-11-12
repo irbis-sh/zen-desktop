@@ -25,7 +25,7 @@ func TestNetResolverReturnsFakeAddresses(t *testing.T) {
 		}
 		return answer(cname(testHost, 60, "cdn.example."), a("cdn.example.", 60, "192.0.2.1"), a("cdn.example.", 60, "192.0.2.2")), nil
 	}}
-	r := newResolver(client, nil, nil)
+	r := newTestResolver(client, nil, nil)
 
 	got, err := r.NetResolver().LookupNetIP(t.Context(), "ip", testHost)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestNetResolverDoesNotRepeatFinalAnswers(t *testing.T) {
 			t.Parallel()
 
 			client := &fakeDoH{answer: always(tt.msg)}
-			r := newResolver(client, nil, nil)
+			r := newTestResolver(client, nil, nil)
 
 			addrs, err := r.NetResolver().LookupNetIP(t.Context(), "ip", testHost)
 			if err == nil {
@@ -76,6 +76,17 @@ func TestNetResolverDoesNotRepeatFinalAnswers(t *testing.T) {
 			}
 		})
 	}
+}
+
+// newTestResolver returns a resolver with an IPv4 route that never goes away and no status
+// callback. A test that makes five DoH queries fail in a row has to close the resolver,
+// or the loop it starts outlives the test; newFallbackRig does that.
+func newTestResolver(
+	client dohClient,
+	systemDomains []string,
+	lookupOS func(ctx context.Context, host string) ([]netip.Addr, error),
+) *Resolver {
+	return newResolver(client, systemDomains, lookupOS, func() bool { return true }, nil)
 }
 
 // fakeDoH is a scriptable dohClient.

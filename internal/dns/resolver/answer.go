@@ -39,6 +39,9 @@ type verdict struct {
 	useOS bool
 	// ttl is how long the verdict can be cached.
 	ttl time.Duration
+	// failed means the response says the server isn't working: a DNSSEC failure, or an
+	// rcode other than NOERROR and NXDOMAIN. It counts towards fallback mode.
+	failed bool
 }
 
 // interpret turns the response to q into a verdict. The order of the cases matters: a block,
@@ -60,11 +63,11 @@ func interpret(msg *dnsmessage.Message, q dnsmessage.Question) verdict {
 	case msg.RCode == dnsmessage.RCodeServerFailure && dnssecFailed:
 		// The OS resolver often doesn't validate, so asking it would accept the answer
 		// that validation rejected.
-		return verdict{rcode: dnsmessage.RCodeServerFailure, ttl: minTTL}
+		return verdict{rcode: dnsmessage.RCodeServerFailure, ttl: minTTL, failed: true}
 	case msg.RCode == dnsmessage.RCodeNameError:
 		return verdict{rcode: dnsmessage.RCodeNameError, ttl: negativeTTL(msg)}
 	case msg.RCode != dnsmessage.RCodeSuccess:
-		return verdict{useOS: true, ttl: minTTL}
+		return verdict{useOS: true, ttl: minTTL, failed: true}
 	case slices.ContainsFunc(addrs, isLocal):
 		// The name is probably internal, with a public record pointing at the local
 		// network, so the OS may well know a better answer.
