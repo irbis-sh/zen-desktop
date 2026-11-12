@@ -2,16 +2,54 @@ import { isProxyable } from './helpers/isProxyable';
 import { createLogger } from './helpers/logger';
 import { matchStack } from './helpers/matchStack';
 import { parseRegexpFromString, parseRegexpLiteral } from './helpers/parseRegexp';
+import { runAt } from './helpers/runAt';
 
 const logger = createLogger('set-constant');
 
-export function setConstant(
-  property: string,
-  value: string,
-  stack?: string,
-  valueWrapper?: string,
-  setProxyTrap?: boolean,
-) {
+const uboWrappers = new Map([
+  ['function', 'asFunction'],
+  ['callback', 'asCallback'],
+  ['resolved', 'asResolved'],
+  ['rejected', 'asRejected'],
+]);
+
+/**
+ * Parses the arguments that follow the value.
+ *
+ * Zen passes the same argument list for both rule syntaxes, but the two engines
+ * read these arguments differently. AdGuard reads a positional stack, value
+ * wrapper and setProxyTrap. uBO reads name-value pairs, for example
+ * `as, function`. The first argument tells them apart: uBO's pairs start with
+ * `as` or `runAt`, which a stack pattern in a real rule never is. Without this,
+ * `as` would become a stack pattern and the rule would apply only to calls from
+ * a script whose stack contains `as`.
+ */
+function parseOptions(rest: string[]): {
+  stack?: string;
+  valueWrapper?: string;
+  setProxyTrap?: string;
+  when?: string;
+} {
+  if (rest[0] !== 'as' && rest[0] !== 'runAt') {
+    const [stack, valueWrapper, setProxyTrap] = rest;
+    return { stack, valueWrapper, setProxyTrap };
+  }
+
+  let valueWrapper: string | undefined;
+  let when: string | undefined;
+  for (let i = 0; i < rest.length; i += 2) {
+    if (rest[i] === 'as') {
+      // An unknown wrapper sets the plain value, as in uBO.
+      valueWrapper = uboWrappers.get(rest[i + 1]);
+    } else if (rest[i] === 'runAt') {
+      when = rest[i + 1];
+    }
+  }
+  return { valueWrapper, when };
+}
+
+export function setConstant(property: string, value: string, ...rest: string[]) {
+  const { stack, valueWrapper, setProxyTrap, when } = parseOptions(rest);
   if (setProxyTrap !== undefined) {
     logger.warn('setProxyTrap will be ignored');
   }
@@ -31,9 +69,11 @@ export function setConstant(
       fakeValue = null;
       break;
     case 'emptyObj':
+    case '{}':
       fakeValue = {};
       break;
     case 'emptyArr':
+    case '[]':
       fakeValue = [];
       break;
     case 'noopFunc':
@@ -69,9 +109,6 @@ export function setConstant(
     case '':
       fakeValue = '';
       break;
-    case '-1':
-      fakeValue = -1;
-      break;
     case 'yes':
       fakeValue = 'yes';
       break;
@@ -79,9 +116,10 @@ export function setConstant(
       fakeValue = 'no';
       break;
     default: {
-      const int = parseInt(value, 10);
-      if (!isNaN(int) && int >= 0 && int <= 32767) {
-        fakeValue = value;
+      // uBO's range. AdGuard accepts -1 as its only negative number, but a small
+      // number carries no code or data, so the wider range is harmless.
+      if (/^-?\d+$/.test(value) && Math.abs(Number(value)) <= 32767) {
+        fakeValue = Number(value);
         break;
       }
       throw new Error('Invalid value');
@@ -97,10 +135,13 @@ export function setConstant(
       fakeValue = () => () => wrapped;
       break;
     case 'asResolved':
-      fakeValue = () => Promise.resolve(wrapped);
+      fakeValue = Promise.resolve(wrapped);
       break;
     case 'asRejected':
-      fakeValue = () => Promise.reject(wrapped);
+      fakeValue = Promise.reject(wrapped);
+      // Without a handler, the browser logs "Uncaught (in promise)" on every page
+      // the rule runs on. The page's own catch or then still sees the rejection.
+      fakeValue.catch(() => {});
       break;
   }
 
@@ -110,6 +151,12 @@ export function setConstant(
   }
   stackRe ??= null;
 
+  // Only the trap waits for runAt. An invalid value still throws now, inside
+  // the injected script's try/catch.
+  runAt(() => trap(property, value, fakeValue, stackRe), when);
+}
+
+function trap(property: string, value: string, fakeValue: any, stackRe: RegExp | null) {
   const fakeLog = () => {
     logger.debug(`Returning fake value for property window.${property}`, { value });
   };
@@ -117,6 +164,10 @@ export function setConstant(
   if (!property.includes('.')) {
     let localValue = window[property as any];
     const odesc = Object.getOwnPropertyDescriptor(window, property);
+    if (stackRe === null && isLockedWritable(odesc)) {
+      window[property as any] = fakeValue;
+      return;
+    }
     Object.defineProperty(window, property, {
       configurable: true,
       get: () => {
@@ -203,6 +254,10 @@ export function setConstant(
     if (current != undefined && i === rootChain.length - 1) {
       const odesc = Object.getOwnPropertyDescriptor(current, part);
       let localValue = current[part];
+      if (stackRe === null && isLockedWritable(odesc)) {
+        current[part] = fakeValue;
+        return;
+      }
       // Setting a getter/setter property plays more nicely with complex websites, YouTube in particular.
       Object.defineProperty(current, part, {
         configurable: true,
@@ -226,6 +281,15 @@ export function setConstant(
     if (current == undefined || current[part] == undefined) {
       // Go up a level and create a proxy for the current property.
       const odesc = Object.getOwnPropertyDescriptor(prev, rootChain[i - 1]);
+      if (odesc?.configurable === false && current != undefined) {
+        // The parent can't take a getter, for example because it is a page's
+        // top-level var, so trap the missing part on the object it holds. This
+        // misses the page replacing that object later, which a trap on the
+        // parent would catch.
+        prev = current;
+        current = current[part];
+        continue;
+      }
       let localValue = current;
       let proxyCache: { capturedValue: any; proxy: any };
       Object.defineProperty(prev, rootChain[i - 1], {
@@ -261,6 +325,21 @@ export function setConstant(
     current = current[part];
   }
   // For debugging purposes.
-  logger.warn('Hit an invariant in setConstant', { property, value, stack });
+  logger.warn('Hit an invariant in setConstant', { property, value, stackRe });
   throw new Error('Invariant hit');
+}
+
+/**
+ * Reports whether a property can't take a getter but can still be assigned.
+ * A page's top-level var or function declaration makes such a property on
+ * window, and a runAt rule can run after the page has declared it. uBO then
+ * sets the value once, without a trap, and so does Zen. The page can
+ * overwrite it later.
+ *
+ * Without a trap, the value can't depend on the caller's stack. A rule with a
+ * stack pattern therefore skips this and fails in defineProperty, which logs
+ * why, instead of applying to every caller.
+ */
+function isLockedWritable(desc: PropertyDescriptor | undefined): boolean {
+  return desc !== undefined && !desc.configurable && desc.writable === true;
 }
