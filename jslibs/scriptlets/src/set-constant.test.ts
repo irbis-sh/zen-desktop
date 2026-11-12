@@ -234,6 +234,18 @@ describe('set-constant', () => {
     expect((window as any).test.prop).toBe(true);
   });
 
+  test('leaves a non-configurable property alone when the rule has a stack pattern', () => {
+    (window as any).test = {};
+    Object.defineProperty((window as any).test, 'prop', { value: 'original', writable: true, configurable: false });
+    // Can't be deleted, hence the unique name.
+    Object.defineProperty(window, 'LOCKED_STACK', { value: 'original', writable: true, configurable: false });
+
+    expect(() => setConstant('test.prop', 'true', 'doesnt-match')).toThrow();
+    expect(() => setConstant('LOCKED_STACK', 'true', 'doesnt-match')).toThrow();
+    expect((window as any).test.prop).toBe('original');
+    expect((window as any).LOCKED_STACK).toBe('original');
+  });
+
   test('traps a missing part below a non-configurable root', () => {
     // Can't be deleted, hence the unique name.
     Object.defineProperty(window, 'LOCKED_ROOT', { value: {}, writable: true, configurable: false });

@@ -164,7 +164,7 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
   if (!property.includes('.')) {
     let localValue = window[property as any];
     const odesc = Object.getOwnPropertyDescriptor(window, property);
-    if (isLockedWritable(odesc)) {
+    if (stackRe === null && isLockedWritable(odesc)) {
       window[property as any] = fakeValue;
       return;
     }
@@ -254,7 +254,7 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
     if (current != undefined && i === rootChain.length - 1) {
       const odesc = Object.getOwnPropertyDescriptor(current, part);
       let localValue = current[part];
-      if (isLockedWritable(odesc)) {
+      if (stackRe === null && isLockedWritable(odesc)) {
         current[part] = fakeValue;
         return;
       }
@@ -335,6 +335,10 @@ function trap(property: string, value: string, fakeValue: any, stackRe: RegExp |
  * window, and a runAt rule can run after the page has declared it. uBO then
  * sets the value once, without a trap, and so does Zen. The page can
  * overwrite it later.
+ *
+ * Without a trap, the value can't depend on the caller's stack. A rule with a
+ * stack pattern therefore skips this and fails in defineProperty, which logs
+ * why, instead of applying to every caller.
  */
 function isLockedWritable(desc: PropertyDescriptor | undefined): boolean {
   return desc !== undefined && !desc.configurable && desc.writable === true;
