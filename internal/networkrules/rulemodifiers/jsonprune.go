@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/irbis-sh/zen-desktop/internal/httprewrite"
@@ -17,6 +19,14 @@ type JSONPruneModifier struct {
 }
 
 var _ ActionModifier = (*JSONPruneModifier)(nil)
+
+var unsupportedFilter = regexp.MustCompile(
+	`\?\s*\(\s*(?:has|key-eq|key-substr)\b`,
+)
+
+var unquotedKeyList = regexp.MustCompile(
+	`^[A-Za-z_][A-Za-z0-9_]*(?:\s*\\?,\s*[A-Za-z_][A-Za-z0-9_]*)+$`,
+)
 
 var ErrInvalidJSONPruneModifier = errors.New("invalid jsonprune modifier")
 
@@ -31,11 +41,17 @@ func (m *JSONPruneModifier) Parse(modifier string) error {
 		return ErrInvalidJSONPruneModifier
 	}
 
-	commands, err := ajson.ParseJSONPath(raw)
+	noEscapeRaw := strings.ReplaceAll(raw, `\$`, `$`)
+
+	if hasUnsupportedFilter(noEscapeRaw) {
+		return ErrInvalidJSONPruneModifier
+	}
+	commands, err := ajson.ParseJSONPath(noEscapeRaw)
 	if err != nil {
 		return fmt.Errorf("parse JSONPath: %w", err)
 	}
 
+	normalizeUnquotedKeyLists(commands)
 	m.commands = commands
 	return nil
 }
@@ -112,4 +128,24 @@ func isJSONResponse(res *http.Response) bool {
 	}
 
 	return mediaType == "application/json"
+}
+
+func hasUnsupportedFilter(path string) bool {
+	return unsupportedFilter.MatchString(path)
+}
+
+func normalizeUnquotedKeyLists(commands []string) {
+	for i, cmd := range commands {
+		if !unquotedKeyList.MatchString(cmd) {
+			continue
+		}
+
+		keys := strings.Split(strings.ReplaceAll(cmd, `\,`, `,`), ",")
+
+		for j, key := range keys {
+			keys[j] = strconv.Quote(strings.TrimSpace(key))
+		}
+
+		commands[i] = strings.Join(keys, ",")
+	}
 }

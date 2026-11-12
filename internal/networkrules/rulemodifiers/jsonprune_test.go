@@ -1,8 +1,11 @@
 package rulemodifiers
 
 import (
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -30,7 +33,7 @@ func TestJsonPruneModifier(t *testing.T) {
 			modified bool
 		}{
 			{
-				name:     "remove top-level field with escaped $",
+				name:     "remove top-level field with bare $",
 				modifier: `jsonprune=$.removeMe`,
 				input:    `{"removeMe":1,"keep":2}`,
 				want:     `{"keep":2}`,
@@ -71,6 +74,22 @@ func TestJsonPruneModifier(t *testing.T) {
 				want:     `{"text":"` + strings.Repeat("x", 1100) + `é 😀"}`,
 				modified: true,
 			},
+			{
+				// AdGuard Base: ||pluto.tv/*/session.json$jsonprune=\$.adBreaks.*
+				name:     "remove Pluto TV ad breaks with escaped $",
+				modifier: `jsonprune=\$.adBreaks.*`,
+				input:    `{"adBreaks":{"first":1},"keep":2}`,
+				want:     `{"adBreaks":{},"keep":2}`,
+				modified: true,
+			},
+			{
+				// AdGuard Base: /youtubei/v*/player?$jsonprune=\$..[adPlacements\, adSlots\, playerAds],domain=youtube.com
+				name:     "remove YouTube ad fields with escaped commas",
+				modifier: `jsonprune=\$..[adPlacements\, adSlots\, playerAds]`,
+				input:    `{"player":{"adPlacements":[1],"adSlots":[2],"playerAds":[3],"keep":true}}`,
+				want:     `{"player":{"keep":true}}`,
+				modified: true,
+			},
 		}
 
 		for _, tt := range tests {
@@ -96,8 +115,24 @@ func TestJsonPruneModifier(t *testing.T) {
 				body, _ := io.ReadAll(res.Body)
 				res.Body.Close()
 
-				if string(body) != tt.want {
-					t.Errorf("response body = %q, want %q", string(body), tt.want)
+				if !tt.modified {
+					if string(body) != tt.want {
+						t.Errorf("response body = %q, want %q", body, tt.want)
+					}
+					return
+				}
+				var got, want any
+
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("invalid response JSON: %v", err)
+				}
+
+				if err := json.Unmarshal([]byte(tt.want), &want); err != nil {
+					t.Fatalf("invalid expected JSON: %v", err)
+				}
+
+				if !reflect.DeepEqual(got, want) {
+					t.Errorf("response body = %q, want JSON equivalent to %q", body, tt.want)
 				}
 			})
 		}
@@ -140,6 +175,61 @@ func TestJsonPruneModifier(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	t.Run("Parse", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name     string
+			modifier string
+			wantErr  bool
+		}{
+			{
+				name:     "accepts escaped dollar",
+				modifier: `jsonprune=\$.adBreaks`,
+			},
+			{
+				name:     "accepts bare dollar",
+				modifier: `jsonprune=$.adBreaks`,
+			},
+			{
+				name:     "rejects unsupported has filter",
+				modifier: `jsonprune=$.a[?(has key)]`,
+				wantErr:  true,
+			},
+			{
+				name:     "rejects unsupported key-eq filter",
+				modifier: `jsonprune=$.a[?(key-eq key value)]`,
+				wantErr:  true,
+			},
+			{
+				// AdGuard Chinese filter: assets.msn.cn/...$jsonprune=\$.sections..subSections..cards..[?(key-substr 'type' 'nativead')]
+				name:     "reject MSN key-substr filter",
+				modifier: `jsonprune=\$.sections..subSections..cards..[?(key-substr 'type' 'nativead')]`,
+				wantErr:  true,
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				var m JSONPruneModifier
+				err := m.Parse(tt.modifier)
+
+				if tt.wantErr {
+					if !errors.Is(err, ErrInvalidJSONPruneModifier) {
+						t.Errorf("Parse() error = %v, want %v",
+							err, ErrInvalidJSONPruneModifier)
+					}
+					return
+				}
+
+				if err != nil {
+					t.Errorf("Parse() unexpected error: %v", err)
+				}
+			})
+		}
+
 	})
 }
 
