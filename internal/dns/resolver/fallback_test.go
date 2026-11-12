@@ -766,13 +766,20 @@ func TestCloseRightAfterNetworkChanged(t *testing.T) {
 		time.Sleep(time.Second)
 
 		// NetworkChanged abandons the waiting probe and kicks the loop. The loop must
-		// still stop, whichever of the kick and the close it sees first.
+		// still stop, whichever of the kick and the close it sees first. The bubble's
+		// goroutines run in parallel, so the loop can start a second round between the
+		// two calls.
 		g.r.NetworkChanged()
 		g.r.Close()
-		time.Sleep(5 * time.Minute)
+		synctest.Wait()
+		n := len(g.server.probeTimes())
+		if n != 1 && n != 2 {
+			t.Errorf("%d probes by Close, want 1 or 2", n)
+		}
 
-		if n := len(g.server.probeTimes()); n != 1 {
-			t.Errorf("%d probes, want only the one from before Close", n)
+		time.Sleep(5 * time.Minute)
+		if got := len(g.server.probeTimes()); got != n {
+			t.Errorf("%d probes after Close, want none", got-n)
 		}
 	})
 }
