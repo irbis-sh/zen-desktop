@@ -16,7 +16,8 @@ MACOS_PASSWORD="admin"
 macos_exists() {
   local names
   names=$(tart list --quiet --source local)
-  grep -qx "$1" <<<"$names"
+  # -F: a guest name can hold a dot, which would otherwise match any character.
+  grep -qxF "$1" <<<"$names"
 }
 
 macos_running() {

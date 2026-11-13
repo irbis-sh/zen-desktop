@@ -20,7 +20,14 @@ qemu_wait_exit() {
     qemu_running "$dir" || return 0
     sleep 1
   done
+  qemu_running "$dir" || return 0
   kill "$(cat "$dir/pid")" 2>/dev/null || true
+  # QEMU needs a moment to end. A start that follows at once would otherwise
+  # still find the machine running.
+  for _ in $(seq 50); do
+    qemu_running "$dir" || break
+    sleep 0.1
+  done
   echo "vm: the guest did not shut down within $2 seconds and was powered off" >&2
   return 1
 }

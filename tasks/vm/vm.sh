@@ -77,27 +77,50 @@ provision() {
   ssh "${SSH_OPTS[@]}" "$@" bash -s -- "$GO_VERSION" "$NODE_VERSION" "$WAILS_VERSION" <"$SCRIPT_DIR/$script"
 }
 
+# Takes the lock at the given path. While another run of this script holds it,
+# prints the given message once and waits.
+lock_take() {
+  local lock=$1 waiting=
+  # A symbolic link is created in one step, unlike a file and its content, so
+  # the lock never exists without the ID of the process that holds it.
+  until ln -s "$$" "$lock" 2>/dev/null; do
+    # A run that was killed leaves its lock behind, and its ID may by now
+    # belong to another program.
+    if [[ "$(ps -p "$(readlink "$lock")" -o args= 2>/dev/null)" != *vm.sh* ]]; then
+      rm -f "$lock"
+      continue
+    fi
+    [ -n "$waiting" ] || echo "$2" >&2
+    waiting=1
+    sleep 5
+  done
+  LOCKS+=("$lock")
+}
+
+# Does nothing unless this process holds the lock, so it is safe at exit for
+# a lock that was released earlier and has a new holder since.
+lock_release() {
+  [ "$(readlink "$1" 2>/dev/null)" != "$$" ] || rm -f "$1"
+}
+
+release_locks() {
+  local lock
+  for lock in ${LOCKS[@]+"${LOCKS[@]}"}; do
+    lock_release "$lock"
+  done
+}
+LOCKS=()
+trap release_locks EXIT
+
 # Builds the base of this OS unless it exists. Sessions that ask for a guest
 # at the same time would otherwise each start a build, and the later one would
 # shut the earlier one's build down as a leftover.
 ensure_base() {
-  local lock="$VM_HOME/$os/base.lock" waiting=
+  local lock="$VM_HOME/$os/base.lock"
   ! "${os}_base_exists" || return 0
-  # A symbolic link is created in one step, unlike a file and its content, so
-  # the lock never exists without the ID of the process that holds it.
-  until ln -s "$$" "$lock" 2>/dev/null; do
-    if ! kill -0 "$(readlink "$lock")" 2>/dev/null; then
-      rm -f "$lock"
-      continue
-    fi
-    [ -n "$waiting" ] || echo "Waiting for another session to finish building the $os base." >&2
-    waiting=1
-    sleep 5
-  done
-  trap 'rm -f "$VM_HOME/$os/base.lock"' EXIT
+  lock_take "$lock" "Waiting for another session to finish building the $os base."
   "${os}_base_exists" || "${os}_build_base"
-  rm -f "$lock"
-  trap - EXIT
+  lock_release "$lock"
 }
 
 guest_ssh() {
@@ -118,9 +141,11 @@ guest_sync() {
   # node_modules holds platform-specific binaries, so each guest installs its
   # own. package.json.md5 is Wails' record of which package.json the
   # node_modules next to it were installed from, so it stays with them.
+  # rsync splits the value of -e at spaces unless they are inside quotes, and
+  # the path of the SSH key can hold one.
   rsync -a --delete --exclude .git --exclude node_modules --exclude /frontend/package.json.md5 \
     --exclude /.claude --exclude /build/bin \
-    -e "ssh ${SSH_OPTS[*]} -p $GUEST_SSH_PORT" "$REPO_ROOT/" "$GUEST_USER@$GUEST_HOST:zen/"
+    -e "ssh $(printf "'%s' " "${SSH_OPTS[@]}") -p $GUEST_SSH_PORT" "$REPO_ROOT/" "$GUEST_USER@$GUEST_HOST:zen/"
   guest_sync_git_stub
 }
 
@@ -227,6 +252,10 @@ mkdir -p "$VM_HOME/shots"
 case "$command" in
   up | reset)
     mkdir -p "$GUEST_DIR"
+    # Two sessions that start the same guest at once would both find it
+    # stopped, and the one whose start then fails would leave behind an empty
+    # disk or the ports of a machine that never ran.
+    lock_take "$GUEST_DIR/lock" "Waiting for another session to finish starting $os:$name."
     [ -f "$GUEST_DIR/checkout" ] || echo "$REPO_ROOT" >"$GUEST_DIR/checkout"
     if [ "$command" = reset ]; then
       "${os}_down" || true
