@@ -34,17 +34,17 @@ windows_ssh() {
 # disk has a file next to it, disk.qcow2.vars, in which the firmware keeps its
 # settings: the screen resolution and the boot entry Windows adds for itself.
 windows_start() {
-  local disk="$WINDOWS_DIR/disk.qcow2" accel=kvm firmware ssh_port vnc_port
+  local disk="$WINDOWS_DIR/disk.qcow2" accel=kvm ssh_port vnc_port
   [ "$(uname -s)" != Darwin ] || accel=hvf
-  firmware="$(dirname "$(realpath "$(command -v "$WINDOWS_QEMU")")")/../share/qemu"
-  [ -f "$disk.vars" ] || cp "$firmware/edk2-arm-vars.fd" "$disk.vars"
+  qemu_find_arm_firmware
+  [ -f "$disk.vars" ] || cp "$ARM_FIRMWARE_VARS" "$disk.vars"
   qemu_pick_ports "$WINDOWS_DIR"
   read -r ssh_port vnc_port <"$WINDOWS_DIR/ports"
   # Windows only has drivers for a few of QEMU's devices: NVMe for the disk,
   # USB for input and CDs, and ramfb, a plain framebuffer, for the screen.
   # QEMU counts VNC displays from TCP port 5900.
   "$WINDOWS_QEMU" -M virt -accel "$accel" -cpu host -smp 4 -m 8G \
-    -drive "if=pflash,format=raw,readonly=on,file=$firmware/edk2-aarch64-code.fd" \
+    -drive "if=pflash,format=raw,readonly=on,file=$ARM_FIRMWARE" \
     -drive "if=pflash,format=raw,file=$disk.vars" \
     -device ramfb -device qemu-xhci -device usb-kbd -device usb-tablet \
     -drive "if=none,id=disk,format=qcow2,file=$disk" -device nvme,drive=disk,serial=zen-windows \

@@ -44,8 +44,9 @@ linux_start() {
   local accel=kvm firmware=() ssh_port vnc_port
   [ "$(uname -s)" != Darwin ] || accel=hvf
   if [ "$LINUX_IMAGE_ARCH" = arm64 ]; then
-    # ARM machines have no built-in firmware. QEMU ships one next to its binary.
-    firmware=(-bios "$(dirname "$(realpath "$(command -v "$LINUX_QEMU")")")/../share/qemu/edk2-aarch64-code.fd")
+    # Unlike x86 machines, ARM machines have no built-in firmware.
+    qemu_find_arm_firmware
+    firmware=(-bios "$ARM_FIRMWARE")
   fi
   qemu_pick_ports "$LINUX_DIR"
   read -r ssh_port vnc_port <"$LINUX_DIR/ports"

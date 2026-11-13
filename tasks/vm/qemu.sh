@@ -1,5 +1,5 @@
 # Shared by the backends whose guests run under QEMU. Sourced by them.
-# shellcheck shell=bash disable=SC2154 # vm.sh sets os.
+# shellcheck shell=bash disable=SC2034,SC2154 # The backends read ARM_FIRMWARE*, vm.sh sets os.
 #
 # Each machine, a guest or a base being built, has a directory with its disk
 # and three files written here and by QEMU: pid, ports and serial.log.
@@ -23,6 +23,25 @@ qemu_wait_exit() {
   kill "$(cat "$dir/pid")" 2>/dev/null || true
   echo "vm: the guest did not shut down within $2 seconds and was powered off" >&2
   return 1
+}
+
+# Sets ARM_FIRMWARE and ARM_FIRMWARE_VARS, the firmware that ARM machines need
+# and the empty file for its settings. QEMU's own build lies next to its
+# binary, as with Homebrew. Debian and Ubuntu leave it out of their QEMU
+# packages and have their own build in the package qemu-efi-aarch64.
+qemu_find_arm_firmware() {
+  local dir
+  dir="$(dirname "$(realpath "$(command -v qemu-system-aarch64)")")/../share/qemu"
+  if [ -f "$dir/edk2-aarch64-code.fd" ]; then
+    ARM_FIRMWARE="$dir/edk2-aarch64-code.fd"
+    ARM_FIRMWARE_VARS="$dir/edk2-arm-vars.fd"
+  elif [ -f /usr/share/AAVMF/AAVMF_CODE.fd ]; then
+    ARM_FIRMWARE=/usr/share/AAVMF/AAVMF_CODE.fd
+    ARM_FIRMWARE_VARS=/usr/share/AAVMF/AAVMF_VARS.fd
+  else
+    die "no firmware for ARM machines at $dir/edk2-aarch64-code.fd or /usr/share/AAVMF/AAVMF_CODE.fd." \
+      "Install your system's package of it, or add its location to qemu_find_arm_firmware."
+  fi
 }
 
 # Writes two free loopback ports to <dir>/ports: the one that forwards to the

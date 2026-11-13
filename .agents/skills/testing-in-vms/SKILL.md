@@ -27,7 +27,7 @@ For Tart: `brew install openai/tools/tart`. Homebrew refuses untrusted taps, so 
 
 For Windows: Microsoft has no download that a script can use, so a person must fetch the Windows 11 ARM64 ISO, in English (United States), from https://www.microsoft.com/software-download/windows11arm64 and save it as `~/.zen-vms/images/windows-arm64.iso`, or set `ZEN_VM_WINDOWS_ISO` to its path. The install accepts Microsoft's licence terms on that person's behalf and leaves Windows unactivated. Setup differs between Windows releases and editions, and the recipe has not been run with all of them. If `up` is still waiting after half an hour, look at the screen with `shot windows:base-build`: Setup may have stopped at a question the answer file does not cover.
 
-The Linux guest runs at the host's architecture, so on Apple Silicon it is an ARM build. The Windows guest is always Windows on ARM and needs an ARM host. On a Linux host both should work with KVM, but that has not been tried. macOS guests need a Mac.
+The Linux guest runs at the host's architecture, so on Apple Silicon it is an ARM build. The Windows guest is always Windows on ARM and needs an ARM host. Linux hosts have not been tried. The scripts use KVM there. On an ARM host they also need QEMU's ARM firmware, which they only know how to find on Debian and Ubuntu (package `qemu-efi-aarch64`). macOS guests need a Mac.
 
 ## Commands
 
