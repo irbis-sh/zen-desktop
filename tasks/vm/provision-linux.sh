@@ -37,6 +37,11 @@ main() {
   # Its first-login wizard would cover the desktop.
   sudo apt-get purge --yes --quiet gnome-initial-setup
 
+  # Without this policy Firefox's first run covers the page with a dialog whose
+  # only button accepts Mozilla's terms of use.
+  sudo install -d -m 0755 /etc/firefox/policies
+  echo '{"policies": {"SkipTermsOfUse": true}}' | sudo tee /etc/firefox/policies/policies.json >/dev/null
+
   sudo tee /etc/gdm3/custom.conf >/dev/null <<EOF
 [daemon]
 AutomaticLoginEnable=true
