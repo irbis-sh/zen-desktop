@@ -30,7 +30,7 @@ Use `task` commands when available.
 - Run `task test` after Go changes
 - Before writing code, read `docs/reference/code-conventions.md` and follow it
 - When committing, follow `.agents/skills/writing-commit-messages/SKILL.md`
-- The app's UI can be driven via a browser (e.g. using MCP) for debugging and testing features, including starting and stopping the proxy, and modifying filter lists or custom rules. When launching in dev mode, wait for the log line `To develop in the browser and call your bound Go methods from Javascript, navigate to: <url>` and open that URL. Don't use the Vite URL (port 5173): it serves the UI without the Wails runtime, so Go calls fail. If another development instance of Zen is running, the single-instance lock makes dev mode exit straight away. Ask the user before shutting that instance down.
+- The app's UI can be driven via a browser (e.g. using MCP) for debugging and testing features, including starting and stopping the proxy, and modifying filter lists or custom rules. When launching in dev mode, wait for the log line `To develop in the browser and call your bound Go methods from Javascript, navigate to: <url>` and open that URL. If another development instance of Zen is running, the single-instance lock makes dev mode exit straight away. Ask the user before shutting that instance down.
 - In the canonical repo (not a fork), name branches `<github-username>/<description-slug>`. Get the username via `gh api user -q .login` if `gh` is available. No more than 3 words in the slug.
 
 ## Workflow guidelines
