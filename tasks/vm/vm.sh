@@ -246,16 +246,23 @@ fi
 # shellcheck source=/dev/null
 . "$SCRIPT_DIR/$os.sh"
 
-mkdir -p "$VM_HOME/shots"
+mkdir -p "$VM_HOME/shots" "$VM_HOME/$os"
 [ -f "$SSH_KEY" ] || ssh-keygen -q -t ed25519 -N '' -C zen-vms -f "$SSH_KEY"
+
+case "$command" in
+  up | reset | down | rm)
+    # Two sessions that start the same guest at once would both find it
+    # stopped, and the one whose start then fails would leave behind an empty
+    # disk or the ports of a machine that never ran. Stopping or deleting a
+    # guest that another session is starting fails in similar ways. The lock
+    # is not in the guest's directory, because `rm` deletes that.
+    lock_take "$VM_HOME/$os/$name.lock" "Waiting for another session to finish its command on $os:$name."
+    ;;
+esac
 
 case "$command" in
   up | reset)
     mkdir -p "$GUEST_DIR"
-    # Two sessions that start the same guest at once would both find it
-    # stopped, and the one whose start then fails would leave behind an empty
-    # disk or the ports of a machine that never ran.
-    lock_take "$GUEST_DIR/lock" "Waiting for another session to finish starting $os:$name."
     [ -f "$GUEST_DIR/checkout" ] || echo "$REPO_ROOT" >"$GUEST_DIR/checkout"
     if [ "$command" = reset ]; then
       "${os}_down" || true
