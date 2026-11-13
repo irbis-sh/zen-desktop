@@ -15,18 +15,21 @@ qemu_running() {
 # seconds, and cuts its power after that. Fails in that case: a power cut can
 # lose what the guest wrote last, which a disk about to become a base must not.
 qemu_wait_exit() {
-  local dir=$1
+  local dir=$1 signal
   for _ in $(seq "$2"); do
     qemu_running "$dir" || return 0
     sleep 1
   done
   qemu_running "$dir" || return 0
-  kill "$(cat "$dir/pid")" 2>/dev/null || true
-  # QEMU needs a moment to end. A start that follows at once would otherwise
-  # still find the machine running.
-  for _ in $(seq 50); do
-    qemu_running "$dir" || break
-    sleep 0.1
+  # QEMU needs a moment to end, and a start that follows at once would still
+  # find the machine running. A QEMU that hangs does not act on the first
+  # signal at all; no process can ignore the second.
+  for signal in TERM KILL; do
+    kill -s "$signal" "$(cat "$dir/pid")" 2>/dev/null || true
+    for _ in $(seq 50); do
+      qemu_running "$dir" || break 2
+      sleep 0.1
+    done
   done
   echo "vm: the guest did not shut down within $2 seconds and was powered off" >&2
   return 1
