@@ -36,8 +36,9 @@ func newCache() *cache {
 	return &cache{entries: make(map[cacheKey]*list.Element), order: list.New()}
 }
 
-// wallClock returns the time without its monotonic reading. The monotonic clock stops
-// during sleep, and an entry's time has to run out while the machine sleeps too.
+// wallClock returns the time without its monotonic reading. On macOS and Linux the
+// monotonic clock stops during sleep, and an entry's time has to run out while the
+// machine sleeps too.
 func wallClock() time.Time { return time.Now().Round(0) }
 
 // get returns the fresh entry for key, if there is one.

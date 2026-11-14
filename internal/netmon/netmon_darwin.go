@@ -63,9 +63,13 @@ func readStore() (map[string]any, error) {
 		return nil, fmt.Errorf("read DNS keys: %s", C.GoString(data.failed))
 	}
 	defer C.free(unsafe.Pointer(data.bytes))
+	return decodeStore(C.GoBytes(unsafe.Pointer(data.bytes), C.int(data.len)))
+}
 
+// decodeStore decodes the property list that netmon_read returns.
+func decodeStore(data []byte) (map[string]any, error) {
 	var values map[string]any
-	if _, err := plist.Unmarshal(C.GoBytes(unsafe.Pointer(data.bytes), C.int(data.len)), &values); err != nil {
+	if _, err := plist.Unmarshal(data, &values); err != nil {
 		return nil, fmt.Errorf("decode DNS keys: %w", err)
 	}
 	return values, nil

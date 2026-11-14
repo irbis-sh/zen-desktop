@@ -4,6 +4,8 @@ import (
 	"net/netip"
 	"slices"
 	"testing"
+
+	"howett.net/plist"
 )
 
 const serviceKey = "State:/Network/Service/0C5E6F2A-1B3D-4E5F-8A9B-123456789ABC/DNS"
@@ -139,6 +141,33 @@ func TestParseAsksRouteOnlyForAddresses(t *testing.T) {
 				t.Errorf("viaTunnel called = %v, want %v", asked, tt.want)
 			}
 		})
+	}
+}
+
+// TestParseDecodedStore checks that parse accepts the types the decoder produces. Its
+// type checks skip everything else, so a decoder that changed them would leave the state
+// empty without an error.
+func TestParseDecodedStore(t *testing.T) {
+	t.Parallel()
+	data, err := plist.Marshal(map[string]any{
+		serviceKey: map[string]any{
+			"SearchDomains":            []string{"corp.example"},
+			"SupplementalMatchDomains": []string{"", "vpn.example"},
+			"ServerAddresses":          []string{"10.0.0.53"},
+		},
+	}, plist.BinaryFormat)
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	values, err := decodeStore(data)
+	if err != nil {
+		t.Fatalf("decodeStore: %v", err)
+	}
+	got := parse(values, nil, func(netip.Addr) bool { return false })
+	slices.Sort(got.Domains)
+	want := State{Domains: []string{"corp.example", "vpn.example"}, VPNHandlesAllDNS: true}
+	if !got.equal(want) {
+		t.Errorf("parse(decoded) = %+v, want %+v", got, want)
 	}
 }
 

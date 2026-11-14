@@ -98,12 +98,13 @@ func TestTickAfterWake(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name        string
-		gap         time.Duration
-		wantNetwork bool
+		name string
+		gap  time.Duration
+		want []string
 	}{
-		{name: "clock moved 46 s", gap: 46 * time.Second, wantNetwork: true},
-		{name: "clock moved 44 s", gap: 44 * time.Second, wantNetwork: false},
+		// The routing comes first, as after a change.
+		{name: "clock moved 46 s", gap: 46 * time.Second, want: []string{"routing [corp.example] false", "network"}},
+		{name: "clock moved 44 s", gap: 44 * time.Second, want: []string{"routing [corp.example] false"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -111,12 +112,11 @@ func TestTickAfterWake(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				r := newRig(t, &fakeOS{})
 				r.events()
+				r.os.set(corp, nil)
 				r.jump.Store(int64(tt.gap - rereadInterval))
 				time.Sleep(rereadInterval)
 				synctest.Wait()
-				if got := slices.Equal(r.events(), []string{"network"}); got != tt.wantNetwork {
-					t.Errorf("network reported = %v, want %v", got, tt.wantNetwork)
-				}
+				r.want(t, tt.want...)
 			})
 		})
 	}
