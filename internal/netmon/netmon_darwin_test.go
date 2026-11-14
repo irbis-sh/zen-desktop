@@ -62,6 +62,12 @@ func TestParse(t *testing.T) {
 			values: map[string]any{serviceKey: dict("SupplementalMatchDomains", list(""))},
 		},
 		{
+			name: "match domain of two dots",
+			values: map[string]any{
+				serviceKey: dict("SupplementalMatchDomains", list(".."), "ServerAddresses", list("10.0.0.53")),
+			},
+		},
+		{
 			name: "search domains as a string",
 			values: map[string]any{
 				serviceKey:   dict("SearchDomains", "bad.example"),
