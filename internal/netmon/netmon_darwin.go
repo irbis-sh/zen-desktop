@@ -216,9 +216,10 @@ func stringList(v any) []string {
 	return list
 }
 
-// normalise lower-cases a domain and drops its trailing dot.
+// normalise lower-cases a domain and drops its trailing dots. configd drops every one
+// from a resolver file's domain, and a domain left with one would match no name.
 func normalise(domain string) string {
-	return strings.TrimSuffix(strings.ToLower(domain), ".")
+	return strings.TrimRight(strings.ToLower(domain), ".")
 }
 
 // isRoot reports whether domain names the root, as an empty match domain does.

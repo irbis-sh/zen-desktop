@@ -79,7 +79,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name:        "resolver file domains",
-			fileDomains: []string{"Dev.Example."},
+			fileDomains: []string{"Dev.Example.."},
 			wantDomains: []string{"dev.example"},
 		},
 		{
