@@ -113,21 +113,27 @@ func resolverDomains(dir string) []string {
 }
 
 // fileDomain returns the domain of the resolver file at path. That is the value of its
-// last domain line, as macOS takes it, or else the file's name. A tool can name the file
-// as it likes and set the domain inside, and the name alone would send the domain's
-// names to the DoH server. A file that can't be read counts as having no domain line.
+// first domain line, or else the file's name. A tool can name the file as it likes and
+// set the domain inside, and the name alone would send the domain's names to the DoH
+// server. A file that can't be read counts as having no domain line.
+//
+// The lines are read as configd reads them (dnsinfo_flatfile.c): the keyword starts the
+// line, its case doesn't matter, and a second domain line is ignored. resolver(5) says
+// the last one wins, which configd doesn't do.
 func fileDomain(path string) string {
-	domain := filepath.Base(path)
 	data, err := os.ReadFile(path)
-	if err != nil {
-		return domain
-	}
-	for line := range strings.Lines(string(data)) {
-		if fields := strings.Fields(line); len(fields) >= 2 && fields[0] == "domain" {
-			domain = fields[1]
+	if err == nil {
+		for line := range strings.Lines(string(data)) {
+			i := strings.IndexAny(line, " \t")
+			if i < 0 || !strings.EqualFold(line[:i], "domain") {
+				continue
+			}
+			if fields := strings.Fields(line[i:]); len(fields) > 0 {
+				return fields[0]
+			}
 		}
 	}
-	return domain
+	return filepath.Base(path)
 }
 
 // parse turns the store's DNS values and the domains of the resolver files into a state.

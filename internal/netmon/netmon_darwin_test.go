@@ -180,6 +180,9 @@ func TestResolverDomains(t *testing.T) {
 		"dev.example": "nameserver 127.0.0.1\n",
 		"vpn-a":       "nameserver 10.0.0.53\ndomain corp.example\n",
 		"twice":       "domain first.example\ndomain last.example",
+		"upper":       "DOMAIN upper.example\n",
+		"tab":         "domain\ttab.example\n",
+		"indented":    " domain wrong.example\nnameserver 10.0.0.53\n",
 		"commented":   "# domain wrong.example\nnameserver 10.0.0.53\n",
 		".DS_Store":   "domain hidden.example\n",
 		"unreadable":  "domain unread.example\n",
@@ -199,7 +202,9 @@ func TestResolverDomains(t *testing.T) {
 	}
 	got := resolverDomains(dir)
 	slices.Sort(got)
-	want := []string{"commented", "corp.example", "dev.example", "last.example", unreadable}
+	want := []string{
+		"commented", "corp.example", "dev.example", "first.example", "indented", "tab.example", unreadable, "upper.example",
+	}
 	if !slices.Equal(got, want) {
 		t.Errorf("resolverDomains = %q, want %q", got, want)
 	}
