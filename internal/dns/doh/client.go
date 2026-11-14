@@ -65,7 +65,7 @@ func NewClient(rawURL string, bootstrap []netip.Addr) *Client {
 }
 
 // wallClock returns the time without its monotonic reading. Time asleep has to count
-// towards silenceLimit, and the monotonic clock stops during sleep.
+// towards silenceLimit, and on macOS and Linux the monotonic clock stops during sleep.
 func wallClock() time.Time { return time.Now().Round(0) }
 
 func lookupIP(ctx context.Context, host string) ([]netip.Addr, error) {
