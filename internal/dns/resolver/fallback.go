@@ -118,8 +118,9 @@ func (r *Resolver) kickLocked() {
 
 // loop runs rounds until a probe is usable or the resolver is closed. The first round
 // runs at once, and the waits between rounds double from firstWait up to maxWait. The
-// waits use ordinary timers, which stop while the machine sleeps. A wake reported as a
-// network change runs a round at once.
+// waits use ordinary timers. Whether those count time asleep depends on the OS, so after
+// a wake the next round can be a full wait away. The network monitor reports a wake as
+// a network change, which runs a round at once.
 func (r *Resolver) loop() {
 	wait := firstWait
 	for {

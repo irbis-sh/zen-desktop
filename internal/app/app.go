@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	goruntime "runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
 	"github.com/irbis-sh/zen-desktop/internal/hwkey"
 	"github.com/irbis-sh/zen-desktop/internal/logger"
+	"github.com/irbis-sh/zen-desktop/internal/netmon"
 	"github.com/irbis-sh/zen-desktop/internal/proxy"
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
 	"github.com/irbis-sh/zen-desktop/internal/routing"
@@ -75,8 +77,10 @@ type App struct {
 	filterListStore *filterliststore.FilterListStore
 	whitelistSrv    *whitelistserver.Server
 	// resolver is nil when the proxy uses the OS resolver.
-	resolver  *resolver.Resolver
-	restartMu sync.Mutex
+	resolver *resolver.Resolver
+	// netMonitor is nil when resolver is.
+	netMonitor *netmon.Monitor
+	restartMu  sync.Mutex
 	// pendingRestart records an armed restart.
 	pendingRestart      bool
 	pendingRestartStart bool
@@ -270,10 +274,12 @@ func (a *App) StartProxy() (err error) {
 	a.resolver = newResolver(a.config.GetDNS())
 	var netResolver *net.Resolver
 	if a.resolver != nil {
+		// Before the proxy starts, so that the resolver has the network's domains for the
+		// first request.
+		a.netMonitor = newNetMonitor(a.resolver)
 		defer func() {
 			if err != nil {
-				a.resolver.Close()
-				a.resolver = nil
+				a.closeResolver()
 			}
 		}()
 		netResolver = a.resolver.NetResolver()
@@ -339,6 +345,32 @@ func newResolver(dnsConfig config.DNSConfig) *resolver.Resolver {
 	return nil
 }
 
+// newNetMonitor returns a monitor that keeps r up to date with the network. Its callbacks
+// take only r's lock, never proxyMu, which Close is called with.
+func newNetMonitor(r *resolver.Resolver) *netmon.Monitor {
+	return netmon.New(
+		func(s netmon.State) {
+			// The domains can name the network the user is on, such as an employer's.
+			log.Printf("DNS routing: %d network domains (%s), VPN handles all DNS: %t",
+				len(s.Domains), redacted.Redacted(strings.Join(s.Domains, " ")), s.VPNHandlesAllDNS)
+			r.SetRouting(s.Domains, s.VPNHandlesAllDNS)
+		},
+		func() {
+			log.Println("network changed")
+			r.NetworkChanged()
+		},
+	)
+}
+
+// closeResolver closes the network monitor and then the resolver, so that no monitor
+// callback reaches a closed resolver.
+func (a *App) closeResolver() {
+	a.netMonitor.Close()
+	a.netMonitor = nil
+	a.resolver.Close()
+	a.resolver = nil
+}
+
 // StopProxy stops the proxy. When a start is in flight, it aborts the filter
 // build rather than waiting out filterBuildTimeout behind proxyMu.
 func (a *App) StopProxy() (err error) {
@@ -388,8 +420,7 @@ func (a *App) StopProxy() (err error) {
 	// The nil check also covers a second StopProxy after the whitelist server failed to
 	// stop, which leaves proxyOn set.
 	if a.resolver != nil {
-		a.resolver.Close()
-		a.resolver = nil
+		a.closeResolver()
 	}
 
 	if err := a.whitelistSrv.Stop(); err != nil {
