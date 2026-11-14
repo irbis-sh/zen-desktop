@@ -2,6 +2,8 @@ package netmon
 
 import (
 	"net/netip"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -16,7 +18,7 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name        string
 		values      map[string]any
-		files       []string
+		fileDomains []string
 		tunnel      bool
 		wantDomains []string
 		wantVPN     bool
@@ -76,8 +78,8 @@ func TestParse(t *testing.T) {
 			wantDomains: []string{"corp.example"},
 		},
 		{
-			name:        "resolver files",
-			files:       []string{"dev.example", ".DS_Store"},
+			name:        "resolver file domains",
+			fileDomains: []string{"Dev.Example."},
 			wantDomains: []string{"dev.example"},
 		},
 		{
@@ -104,7 +106,7 @@ func TestParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := parse(tt.values, tt.files, func(netip.Addr) bool { return tt.tunnel })
+			got := parse(tt.values, tt.fileDomains, func(netip.Addr) bool { return tt.tunnel })
 			slices.Sort(got.Domains)
 			if !slices.Equal(got.Domains, tt.wantDomains) {
 				t.Errorf("domains %q, want %q", got.Domains, tt.wantDomains)
@@ -168,6 +170,42 @@ func TestParseDecodedStore(t *testing.T) {
 	want := State{Domains: []string{"corp.example", "vpn.example"}, VPNHandlesAllDNS: true}
 	if !got.equal(want) {
 		t.Errorf("parse(decoded) = %+v, want %+v", got, want)
+	}
+}
+
+func TestResolverDomains(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	files := map[string]string{
+		"dev.example": "nameserver 127.0.0.1\n",
+		"vpn-a":       "nameserver 10.0.0.53\ndomain corp.example\n",
+		"twice":       "domain first.example\ndomain last.example",
+		"commented":   "# domain wrong.example\nnameserver 10.0.0.53\n",
+		".DS_Store":   "domain hidden.example\n",
+		"unreadable":  "domain unread.example\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Chmod(filepath.Join(dir, "unreadable"), 0); err != nil {
+		t.Fatal(err)
+	}
+	unreadable := "unreadable"
+	if os.Geteuid() == 0 {
+		// Root reads the file regardless of its mode.
+		unreadable = "unread.example"
+	}
+	got := resolverDomains(dir)
+	slices.Sort(got)
+	want := []string{"commented", "corp.example", "dev.example", "last.example", unreadable}
+	if !slices.Equal(got, want) {
+		t.Errorf("resolverDomains = %q, want %q", got, want)
+	}
+
+	if got := resolverDomains(filepath.Join(dir, "missing")); got != nil {
+		t.Errorf("resolverDomains(missing directory) = %q, want none", got)
 	}
 }
 

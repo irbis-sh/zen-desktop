@@ -29,6 +29,7 @@ import (
 	"log"
 	"net/netip"
 	"os"
+	"path/filepath"
 	"runtime/cgo"
 	"slices"
 	"strings"
@@ -42,9 +43,9 @@ import (
 // uses by default. The keys of network services, such as Wi-Fi or a VPN, add to it.
 const globalDNSKey = "State:/Network/Global/DNS"
 
-// resolverDir holds a file for each domain that has its own DNS server, named after the
-// domain (resolver(5)). Developers and some tools put files there. A change to it changes
-// globalDNSKey, but the key doesn't list the domains.
+// resolverDir holds a file for each domain that has its own DNS server (resolver(5)).
+// Developers and some tools put files there. A change to it changes globalDNSKey, but
+// the key doesn't list the domains.
 const resolverDir = "/etc/resolver"
 
 func readState() (State, error) {
@@ -52,7 +53,7 @@ func readState() (State, error) {
 	if err != nil {
 		return State{}, err
 	}
-	return parse(values, resolverFiles(), viaTunnel), nil
+	return parse(values, resolverDomains(resolverDir), viaTunnel), nil
 }
 
 // readStore returns the DNS keys of the system configuration store, as a map from each
@@ -82,13 +83,13 @@ var lastDirErr struct {
 	text string
 }
 
-// resolverFiles returns the names of the files in resolverDir. An error that isn't the
+// resolverDomains returns the domain of each file in dir. An error that isn't the
 // directory's absence is logged and counts as no files. It doesn't fail the read: it
 // would persist, such as EACCES for a directory created with umask 077, which macOS
 // still reads as root, and the monitor would then report an empty state for as long as
 // it lasted, without the store's domains or VPN flag.
-func resolverFiles() []string {
-	entries, err := os.ReadDir(resolverDir)
+func resolverDomains(dir string) []string {
+	entries, err := os.ReadDir(dir)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		lastDirErr.Lock()
 		if text := err.Error(); text != lastDirErr.text {
@@ -101,21 +102,42 @@ func resolverFiles() []string {
 	lastDirErr.Lock()
 	lastDirErr.text = ""
 	lastDirErr.Unlock()
-	names := make([]string, len(entries))
-	for i, e := range entries {
-		names[i] = e.Name()
+	var domains []string
+	for _, e := range entries {
+		// Skips files such as .DS_Store.
+		if !strings.HasPrefix(e.Name(), ".") {
+			domains = append(domains, fileDomain(filepath.Join(dir, e.Name())))
+		}
 	}
-	return names
+	return domains
 }
 
-// parse turns the store's DNS values and the file names in resolverDir into a state.
+// fileDomain returns the domain of the resolver file at path. That is the value of its
+// last domain line, as macOS takes it, or else the file's name. A tool can name the file
+// as it likes and set the domain inside, and the name alone would send the domain's
+// names to the DoH server. A file that can't be read counts as having no domain line.
+func fileDomain(path string) string {
+	domain := filepath.Base(path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return domain
+	}
+	for line := range strings.Lines(string(data)) {
+		if fields := strings.Fields(line); len(fields) >= 2 && fields[0] == "domain" {
+			domain = fields[1]
+		}
+	}
+	return domain
+}
+
+// parse turns the store's DNS values and the domains of the resolver files into a state.
 // viaTunnel reports whether the routing table sends packets for the address through a
 // point-to-point interface.
 //
 // Each value and field is taken with a type check, and one of the wrong type is skipped,
 // as macOS does. A VPN script that writes "d.add SearchDomains corp.example" in scutil,
 // without the * that makes an array, leaves a string there.
-func parse(values map[string]any, files []string, viaTunnel func(netip.Addr) bool) State {
+func parse(values map[string]any, fileDomains []string, viaTunnel func(netip.Addr) bool) State {
 	var s State
 	add := func(names ...string) {
 		for _, name := range names {
@@ -147,12 +169,7 @@ func parse(values map[string]any, files []string, viaTunnel func(netip.Addr) boo
 		}
 	}
 
-	for _, name := range files {
-		// Skips files such as .DS_Store.
-		if !strings.HasPrefix(name, ".") {
-			add(name)
-		}
-	}
+	add(fileDomains...)
 
 	if !s.VPNHandlesAllDNS {
 		global, _ := values[globalDNSKey].(map[string]any)
