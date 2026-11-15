@@ -39,9 +39,12 @@ type Monitor struct {
 	onRouting func(State)
 	onNetwork func()
 	stopWatch func()
-	notified  chan struct{}
-	quit      chan struct{}
-	done      chan struct{}
+	// networkChanged and settingsChanged hold a change that run hasn't taken yet. They are
+	// two channels, because one would lose which kind it was.
+	networkChanged  chan struct{}
+	settingsChanged chan struct{}
+	quit            chan struct{}
+	done            chan struct{}
 
 	// The fields below belong to the goroutine after New returns.
 
@@ -69,28 +72,30 @@ func wallClock() time.Time {
 }
 
 // newMonitor is [New] with the OS's functions and the clock as parameters. watch calls
-// notify, from any thread, each time something changes, and the stop function it
-// returns ends the watch and waits for a notify that is still running.
+// network, from any thread, each time the network itself changes: an interface or an
+// address. It calls settings each time only the DNS settings may have changed. The stop
+// function it returns ends the watch and waits for a call that is still running.
 func newMonitor(
 	readState func() (State, error),
-	watch func(notify func()) (stop func(), err error),
+	watch func(network, settings func()) (stop func(), err error),
 	now func() time.Time,
 	onRouting func(State),
 	onNetwork func(),
 ) *Monitor {
 	m := &Monitor{
-		readState: readState,
-		now:       now,
-		onRouting: onRouting,
-		onNetwork: onNetwork,
-		notified:  make(chan struct{}, 1),
-		quit:      make(chan struct{}),
-		done:      make(chan struct{}),
+		readState:       readState,
+		now:             now,
+		onRouting:       onRouting,
+		onNetwork:       onNetwork,
+		networkChanged:  make(chan struct{}, 1),
+		settingsChanged: make(chan struct{}, 1),
+		quit:            make(chan struct{}),
+		done:            make(chan struct{}),
 	}
 
 	// The watch starts before the first read, so that a change between the two is
 	// reported rather than lost until the next re-read.
-	stop, err := watch(m.notify)
+	stop, err := watch(m.network, m.settings)
 	if err != nil {
 		log.Printf("watch network: %v, re-reading it every %s instead", err, rereadInterval)
 		stop = func() {}
@@ -111,10 +116,21 @@ func (m *Monitor) Close() {
 	m.stopWatch()
 }
 
-// notify records a change. It never blocks: one recorded change is as good as many.
-func (m *Monitor) notify() {
+// network records a change of the network. It never blocks: one recorded change is as
+// good as many.
+func (m *Monitor) network() {
 	select {
-	case m.notified <- struct{}{}:
+	case m.networkChanged <- struct{}{}:
+	default:
+	}
+}
+
+// settings records a change that can only change the state, such as a DHCP renewal that
+// rewrites the registry on Windows. Reporting it as a change of the network would make
+// the resolver drop its connection and cache for nothing.
+func (m *Monitor) settings() {
+	select {
+	case m.settingsChanged <- struct{}{}:
 	default:
 	}
 }
@@ -129,19 +145,29 @@ func (m *Monitor) run() {
 	// settled fires once the OS has been quiet for settleTime after a change. It is nil
 	// while no change is pending.
 	var settled <-chan time.Time
+	// networkPending reports whether network was called since the wait last ended. Only
+	// the end of the wait clears it, not any read: a tick inside the wait would otherwise
+	// lose the change.
+	networkPending := false
 
 	for {
 		select {
-		case <-m.notified:
+		case <-m.networkChanged:
+			networkPending = true
+			settled = time.After(settleTime)
+		case <-m.settingsChanged:
 			settled = time.After(settleTime)
 		case <-settled:
 			settled = nil
 			// The routing comes first: NetworkChanged has the resolver's loop run a round
 			// at once, and that round reads the VPN flag.
 			m.refresh()
-			// Called even when the state is the same: a new Wi-Fi network usually
-			// announces the same domains as the old one, which is none.
-			m.onNetwork()
+			if networkPending {
+				networkPending = false
+				// Called even when the state is the same: a new Wi-Fi network usually
+				// announces the same domains as the old one, which is none.
+				m.onNetwork()
+			}
 		case <-ticker.C:
 			// Go's timers stop during sleep on macOS and Linux, so this tick can come up to
 			// rereadInterval after a wake. On Windows they keep counting.

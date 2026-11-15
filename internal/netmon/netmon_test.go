@@ -53,10 +53,10 @@ func TestBurstGivesOneRead(t *testing.T) {
 		r := newRig(t, &fakeOS{})
 		r.events()
 		for range 5 {
-			r.os.notify()
+			r.os.network()
 			time.Sleep(200 * time.Millisecond)
 		}
-		// The last notify was 200 ms ago.
+		// The last call was 200 ms ago.
 		time.Sleep(799 * time.Millisecond)
 		synctest.Wait()
 		r.want(t)
@@ -75,10 +75,65 @@ func TestBurstWithChangedState(t *testing.T) {
 		r := newRig(t, &fakeOS{})
 		r.events()
 		r.os.set(corp, nil)
-		r.os.notify()
+		r.os.network()
 		time.Sleep(settleTime)
 		synctest.Wait()
 		r.want(t, "routing [corp.example] false", "network")
+	})
+}
+
+func TestSettingsBurstGivesNoNetwork(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		r := newRig(t, &fakeOS{})
+		r.events()
+		r.os.set(corp, nil)
+		for range 3 {
+			r.os.settings()
+			time.Sleep(200 * time.Millisecond)
+		}
+		time.Sleep(settleTime)
+		synctest.Wait()
+		r.want(t, "routing [corp.example] false")
+		if n := r.os.readCount(); n != 2 {
+			t.Errorf("%d reads, want 2", n)
+		}
+	})
+}
+
+func TestMixedBurstGivesOneNetwork(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		r := newRig(t, &fakeOS{})
+		r.events()
+		r.os.settings()
+		time.Sleep(200 * time.Millisecond)
+		r.os.network()
+		time.Sleep(200 * time.Millisecond)
+		r.os.settings()
+		time.Sleep(settleTime)
+		synctest.Wait()
+		r.want(t, "network")
+		if n := r.os.readCount(); n != 2 {
+			t.Errorf("%d reads, want 2", n)
+		}
+	})
+}
+
+func TestTickDuringSettleTimeKeepsNetwork(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		r := newRig(t, &fakeOS{})
+		r.events()
+		time.Sleep(rereadInterval - settleTime/2)
+		r.os.network()
+		time.Sleep(settleTime)
+		synctest.Wait()
+		r.want(t, "network")
+		// The first read, the tick's, and the one at the end of the wait.
+		if n := r.os.readCount(); n != 3 {
+			t.Errorf("%d reads, want 3", n)
+		}
 	})
 }
 
@@ -190,7 +245,7 @@ func TestCloseDuringSettleTime(t *testing.T) {
 		r := newRig(t, &fakeOS{})
 		r.events()
 		r.os.set(corp, nil)
-		r.os.notify()
+		r.os.network()
 		time.Sleep(settleTime / 2)
 		r.m.Close()
 		if !r.os.isStopped() {
@@ -209,7 +264,7 @@ func TestChangeDuringFirstRead(t *testing.T) {
 		r := newRig(t, &fakeOS{afterFirstRead: func(o *fakeOS) {
 			// The state changes after the first read took it, and the OS reports the change.
 			o.set(corp, nil)
-			o.notify()
+			o.network()
 		}})
 		r.want(t, "routing [] false")
 		time.Sleep(settleTime)
@@ -282,12 +337,15 @@ type fakeOS struct {
 	watchErr       error
 	afterFirstRead func(*fakeOS)
 
-	mu       sync.Mutex
-	state    State
-	err      error
-	reads    int
-	notifyFn func()
-	stopped  bool
+	// network and settings are the monitor's callbacks. watch sets them inside
+	// newMonitor, before the monitor's goroutine starts.
+	network, settings func()
+
+	mu      sync.Mutex
+	state   State
+	err     error
+	reads   int
+	stopped bool
 }
 
 func (o *fakeOS) readState() (State, error) {
@@ -304,13 +362,11 @@ func (o *fakeOS) readState() (State, error) {
 	return s, err
 }
 
-func (o *fakeOS) watch(notify func()) (func(), error) {
+func (o *fakeOS) watch(network, settings func()) (func(), error) {
 	if o.watchErr != nil {
 		return nil, o.watchErr
 	}
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	o.notifyFn = notify
+	o.network, o.settings = network, settings
 	return func() {
 		o.mu.Lock()
 		defer o.mu.Unlock()
@@ -322,13 +378,6 @@ func (o *fakeOS) set(s State, err error) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	o.state, o.err = s, err
-}
-
-func (o *fakeOS) notify() {
-	o.mu.Lock()
-	notify := o.notifyFn
-	o.mu.Unlock()
-	notify()
 }
 
 func (o *fakeOS) readCount() int {
