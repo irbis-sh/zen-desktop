@@ -229,8 +229,9 @@ func isRoot(domain string) bool {
 	return domain == "" || domain == "."
 }
 
-func watch(notify func()) (stop func(), err error) {
-	h := cgo.NewHandle(notify)
+// watch reports every change of the watched keys as a change of the network.
+func watch(network, _ func()) (stop func(), err error) {
+	h := cgo.NewHandle(network)
 	w := C.netmon_watch(C.uintptr_t(h))
 	if w == nil {
 		h.Delete()

@@ -1,4 +1,4 @@
-//go:build !darwin
+//go:build !darwin && !windows
 
 package netmon
 
@@ -9,6 +9,6 @@ func readState() (State, error) {
 }
 
 // watch reports nothing: this system has no watcher yet.
-func watch(func()) (func(), error) {
+func watch(_, _ func()) (func(), error) {
 	return func() {}, nil
 }

@@ -232,7 +232,7 @@ func TestReadStateOnSystem(t *testing.T) {
 func TestWatchAndStopOnSystem(t *testing.T) {
 	t.Parallel()
 	for range 100 {
-		stop, err := watch(func() {})
+		stop, err := watch(func() {}, func() {})
 		if err != nil {
 			t.Fatalf("watch: %v", err)
 		}
