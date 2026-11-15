@@ -441,13 +441,13 @@ type watchedKey struct {
 func watchKey(path string) (watchedKey, error) {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, path, registry.NOTIFY)
 	if err != nil {
-		return watchedKey{}, err
+		return watchedKey{}, fmt.Errorf("open key: %w", err)
 	}
 	// Auto-reset, so the wait that reports a change also resets the event.
 	event, err := windows.CreateEvent(nil, 0, 0, nil)
 	if err != nil {
 		k.Close()
-		return watchedKey{}, err
+		return watchedKey{}, fmt.Errorf("create event: %w", err)
 	}
 	wk := watchedKey{path: path, key: k, event: event}
 	if err := wk.notify(); err != nil {
@@ -463,7 +463,10 @@ func (k watchedKey) notify() error {
 	// Without REG_NOTIFY_THREAD_AGNOSTIC the request belongs to the calling thread, and
 	// Windows signals the event when that thread exits. Go ends threads as it likes.
 	const filter = windows.REG_NOTIFY_CHANGE_NAME | windows.REG_NOTIFY_CHANGE_LAST_SET | windows.REG_NOTIFY_THREAD_AGNOSTIC
-	return windows.RegNotifyChangeKeyValue(windows.Handle(k.key), true, filter, k.event, true)
+	if err := windows.RegNotifyChangeKeyValue(windows.Handle(k.key), true, filter, k.event, true); err != nil {
+		return fmt.Errorf("ask for change notification: %w", err)
+	}
+	return nil
 }
 
 func (k watchedKey) close() {
