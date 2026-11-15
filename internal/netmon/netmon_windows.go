@@ -40,9 +40,9 @@ const ifTypePropVirtual = 53
 // adapter that has none. Go's resolver skips them too (net/dnsconfig_windows.go).
 var siteLocal = netip.MustParsePrefix("fec0::/10")
 
-// readState fails only when the adapters can't be listed. A missing registry key or value
-// is normal and counts as empty, and so does any other error in the settings, which is
-// logged.
+// readState reads the state from the adapters and the registry. It fails only when the
+// adapters can't be listed. A missing registry key or value is normal and counts as
+// empty, and so does any other error in the settings, which is logged.
 func readState() (State, error) {
 	adapters, err := readAdapters()
 	if err != nil {
@@ -304,7 +304,9 @@ func (a adapter) handlesAll() bool {
 	return false
 }
 
-// watch never fails. What it can't watch it logs and leaves to the monitor's re-reads.
+// watch watches interfaces and addresses through the IP helper, and the DNS settings
+// through the registry. It never fails: what it can't watch it logs and leaves to the
+// monitor's re-reads.
 func watch(network, settings func()) (stop func(), err error) {
 	w := &watcher{network: network}
 	// Windows holds the pointer where the garbage collector can't see it.
@@ -328,7 +330,8 @@ func watch(network, settings func()) (stop func(), err error) {
 // Windows callbacks are never released, and Go ends the program at the 2,001st.
 var changedCallback = windows.NewCallback(changed)
 
-// changed runs on a thread of Windows's own, with the watcher as the context.
+// changed tells w, the context, that the network changed. It runs on a thread of
+// Windows's own.
 func changed(w *watcher, _ unsafe.Pointer, _ uint32) uintptr {
 	w.network()
 	return 0
