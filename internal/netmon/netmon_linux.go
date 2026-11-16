@@ -168,16 +168,16 @@ func readResolved(tunnels map[int]net.Interface) ([]link, error) {
 	return links, nil
 }
 
-// getProperty stores the property name of obj's interface iface in v. godbus's own
+// getProperty stores the property prop of obj's interface iface in v. godbus's own
 // GetProperty doesn't set FlagNoAutoStart.
-func getProperty(ctx context.Context, obj dbus.BusObject, iface, name string, v any) error {
+func getProperty(ctx context.Context, obj dbus.BusObject, iface, prop string, v any) error {
 	var variant dbus.Variant
-	err := obj.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Get", dbus.FlagNoAutoStart, iface, name).Store(&variant)
+	err := obj.CallWithContext(ctx, "org.freedesktop.DBus.Properties.Get", dbus.FlagNoAutoStart, iface, prop).Store(&variant)
 	if err == nil {
 		err = variant.Store(v)
 	}
 	if err != nil {
-		return fmt.Errorf("get %s.%s: %w", iface, name, err)
+		return fmt.Errorf("get %s.%s: %w", iface, prop, err)
 	}
 	return nil
 }
@@ -466,14 +466,14 @@ func watchBus(settings func()) (stop func()) {
 }
 
 // subscribe connects to the system bus and has it send the signals that watchBus wants
-// to signals. The connection lasts until ctx is done.
-func subscribe(ctx context.Context, signals chan<- *dbus.Signal) error {
+// to ch. The connection lasts until ctx is done.
+func subscribe(ctx context.Context, ch chan<- *dbus.Signal) error {
 	conn, err := dbus.ConnectSystemBus(dbus.WithContext(ctx))
 	if err != nil {
 		return err
 	}
 	// The channel comes first, so that no signal arrives before it is there.
-	conn.Signal(signals)
+	conn.Signal(ch)
 	rules := [][]dbus.MatchOption{
 		{
 			dbus.WithMatchSender(resolvedName),
@@ -503,8 +503,9 @@ func subscribe(ctx context.Context, signals chan<- *dbus.Signal) error {
 	return nil
 }
 
-// The inotify events that watchResolvConf asks for. Most writers rename a new file over
-// the old one (IN_MOVED_TO), and a few write it in place (IN_CLOSE_WRITE).
+// resolvConfEvents are the inotify events that watchResolvConf asks for. Most writers
+// rename a new file over the old one (IN_MOVED_TO), and a few write it in place
+// (IN_CLOSE_WRITE).
 const resolvConfEvents = unix.IN_CREATE | unix.IN_MOVED_TO | unix.IN_CLOSE_WRITE | unix.IN_DELETE
 
 // watchResolvConf calls settings after each change of the file at path, and returns the
@@ -554,11 +555,12 @@ func watchResolvConf(path string, settings func()) (stop func()) {
 	}
 }
 
-// readInotify calls settings for each event from f that names one of its watch's files,
-// until f is closed. Comparing names matters: each call starts the monitor's wait again,
-// so a package upgrade that keeps writing to /etc would otherwise hold back a real change
-// for as long as it runs.
-func readInotify(f *os.File, names map[int][]string, settings func()) {
+// readInotify calls settings for each event from f whose file name watched lists for the
+// event's watch, and when the kernel's event queue overflows, until f is closed.
+// Comparing names matters: each call starts the monitor's wait again, so a package
+// upgrade that keeps writing to /etc would otherwise hold back a real change for as long
+// as it runs.
+func readInotify(f *os.File, watched map[int][]string, settings func()) {
 	// Room for many events, each a header and a name of at most NAME_MAX bytes.
 	buf := make([]byte, 64*(unix.SizeofInotifyEvent+unix.NAME_MAX+1))
 	for {
@@ -579,7 +581,7 @@ func readInotify(f *os.File, names map[int][]string, settings func()) {
 			name := strings.TrimRight(string(buf[off+size:off+size+int(ev.Len)]), "\x00")
 			off += size + int(ev.Len)
 			// The kernel dropped events because its queue was full (IN_Q_OVERFLOW).
-			if ev.Wd == -1 || slices.Contains(names[int(ev.Wd)], name) {
+			if ev.Wd == -1 || slices.Contains(watched[int(ev.Wd)], name) {
 				settings()
 			}
 		}
