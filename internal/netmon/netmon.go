@@ -72,9 +72,9 @@ func wallClock() time.Time {
 }
 
 // newMonitor is [New] with the OS's functions and the clock as parameters. watch calls
-// network, from any thread, each time the network itself changes: an interface or an
-// address. It calls settings each time only the DNS settings may have changed. The stop
-// function it returns ends the watch and waits for a call that is still running.
+// network, from any thread, each time the network itself may have changed. It calls
+// settings each time only the DNS settings may have changed. The stop function it
+// returns ends the watch and waits for a call that is still running.
 func newMonitor(
 	readState func() (State, error),
 	watch func(network, settings func()) (stop func(), err error),
