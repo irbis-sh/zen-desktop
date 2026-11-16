@@ -102,7 +102,10 @@ func readResolved(tunnels map[int]net.Interface) ([]link, error) {
 		// A container, or a sandbox that hides the bus but shows the host's resolv.conf,
 		// has the stub in the file and no way to reach systemd-resolved. Failing every
 		// read there would throw away the file's search domains.
-		return nil, nil
+		if busMissing(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("connect to the system bus: %w", err)
 	}
 	defer conn.Close()
 	manager := conn.Object(resolvedName, resolvedPath)
@@ -159,13 +162,21 @@ func readResolved(tunnels map[int]net.Interface) ([]link, error) {
 			err = getProperty(ctx, conn.Object(resolvedName, path), linkIface, "DefaultRoute", &l.defaultRoute)
 		}
 		// A link's DefaultRoute that can't be read counts as false: the link may have gone
-		// since the first calls, and the property is missing before systemd 240. Past the
-		// deadline, though, every link would count as false.
-		if err != nil && ctx.Err() != nil {
+		// since the first calls, and the property is missing before systemd 240. If
+		// systemd-resolved or the connection has gone, though, every link would count as
+		// false.
+		if err != nil && resolvedGone(err) {
 			return nil, err
 		}
 	}
 	return links, nil
+}
+
+// busMissing reports whether err, from connecting to the system bus, means that there is
+// no bus to reach, rather than that the bus is slow or broken.
+func busMissing(err error) bool {
+	return errors.Is(err, unix.ENOENT) || errors.Is(err, unix.ECONNREFUSED) ||
+		errors.Is(err, unix.EACCES) || errors.Is(err, unix.EPERM)
 }
 
 // getProperty stores the property prop of obj's interface iface in v. godbus's own
@@ -180,6 +191,19 @@ func getProperty(ctx context.Context, obj dbus.BusObject, iface, prop string, v 
 		return fmt.Errorf("get %s.%s: %w", iface, prop, err)
 	}
 	return nil
+}
+
+// resolvedGone reports whether err, from a call to systemd-resolved, means that
+// systemd-resolved or the connection to it has gone, rather than the link or property
+// the call asked about.
+func resolvedGone(err error) bool {
+	var reply dbus.Error
+	if !errors.As(err, &reply) {
+		// Without an error reply, the connection closed or the deadline passed.
+		return true
+	}
+	return reply.Name == "org.freedesktop.DBus.Error.ServiceUnknown" ||
+		reply.Name == "org.freedesktop.DBus.Error.NameHasNoOwner"
 }
 
 // tunnelAddrs returns the addresses of the tunnel links.

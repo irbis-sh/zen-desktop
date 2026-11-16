@@ -1,8 +1,10 @@
 package netmon
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 	"net/netip"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/godbus/dbus/v5"
 	"golang.org/x/sys/unix"
 )
 
@@ -167,6 +170,58 @@ func TestIsTunnel(t *testing.T) {
 			t.Parallel()
 			if got := isTunnel(tt.flags); got != tt.want {
 				t.Errorf("isTunnel(%v) = %v, want %v", tt.flags, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBusMissing(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{name: "no socket", err: connectError("unix:path=/nonexistent/system_bus_socket"), want: true},
+		{name: "nobody listening", err: dialError(unix.ECONNREFUSED), want: true},
+		{name: "denied by a sandbox", err: dialError(unix.EACCES), want: true},
+		{name: "deadline passed", err: context.DeadlineExceeded},
+		{name: "handshake failed", err: errors.New("dbus: authentication failed")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := busMissing(tt.err); got != tt.want {
+				t.Errorf("busMissing(%v) = %v, want %v", tt.err, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestResolvedGone(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{name: "service stopped", err: dbus.Error{Name: "org.freedesktop.DBus.Error.ServiceUnknown"}, want: true},
+		{name: "name released", err: dbus.Error{Name: "org.freedesktop.DBus.Error.NameHasNoOwner"}, want: true},
+		{name: "connection closed", err: dbus.ErrClosed, want: true},
+		{name: "deadline passed", err: context.DeadlineExceeded, want: true},
+		{name: "link gone", err: dbus.Error{Name: "org.freedesktop.resolve1.NoSuchLink"}},
+		{
+			name: "property missing",
+			err:  fmt.Errorf("get: %w", dbus.Error{Name: "org.freedesktop.DBus.Error.UnknownProperty"}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := resolvedGone(tt.err); got != tt.want {
+				t.Errorf("resolvedGone(%v) = %v, want %v", tt.err, got, tt.want)
 			}
 		})
 	}
@@ -392,4 +447,20 @@ func symlink(t *testing.T, target, path string) {
 	if err := os.Rename(tmp, path); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// connectError returns the error from connecting to the bus at address, which must fail.
+func connectError(address string) error {
+	conn, err := dbus.Connect(address)
+	if err == nil {
+		conn.Close()
+		panic("connected to " + address)
+	}
+	return err
+}
+
+// dialError returns the error that dialling a Unix socket gives when connect fails with
+// errno.
+func dialError(errno unix.Errno) error {
+	return &net.OpError{Op: "dial", Net: "unix", Err: os.NewSyscallError("connect", errno)}
 }
