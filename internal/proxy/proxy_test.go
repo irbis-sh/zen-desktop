@@ -320,6 +320,28 @@ func TestLocalEndpointImmuneToFilter(t *testing.T) {
 	}
 }
 
+// TestFilterResponseSentAsIsOverPlainHTTP guards against writing the filter's response
+// in its wire form, which sends a 200 with the real status line as the start of the body.
+func TestFilterResponseSentAsIsOverPlainHTTP(t *testing.T) {
+	t.Parallel()
+
+	addr := startTestProxy(t, func(p *Proxy) { p.filter = blockEverythingFilter{} })
+
+	resp, err := proxyClient(t, addr).Get("http://blocked.test/")
+	if err != nil {
+		t.Fatalf("get through proxy: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if resp.StatusCode != http.StatusForbidden || string(body) != blockedBody {
+		t.Fatalf("status = %d, body = %q, want %d, %q", resp.StatusCode, body, http.StatusForbidden, blockedBody)
+	}
+}
+
 // TestWriteRespOverHTTP2 sends responses over one HTTP/2 connection, half of them reset
 // mid-body. Every client has its own fill byte, so a copy buffer used by two responses at
 // once shows up as a corrupted body, or as a race under -race. A reset is the risky case:
