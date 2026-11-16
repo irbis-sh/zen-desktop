@@ -217,7 +217,7 @@ func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo pr
 		}
 
 		if filterResp != nil {
-			filterResp.Write(w)
+			writeResp(w, filterResp)
 			return
 		}
 	}
