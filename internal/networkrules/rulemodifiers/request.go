@@ -26,6 +26,9 @@ type Request struct {
 	// matched against it before any of them runs; ModifyReq then removes
 	// parameters from it.
 	Query url.Values
+	// thirdParty is true when the request is known to be third-party, whatever its
+	// Sec-Fetch-Site header says. When it is false, the header decides.
+	thirdParty bool
 }
 
 // NewRequest derives the values rules are matched against from req. Call it
@@ -37,6 +40,23 @@ func NewRequest(req *http.Request) Request {
 		query = req.URL.Query()
 	}
 	return Request{Request: req, sourceHost: host, sourceHostOK: ok, sourceLabel: labelBeforeSuffix(host), Query: query}
+}
+
+// WithHost returns a copy of r for matching rules against name, a CNAME target in the
+// chain of r's host. The copy is a third-party request to "scheme://name/", with no path
+// or query, from the same page as r and with r's method and headers.
+func (r Request) WithHost(name string) Request {
+	// A struct copy, not Clone: Clone would deep-copy the headers, which no rule changes
+	// while matching.
+	req := *r.Request
+	req.URL = &url.URL{Scheme: r.URL.Scheme, Host: name, Path: "/"}
+	req.Host = name
+	// In proxyHTTP it holds the original URL.
+	req.RequestURI = ""
+	r.Request = &req
+	r.Query = nil
+	r.thirdParty = true
+	return r
 }
 
 func parseSourceHost(req *http.Request) (host string, ok bool) {

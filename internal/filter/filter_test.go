@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"slices"
 	"strings"
 	"sync"
@@ -13,6 +14,7 @@ import (
 	"testing/iotest"
 
 	"github.com/irbis-sh/zen-desktop/internal/filterliststore"
+	"github.com/irbis-sh/zen-desktop/internal/networkrules"
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 	"github.com/irbis-sh/zen-desktop/internal/process"
 )
@@ -457,6 +459,101 @@ func TestAddReaderAppliesDirectives(t *testing.T) {
 	assertRules(t, rules.got(), "||on.example.com^")
 }
 
+func TestHandleCNAMEsSkipsWithoutLookup(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		headers http.Header
+	}{
+		{name: "navigation", headers: http.Header{"Sec-Fetch-Dest": {"document"}, "Sec-Fetch-Mode": {"navigate"}}},
+		{name: "same-origin", headers: http.Header{"Sec-Fetch-Dest": {"image"}, "Sec-Fetch-Site": {"same-origin"}}},
+		{name: "Referer on the request's host", headers: http.Header{"Referer": {"https://SSTATS.adobe.com:443/page"}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f, obs := newCNAMETestFilter(t)
+			req := newCNAMETestRequest("https://sstats.adobe.com/b/ss/x", tt.headers)
+			var calls int
+			cnames := func() []string {
+				calls++
+				return []string{"adobe.com.ssl.d1.sc.omtrdc.net"}
+			}
+
+			if res := f.HandleCNAMEs(req, cnames, process.Info{}); res != nil {
+				t.Errorf("HandleCNAMEs = %d response, want nil", res.StatusCode)
+			}
+			if calls != 0 || len(obs.got()) != 0 {
+				t.Errorf("cnames called %d times and observer %d, want 0 each", calls, len(obs.got()))
+			}
+		})
+	}
+}
+
+func TestHandleCNAMEsMatchesOnlyForeignTargets(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		url       string
+		target    string
+		wantBlock bool
+	}{
+		{name: "foreign target", url: "https://sstats.adobe.com/", target: "x.omtrdc.net", wantBlock: true},
+		{name: "target on the host's domain", url: "https://sstats.adobe.com/", target: "metrics.adobe.com"},
+		{name: "target on the domain of a host with upper case and a trailing dot", url: "https://SSTATS.Adobe.com./", target: "metrics.adobe.com"},
+		{name: "target that is a public suffix", url: "https://sstats.adobe.com/", target: "github.io", wantBlock: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f, _ := newCNAMETestFilter(t, `||omtrdc.net^`, `||metrics.adobe.com^`, `||github.io^`)
+			req := newCNAMETestRequest(tt.url, http.Header{"Sec-Fetch-Dest": {"image"}})
+
+			res := f.HandleCNAMEs(req, func() []string { return []string{tt.target} }, process.Info{})
+			if (res != nil) != tt.wantBlock {
+				t.Errorf("HandleCNAMEs blocked = %v, want %v", res != nil, tt.wantBlock)
+			}
+		})
+	}
+}
+
+func TestHandleCNAMEsReportsBlock(t *testing.T) {
+	t.Parallel()
+
+	f, obs := newCNAMETestFilter(t, `||omtrdc.net^`)
+	const rawURL = "https://sstats.adobe.com/b/ss/x?a=1"
+	req := newCNAMETestRequest(rawURL, http.Header{"Sec-Fetch-Dest": {"image"}, "Referer": {"https://www.adobe.com/"}})
+	chain := []string{"adobe.com.ssl.d1.sc.omtrdc.net"}
+
+	res := f.HandleCNAMEs(req, func() []string { return chain }, process.Info{})
+
+	if res == nil || res.StatusCode != http.StatusForbidden {
+		t.Fatalf("HandleCNAMEs = %+v, want a 403", res)
+	}
+	want := []cnameBlock{{url: rawURL, cname: chain[0], referer: "https://www.adobe.com/", rule: `||omtrdc.net^`}}
+	if got := obs.got(); !slices.Equal(got, want) {
+		t.Errorf("observer got %+v, want %+v", got, want)
+	}
+}
+
+func TestHandleCNAMEsWithoutMatch(t *testing.T) {
+	t.Parallel()
+
+	f, obs := newCNAMETestFilter(t, `||omtrdc.net^`)
+	req := newCNAMETestRequest("https://sstats.adobe.com/", http.Header{"Sec-Fetch-Dest": {"image"}})
+
+	if res := f.HandleCNAMEs(req, func() []string { return []string{"cdn.example.net"} }, process.Info{}); res != nil {
+		t.Errorf("HandleCNAMEs = %d response, want nil", res.StatusCode)
+	}
+	if len(obs.got()) != 0 {
+		t.Errorf("observer got %+v, want nothing", obs.got())
+	}
+}
+
 func newTestFilter(t *testing.T, store *fakeStore) (*Filter, *fakeNetworkRules) {
 	t.Helper()
 	rules := &fakeNetworkRules{}
@@ -590,6 +687,9 @@ func (n *fakeNetworkRules) ModifyReq(*http.Request) ([]rule.Rule, bool, string) 
 func (n *fakeNetworkRules) ModifyRes(*http.Request, *http.Response) ([]rule.Rule, error) {
 	return nil, nil
 }
+func (n *fakeNetworkRules) MatchCNAMEs(*http.Request, []string) (string, rule.Rule, bool) {
+	return "", rule.Rule{}, false
+}
 func (n *fakeNetworkRules) CreateBlockResponse(*http.Request) *http.Response { return nil }
 func (n *fakeNetworkRules) CreateRedirectResponse(*http.Request, string) *http.Response {
 	return nil
@@ -635,7 +735,58 @@ type fakeObserver struct{}
 func (fakeObserver) OnFilterBlock(string, string, string, []rule.Rule, process.Info)            {}
 func (fakeObserver) OnFilterRedirect(string, string, string, string, []rule.Rule, process.Info) {}
 func (fakeObserver) OnFilterModify(string, string, string, []rule.Rule, process.Info)           {}
+func (fakeObserver) OnFilterBlockCNAME(string, string, string, string, []rule.Rule, process.Info) {
+}
 
 type fakeWhitelist struct{}
 
 func (fakeWhitelist) GetPort() int { return 0 }
+
+// newCNAMETestFilter returns a filter with real network rules holding rules, and the
+// observer it reports CNAME blocks to.
+func newCNAMETestFilter(t *testing.T, rules ...string) (*Filter, *cnameObserver) {
+	t.Helper()
+
+	nr := networkrules.New()
+	for _, r := range rules {
+		if _, err := nr.ParseRule(r, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	obs := &cnameObserver{}
+	f, err := NewFilter(nr, fakeInjector{}, &fakeStore{}, obs, fakeWhitelist{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f, obs
+}
+
+func newCNAMETestRequest(rawURL string, headers http.Header) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, rawURL, nil)
+	req.Header = headers
+	return req
+}
+
+type cnameBlock struct {
+	url, cname, referer, rule string
+}
+
+// cnameObserver records the CNAME blocks it is told about.
+type cnameObserver struct {
+	fakeObserver
+
+	mu     sync.Mutex
+	blocks []cnameBlock
+}
+
+func (o *cnameObserver) OnFilterBlockCNAME(_, url, cname, referer string, rules []rule.Rule, _ process.Info) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.blocks = append(o.blocks, cnameBlock{url: url, cname: cname, referer: referer, rule: rules[0].RawRule})
+}
+
+func (o *cnameObserver) got() []cnameBlock {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return slices.Clone(o.blocks)
+}

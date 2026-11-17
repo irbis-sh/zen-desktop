@@ -33,6 +33,7 @@ type filterEvent struct {
 	URL     string          `json:"url"`
 	To      string          `json:"to,omitempty"`
 	Referer string          `json:"referer,omitempty"`
+	CNAME   string          `json:"cname,omitempty"` // the CNAME target a rule blocked
 	Rules   []rulePayload   `json:"rules"`
 	Process processPayload  `json:"process"`
 }
@@ -79,4 +80,10 @@ func (e *frontendEvents) OnFilterRedirect(method, url, to, referer string, rules
 
 func (e *frontendEvents) OnFilterModify(method, url, referer string, rules []nrule.Rule, processInfo process.Info) {
 	e.emit(filterChannel, newFilterEvent(filterEventModify, method, url, "", referer, rules, processInfo))
+}
+
+func (e *frontendEvents) OnFilterBlockCNAME(method, url, cname, referer string, rules []nrule.Rule, processInfo process.Info) {
+	event := newFilterEvent(filterEventBlock, method, url, "", referer, rules, processInfo)
+	event.CNAME = cname
+	e.emit(filterChannel, event)
 }

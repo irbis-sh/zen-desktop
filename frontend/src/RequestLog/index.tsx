@@ -29,6 +29,7 @@ interface FilterAction {
   url: string;
   to: string;
   referer: string;
+  cname?: string;
   rules: Rule[];
   process: Process;
   createdAt: Date;
@@ -128,6 +129,13 @@ function RequestLogCard({ log }: { log: FilterAction }) {
                 <div className="request-log__card__details__label">{t('requestLog.url')}:</div>
                 <div className="request-log__card__details__value">{log.url}</div>
               </div>
+              {log.cname && (
+                <div className="request-log__card__details__field request-log__card__details__field--text">
+                  {/* The record type's name, so it isn't translated. */}
+                  <div className="request-log__card__details__label">CNAME:</div>
+                  <div className="request-log__card__details__value">{log.cname}</div>
+                </div>
+              )}
               {log.kind === FilterActionKind.Redirect && (
                 <div className="request-log__card__details__field request-log__card__details__field--text">
                   <div className="request-log__card__details__label">{t('requestLog.redirectedTo')}:</div>

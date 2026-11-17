@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -18,14 +19,40 @@ func TestCacheEntryExpires(t *testing.T) {
 
 		time.Sleep(10*time.Second - time.Millisecond)
 		if _, ok := c.get(key); !ok {
-			t.Error("entry gone before its TTL ran out")
+			t.Error("get missed before the TTL ran out")
 		}
 		time.Sleep(time.Millisecond)
 		if _, ok := c.get(key); ok {
-			t.Error("entry still there after its TTL ran out")
+			t.Error("get hit after the TTL ran out")
 		}
-		if len(c.entries) != 0 || c.order.Len() != 0 {
-			t.Errorf("expired entry not removed: %d in map, %d in list", len(c.entries), c.order.Len())
+		if _, ok := c.getStale(key); !ok {
+			t.Error("getStale missed right after the TTL ran out")
+		}
+		time.Sleep(maxChainAge - time.Millisecond)
+		if _, ok := c.getStale(key); !ok {
+			t.Error("getStale missed before the entry had been expired for maxChainAge")
+		}
+		time.Sleep(time.Millisecond)
+		if _, ok := c.getStale(key); ok {
+			t.Error("getStale hit after the entry had been expired for maxChainAge")
+		}
+	})
+}
+
+func TestCachePutReplacesExpiredEntry(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		c := newCache()
+		key := cacheKey{"news.example", dnsmessage.TypeA}
+		c.put(key, verdict{ttl: 10 * time.Second, chain: []string{"old.example"}})
+		time.Sleep(time.Minute)
+		c.put(key, verdict{ttl: 10 * time.Second, chain: []string{"new.example"}})
+
+		if v, ok := c.get(key); !ok || !slices.Equal(v.chain, []string{"new.example"}) {
+			t.Errorf("get = %+v, %v, want the new entry", v, ok)
+		}
+		if c.order.Len() != 1 {
+			t.Errorf("list holds %d entries, want 1", c.order.Len())
 		}
 	})
 }
@@ -79,6 +106,39 @@ func TestCacheEvictsLeastRecentlyUsed(t *testing.T) {
 	if _, ok := c.get(keys[1]); ok {
 		t.Error("least recently used entry is still there")
 	}
+}
+
+func TestCacheGetStaleCountsAsUse(t *testing.T) {
+	t.Parallel()
+	synctest.Test(t, func(t *testing.T) {
+		c := newCache()
+		// After the sleep, stale has just expired and is read only with getStale. tooOld
+		// has been expired for maxChainAge, so getStale ignores it. The rest are fresh
+		// and never read. They go in after the first two, so tooOld is the least
+		// recently used once stale has been read.
+		stale := cacheKey{"stale.example", dnsmessage.TypeA}
+		tooOld := cacheKey{"too-old.example", dnsmessage.TypeA}
+		unread := cacheKey{"0.example", dnsmessage.TypeA}
+		c.put(stale, verdict{ttl: time.Hour})
+		c.put(tooOld, verdict{ttl: 10 * time.Second})
+		for i := range maxCacheEntries - 2 {
+			c.put(cacheKey{fmt.Sprintf("%d.example", i), dnsmessage.TypeA}, verdict{ttl: 2 * time.Hour})
+		}
+		time.Sleep(maxChainAge + 10*time.Second)
+		c.getStale(stale)
+		c.getStale(tooOld)
+		c.put(cacheKey{"new.example", dnsmessage.TypeA}, verdict{ttl: time.Minute})
+
+		if _, ok := c.entries[stale]; !ok {
+			t.Error("evicted an entry that getStale had found")
+		}
+		if _, ok := c.entries[tooOld]; ok {
+			t.Error("an entry getStale ignored outlasted the cap")
+		}
+		if _, ok := c.entries[unread]; !ok {
+			t.Error("evicted an entry that was used more recently than the one getStale ignored")
+		}
+	})
 }
 
 func TestCacheClear(t *testing.T) {

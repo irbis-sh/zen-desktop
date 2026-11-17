@@ -3,6 +3,7 @@ package networkrules
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -985,6 +986,92 @@ func TestSharedModifiers(t *testing.T) {
 	})
 }
 
+func TestMatchCNAMEs(t *testing.T) {
+	t.Parallel()
+
+	const omtrdc = "adobe.com.ssl.d1.sc.omtrdc.net"
+	const xhrException = `@@||adobe.com.ssl.d1.sc.omtrdc.net^$xmlhttprequest,domain=www.adobe.com`
+	image := sameSiteHeaders("image", "https://www.adobe.com/")
+	tests := []struct {
+		name     string
+		rules    []string
+		headers  http.Header
+		names    []string
+		wantName string
+		wantRule string
+	}{
+		{name: "rule for the target", rules: []string{`||omtrdc.net^`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^`},
+		{name: "third-party", rules: []string{`||omtrdc.net^$third-party`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^$third-party`},
+		{name: "first-party only", rules: []string{`||omtrdc.net^$~third-party`}, headers: image},
+		{name: "rule with a path", rules: []string{`||omtrdc.net/b/ss/`}, headers: image},
+		{
+			name:     "nearer target is reported",
+			rules:    []string{`||far.tracker.example^`, `||near.tracker.example^`},
+			headers:  image,
+			names:    []string{"near.tracker.example", "far.tracker.example"},
+			wantName: "near.tracker.example",
+			wantRule: `||near.tracker.example^`,
+		},
+		{name: "content type matches", rules: []string{`||omtrdc.net^$image`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^$image`},
+		{name: "content type differs", rules: []string{`||omtrdc.net^$image`}, headers: sameSiteHeaders("script", "https://www.adobe.com/")},
+		{name: "$domain sees the Referer", rules: []string{`||omtrdc.net^$domain=adobe.com`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^$domain=adobe.com`},
+		{name: "$domain without a Referer sees the host", rules: []string{`||omtrdc.net^$domain=adobe.com`}, headers: http.Header{}, wantName: omtrdc, wantRule: `||omtrdc.net^$domain=adobe.com`},
+		{name: "$domain on another page", rules: []string{`||omtrdc.net^$domain=adobe.com`}, headers: sameSiteHeaders("image", "https://example.com/")},
+		{name: "target exception for an XHR from its page", rules: []string{`||omtrdc.net^`, xhrException}, headers: sameSiteHeaders("empty", "https://www.adobe.com/")},
+		{name: "target exception for another type", rules: []string{`||omtrdc.net^`, xhrException}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^`},
+		{name: "target exception from another page", rules: []string{`||omtrdc.net^`, xhrException}, headers: sameSiteHeaders("empty", "https://example.com/"), wantName: omtrdc, wantRule: `||omtrdc.net^`},
+		{name: "exception for the host", rules: []string{`||omtrdc.net^`, `@@||sstats.adobe.com^`}, headers: image},
+		{name: "important rule and exception for the host", rules: []string{`||omtrdc.net^$important`, `@@||sstats.adobe.com^`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^$important`},
+		{name: "exception for the host that only modifies", rules: []string{`||omtrdc.net^`, `@@||sstats.adobe.com^$removeparam=x`}, headers: image, wantName: omtrdc, wantRule: `||omtrdc.net^`},
+		{name: "rule without a pattern", rules: []string{`*$third-party,domain=adobe.com`}, headers: image, wantName: omtrdc, wantRule: `*$third-party,domain=adobe.com`},
+		{name: "exception without a pattern", rules: []string{`*$third-party,domain=adobe.com`, `@@$third-party,domain=adobe.com`}, headers: image},
+		{name: "rule that only modifies", rules: []string{`||omtrdc.net^$removeparam=x`}, headers: image},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			nr := New()
+			for _, r := range tt.rules {
+				if _, err := nr.ParseRule(r, nil); err != nil {
+					t.Fatal(err)
+				}
+			}
+			names := tt.names
+			if names == nil {
+				names = []string{omtrdc}
+			}
+			req := newTestRequest(t, "https://sstats.adobe.com/b/ss/x/1/JS-2.22.0/s123", tt.headers)
+
+			name, r, ok := nr.MatchCNAMEs(req, names)
+			if name != tt.wantName || r.RawRule != tt.wantRule || ok != (tt.wantName != "") {
+				t.Errorf("MatchCNAMEs = %q, %q, %v, want %q, %q", name, r.RawRule, ok, tt.wantName, tt.wantRule)
+			}
+		})
+	}
+}
+
+func TestMatchCNAMEsLeavesRequestUnchanged(t *testing.T) {
+	t.Parallel()
+
+	nr := New()
+	if _, err := nr.ParseRule(`||omtrdc.net^`, nil); err != nil {
+		t.Fatal(err)
+	}
+	const rawURL = "https://sstats.adobe.com/b/ss/x?a=1"
+	req := newTestRequest(t, rawURL, sameSiteHeaders("image", "https://www.adobe.com/"))
+	req.Host = "sstats.adobe.com"
+	header := req.Header.Clone()
+
+	if _, _, ok := nr.MatchCNAMEs(req, []string{"adobe.com.ssl.d1.sc.omtrdc.net"}); !ok {
+		t.Fatal("MatchCNAMEs found no rule")
+	}
+
+	if req.URL.String() != rawURL || req.Host != "sstats.adobe.com" || !reflect.DeepEqual(req.Header, header) {
+		t.Errorf("request changed: URL %q, Host %q, headers %v", req.URL, req.Host, req.Header)
+	}
+}
+
 func newTestRequest(t *testing.T, rawURL string, headers http.Header) *http.Request {
 	t.Helper()
 
@@ -1001,4 +1088,9 @@ func newTestRequest(t *testing.T, rawURL string, headers http.Header) *http.Requ
 		URL:    u,
 		Header: headers,
 	}
+}
+
+// sameSiteHeaders returns the headers of a same-site request of type dest from referer.
+func sameSiteHeaders(dest, referer string) http.Header {
+	return http.Header{"Sec-Fetch-Dest": {dest}, "Sec-Fetch-Site": {"same-site"}, "Referer": {referer}}
 }

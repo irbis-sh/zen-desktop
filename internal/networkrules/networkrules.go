@@ -89,6 +89,52 @@ outer:
 	return appliedRules, false, ""
 }
 
+// MatchCNAMEs checks names, the CNAME chain of req's host, nearest first. It returns
+// name, the first of them for which a blocking rule applies to req as if it were req's
+// host, and r, that rule. ok is false if no rule applies to any of them. It doesn't
+// change req.
+//
+// Each name is matched as a third-party request to "scheme://name/" from the page that
+// made req, with req's method and content type. The path is left out because a rule
+// with a path was written for the tracker's own URLs, not for the site's.
+//
+// An exception cancels a rule if it matches either the target's request or req itself,
+// so that "@@||site.example^" allows a request to site.example whatever its CNAME chain
+// holds.
+func (nr *NetworkRules) MatchCNAMEs(req *http.Request, names []string) (name string, r rule.Rule, ok bool) {
+	reqType := contenttype.FromRequest(req)
+	matchReq := rulemodifiers.NewRequest(req)
+
+	for _, target := range names {
+		targetURL := req.URL.Scheme + "://" + target + "/"
+		targetReq := matchReq.WithHost(target)
+		candidates := nr.primaryStore.Match(targetURL, func(r *rule.Rule) bool {
+			return r.IsBlockRule() && r.ShouldMatchReq(targetReq, reqType)
+		})
+		// The usual case. Exceptions are matched only for a name that has a candidate.
+		if len(candidates) == 0 {
+			continue
+		}
+
+		exceptions := nr.exceptionStore.Match(targetURL, func(er *exceptionrule.ExceptionRule) bool {
+			return er.ShouldMatchReq(targetReq, reqType)
+		})
+		exceptions = append(exceptions, nr.exceptionStore.Match(renderURLWithoutPort(req.URL), func(er *exceptionrule.ExceptionRule) bool {
+			return er.ShouldMatchReq(matchReq, reqType)
+		})...)
+	nextCandidate:
+		for _, candidate := range candidates {
+			for _, ex := range exceptions {
+				if ex.Cancels(candidate) {
+					continue nextCandidate
+				}
+			}
+			return target, *candidate, true
+		}
+	}
+	return "", rule.Rule{}, false
+}
+
 func (nr *NetworkRules) ModifyRes(req *http.Request, res *http.Response) ([]rule.Rule, error) {
 	url := renderURLWithoutPort(req.URL)
 	resType := contenttype.FromResponse(req, res)

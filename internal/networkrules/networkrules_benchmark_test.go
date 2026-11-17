@@ -34,6 +34,25 @@ func BenchmarkModifyReq(b *testing.B) {
 	}
 }
 
+// BenchmarkMatchCNAMEs matches a CNAME chain of two targets per request, as Akamai gives
+// its customers' hosts.
+func BenchmarkMatchCNAMEs(b *testing.B) {
+	nr := loadRules(b)
+	urls := loadURLs(b)
+	chains := make([][]string, len(urls))
+	for i, u := range urls {
+		chains[i] = []string{u.Hostname() + ".edgekey.net", fmt.Sprintf("e%d.a.akamaiedge.net", i)}
+	}
+	b.ReportAllocs()
+
+	var i int
+	for b.Loop() {
+		n := i % len(urls)
+		nr.MatchCNAMEs(newRequest(urls[n]), chains[n])
+		i++
+	}
+}
+
 func BenchmarkModifyRes(b *testing.B) {
 	nr := loadRules(b)
 	urls := loadURLs(b)

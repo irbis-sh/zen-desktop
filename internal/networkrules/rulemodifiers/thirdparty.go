@@ -20,6 +20,9 @@ func (m *ThirdPartyModifier) Parse(modifier string) error {
 }
 
 func (m *ThirdPartyModifier) ShouldMatchReq(req Request) bool {
+	if req.thirdParty {
+		return !m.inverted
+	}
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site
 	switch req.Header.Get("Sec-Fetch-Site") {
 	case "cross-site":

@@ -20,6 +20,7 @@ import (
 	"github.com/irbis-sh/zen-desktop/internal/networkrules/rule"
 	"github.com/irbis-sh/zen-desktop/internal/process"
 	"github.com/irbis-sh/zen-desktop/internal/redacted"
+	"golang.org/x/net/publicsuffix"
 )
 
 // filterActionObserver observes filter events.
@@ -27,6 +28,9 @@ type filterActionObserver interface {
 	OnFilterBlock(method, url, referer string, rules []rule.Rule, processInfo process.Info)
 	OnFilterRedirect(method, url, to, referer string, rules []rule.Rule, processInfo process.Info)
 	OnFilterModify(method, url, referer string, rules []rule.Rule, processInfo process.Info)
+	// OnFilterBlockCNAME reports a block by a rule for cname, a CNAME target in the chain
+	// of url's host.
+	OnFilterBlockCNAME(method, url, cname, referer string, rules []rule.Rule, processInfo process.Info)
 }
 
 type filterListStore interface {
@@ -37,6 +41,7 @@ type networkRules interface {
 	ParseRule(rule string, filterName *string) (isException bool, err error)
 	ModifyReq(req *http.Request) (appliedRules []rule.Rule, shouldBlock bool, redirectURL string)
 	ModifyRes(req *http.Request, res *http.Response) ([]rule.Rule, error)
+	MatchCNAMEs(req *http.Request, names []string) (name string, r rule.Rule, ok bool)
 	CreateBlockResponse(req *http.Request) *http.Response
 	CreateRedirectResponse(req *http.Request, to string) *http.Response
 	CreateBlockPageResponse(req *http.Request, appliedRules []rule.Rule, whitelistPort int) (*http.Response, error)
@@ -423,6 +428,54 @@ func (f *Filter) HandleRequest(req *http.Request, processInfo process.Info) (*ht
 	}
 
 	return nil, nil
+}
+
+// HandleCNAMEs checks the CNAME chain of req's host, which cnames returns, against the
+// blocking rules. It skips navigations and requests from the host's own pages without
+// calling cnames, which can wait for a DNS lookup. If a rule matches, it reports the
+// block to the observer and returns the response to send. Otherwise it returns nil.
+func (f *Filter) HandleCNAMEs(req *http.Request, cnames func() []string, processInfo process.Info) *http.Response {
+	// A site's own host can have a CNAME record, such as a blog on a hosting platform,
+	// and a block would replace the page with a bare 403.
+	if req.Header.Get("Sec-Fetch-Dest") == "document" {
+		return nil
+	}
+	// A tracker can't hide behind the host that serves the page.
+	if req.Header.Get("Sec-Fetch-Site") == "same-origin" {
+		return nil
+	}
+	if referer, err := url.Parse(req.Header.Get("Referer")); err == nil && strings.EqualFold(referer.Hostname(), req.URL.Hostname()) {
+		return nil
+	}
+
+	host := strings.ToLower(strings.TrimSuffix(req.URL.Hostname(), "."))
+	var foreign []string // a new slice, because the chain belongs to the resolver's cache
+	for _, target := range cnames() {
+		if !sameDomain(host, target) {
+			foreign = append(foreign, target)
+		}
+	}
+	if len(foreign) == 0 {
+		return nil
+	}
+
+	target, r, ok := f.networkRules.MatchCNAMEs(req, foreign)
+	if !ok {
+		return nil
+	}
+	f.actionObserver.OnFilterBlockCNAME(req.Method, req.URL.String(), target, req.Header.Get("Referer"), []rule.Rule{r}, processInfo)
+	return f.networkRules.CreateBlockResponse(req)
+}
+
+// sameDomain reports whether a and b have the same registrable domain. It is false if
+// either has none, such as a public suffix.
+func sameDomain(a, b string) bool {
+	domainA, err := publicsuffix.EffectiveTLDPlusOne(a)
+	if err != nil {
+		return false
+	}
+	domainB, err := publicsuffix.EffectiveTLDPlusOne(b)
+	return err == nil && domainA == domainB
 }
 
 // Finalize optimizes internal data structures after all filter lists have been loaded.

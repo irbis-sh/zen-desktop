@@ -220,9 +220,10 @@ func TestInterpretChain(t *testing.T) {
 	want := []netip.Addr{netip.MustParseAddr("192.0.2.1")}
 
 	tests := []struct {
-		name    string
-		msg     *dnsmessage.Message
-		wantTTL time.Duration
+		name      string
+		msg       *dnsmessage.Message
+		wantTTL   time.Duration
+		wantChain []string
 	}{
 		{
 			name: "in order",
@@ -231,7 +232,8 @@ func TestInterpretChain(t *testing.T) {
 				cname("a.cdn.example.", 200, "b.cdn.example."),
 				a("b.cdn.example.", 400, "192.0.2.1"),
 			),
-			wantTTL: 200 * time.Second,
+			wantTTL:   200 * time.Second,
+			wantChain: []string{"a.cdn.example", "b.cdn.example"},
 		},
 		{
 			name: "reversed",
@@ -240,7 +242,8 @@ func TestInterpretChain(t *testing.T) {
 				cname("a.cdn.example.", 200, "b.cdn.example."),
 				cname(testHost, 300, "a.cdn.example."),
 			),
-			wantTTL: 200 * time.Second,
+			wantTTL:   200 * time.Second,
+			wantChain: []string{"a.cdn.example", "b.cdn.example"},
 		},
 		{
 			name: "names differ in case",
@@ -248,7 +251,8 @@ func TestInterpretChain(t *testing.T) {
 				cname("NEWS.example.", 300, "A.cdn.example."),
 				a("a.CDN.example.", 100, "192.0.2.1"),
 			),
-			wantTTL: 100 * time.Second,
+			wantTTL:   100 * time.Second,
+			wantChain: []string{"a.cdn.example"},
 		},
 		{
 			name: "records of other owners are ignored",
@@ -259,12 +263,14 @@ func TestInterpretChain(t *testing.T) {
 				a(testHost, 1, "192.0.2.8"),
 				a("a.cdn.example.", 300, "192.0.2.1"),
 			),
-			wantTTL: 300 * time.Second,
+			wantTTL:   300 * time.Second,
+			wantChain: []string{"a.cdn.example"},
 		},
 		{
-			name:    "16 CNAME records",
-			msg:     answer(chain(16)...),
-			wantTTL: 300 * time.Second,
+			name:      "16 CNAME records",
+			msg:       answer(chain(16)...),
+			wantTTL:   300 * time.Second,
+			wantChain: hops(16),
 		},
 	}
 	for _, tt := range tests {
@@ -272,8 +278,38 @@ func TestInterpretChain(t *testing.T) {
 			t.Parallel()
 
 			got := interpret(tt.msg, q)
-			if !slices.Equal(got.addrs, want) || got.ttl != tt.wantTTL {
-				t.Errorf("got addrs %v, ttl %v; want %v, %v", got.addrs, got.ttl, want, tt.wantTTL)
+			if !slices.Equal(got.addrs, want) || got.ttl != tt.wantTTL || !slices.Equal(got.chain, tt.wantChain) {
+				t.Errorf("got addrs %v, ttl %v, chain %v; want %v, %v, %v", got.addrs, got.ttl, got.chain, want, tt.wantTTL, tt.wantChain)
+			}
+		})
+	}
+}
+
+func TestInterpretKeepsChainOnlyForDialledAnswers(t *testing.T) {
+	t.Parallel()
+
+	cnameRecord := cname(testHost, 300, "cdn.example.")
+	tests := []struct {
+		name      string
+		msg       *dnsmessage.Message
+		wantChain []string
+	}{
+		{name: "addresses", msg: answer(cnameRecord, a("cdn.example.", 300, "192.0.2.1")), wantChain: []string{"cdn.example"}},
+		{name: "NODATA", msg: answer(cnameRecord), wantChain: []string{"cdn.example"}},
+		{name: "NXDOMAIN", msg: &dnsmessage.Message{Header: dnsmessage.Header{Response: true, RCode: dnsmessage.RCodeNameError}, Answers: []dnsmessage.Resource{cnameRecord}}},
+		{name: "blocked by an EDE", msg: withEDE(answer(cnameRecord, a("cdn.example.", 300, "192.0.2.1")), 15)},
+		{name: "blocked by 0.0.0.0", msg: answer(cnameRecord, a("cdn.example.", 300, "0.0.0.0"))},
+		{name: "DNSSEC failure", msg: withEDE(&dnsmessage.Message{Header: dnsmessage.Header{Response: true, RCode: dnsmessage.RCodeServerFailure}, Answers: []dnsmessage.Resource{cnameRecord}}, 6)},
+		{name: "local address", msg: answer(cnameRecord, a("cdn.example.", 300, "10.0.0.1"))},
+		{name: "17 CNAME records", msg: answer(chain(17)...)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := interpret(tt.msg, question(testHost, dnsmessage.TypeA))
+			if !slices.Equal(got.chain, tt.wantChain) {
+				t.Errorf("chain = %v, want %v", got.chain, tt.wantChain)
 			}
 		})
 	}
@@ -340,4 +376,13 @@ func chain(n int) []dnsmessage.Resource {
 		name = next
 	}
 	return append(records, a(name, 300, "192.0.2.1"))
+}
+
+// hops returns the chain that chain(n) leads through.
+func hops(n int) []string {
+	names := make([]string, 0, n)
+	for i := range n {
+		names = append(names, fmt.Sprintf("hop%d.example", i))
+	}
+	return names
 }
