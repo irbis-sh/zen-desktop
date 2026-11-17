@@ -8,9 +8,14 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-// maxCacheEntries bounds the cache. Expired entries are only removed when read, so this is
-// also what bounds the ones that are never read again.
+// maxCacheEntries is the most entries the cache holds, expired ones included.
 const maxCacheEntries = 10_000
+
+// maxChainAge is how long an entry's chain stays readable after the entry expires. A
+// host that the CNAME check blocks is never dialled, so nothing else would replace its
+// entry: without a limit, a site that stopped using a tracker would stay blocked until the
+// cache was cleared.
+const maxChainAge = time.Hour
 
 // cacheKey identifies a cached answer. name is lower-cased, without the trailing dot.
 type cacheKey struct {
@@ -42,7 +47,15 @@ func newCache() *cache {
 func wallClock() time.Time { return time.Now().Round(0) }
 
 // get returns the fresh entry for key, if there is one.
-func (c *cache) get(key cacheKey) (verdict, bool) {
+func (c *cache) get(key cacheKey) (verdict, bool) { return c.read(key, 0) }
+
+// getStale is get that also returns an entry that expired less than maxChainAge ago.
+// Like get, it counts as a use.
+func (c *cache) getStale(key cacheKey) (verdict, bool) { return c.read(key, maxChainAge) }
+
+// read returns the entry for key unless it expired grace ago or earlier, and counts that
+// as a use.
+func (c *cache) read(key cacheKey, grace time.Duration) (verdict, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -51,8 +64,7 @@ func (c *cache) get(key cacheKey) (verdict, bool) {
 		return verdict{}, false
 	}
 	e := el.Value.(*cacheEntry)
-	if !wallClock().Before(e.expires) {
-		c.remove(el)
+	if !wallClock().Before(e.expires.Add(grace)) {
 		return verdict{}, false
 	}
 	c.order.MoveToFront(el)

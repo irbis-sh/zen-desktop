@@ -273,6 +273,7 @@ func (a *App) StartProxy() (err error) {
 
 	a.resolver = newResolver(a.config.GetDNS())
 	var netResolver *net.Resolver
+	var cnames func(ctx context.Context, host string) []string
 	if a.resolver != nil {
 		// Before the proxy starts, so that the resolver has the network's domains for the
 		// first request.
@@ -283,9 +284,10 @@ func (a *App) StartProxy() (err error) {
 			}
 		}()
 		netResolver = a.resolver.NetResolver()
+		cnames = a.resolver.CNAMEs
 	}
 
-	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector), netResolver)
+	a.proxy, err = proxy.NewProxy(filter, certGenerator, a.config.GetPort(), routingPolicy.ShouldProxy, constants.LocalEndpointHost, asset.NewHandler(assetInjector), netResolver, cnames)
 	if err != nil {
 		return fmt.Errorf("create proxy: %v", err)
 	}

@@ -106,6 +106,12 @@ func (r *Resolver) resolve(ctx context.Context, q dnsmessage.Question, dohDeadli
 			// out of it counts.
 			if ctx.Err() == nil {
 				r.countFailure()
+				// The marker has no TTL, so the next dial asks the DoH server again. It is
+				// there for CNAMEs, which reads expired entries: without it, each request to
+				// a name the server doesn't answer would wait out a lookup of its own. It
+				// replaces any older entry, whose chain no longer describes the connection
+				// the OS's answer is dialled to.
+				r.cache.put(key, verdict{useOS: true})
 			}
 			return r.askOS(ctx, name, q.Type)
 		}

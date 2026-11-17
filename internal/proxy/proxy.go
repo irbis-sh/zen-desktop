@@ -39,6 +39,7 @@ type certGenerator interface {
 // filter is an interface capable of filtering HTTP requests.
 type filter interface {
 	HandleRequest(*http.Request, process.Info) (*http.Response, error)
+	HandleCNAMEs(req *http.Request, cnames func() []string, processInfo process.Info) *http.Response
 	HandleResponse(*http.Request, *http.Response, process.Info) error
 }
 
@@ -61,6 +62,9 @@ type Proxy struct {
 	localHandler       http.Handler
 	transparentHosts   []string
 	transparentHostsMu sync.RWMutex
+
+	// cnames returns host's CNAME chain. It is nil without a resolver.
+	cnames func(ctx context.Context, host string) []string
 }
 
 // NewProxy creates a proxy. localHost and localHandler, when set, name a host
@@ -69,8 +73,9 @@ type Proxy struct {
 // empty.
 //
 // resolver, when set, looks up the upstream hosts that contain a dot (see dial).
-// With resolver nil, the OS resolves every host.
-func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc, localHost string, localHandler http.Handler, resolver *net.Resolver) (*Proxy, error) {
+// With resolver nil, the OS resolves every host. cnames, when set, returns an upstream
+// host's CNAME chain, which the filter then checks.
+func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy ShouldProxyFunc, localHost string, localHandler http.Handler, resolver *net.Resolver, cnames func(ctx context.Context, host string) []string) (*Proxy, error) {
 	if filter == nil {
 		return nil, errors.New("filter is nil")
 	}
@@ -88,6 +93,7 @@ func NewProxy(filter filter, certGenerator certGenerator, port int, shouldProxy 
 		shouldProxy:   shouldProxy,
 		localHost:     localHost,
 		localHandler:  localHandler,
+		cnames:        cnames,
 	}
 
 	p.netDialer = &net.Dialer{
@@ -211,12 +217,7 @@ func (p *Proxy) proxyHTTP(w http.ResponseWriter, r *http.Request, processInfo pr
 	}
 
 	if shouldProxy {
-		filterResp, err := p.filter.HandleRequest(r, processInfo)
-		if err != nil {
-			log.Printf("error handling request for %q: %v", redacted.Redacted(r.URL), err)
-		}
-
-		if filterResp != nil {
+		if filterResp := p.filterRequest(r, processInfo); filterResp != nil {
 			writeResp(w, filterResp)
 			return
 		}
@@ -422,11 +423,7 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 		req.Close = false
 
 		// Filter request, before upgrading to websockets, to match/block wss:// handshake
-		filterResp, err := p.filter.HandleRequest(req, processInfo)
-		if err != nil {
-			log.Printf("handling request for %q: %v", redacted.Redacted(req.URL), err)
-		}
-		if filterResp != nil {
+		if filterResp := p.filterRequest(req, processInfo); filterResp != nil {
 			writeResp(w, filterResp)
 			if filterResp.Body != nil {
 				filterResp.Body.Close()
@@ -512,6 +509,20 @@ func (p *Proxy) connectHandler(connReq *http.Request, host string, ln *singleCon
 
 		writeResp(w, resp)
 	})
+}
+
+// filterRequest returns the response to send instead of forwarding req: the filter's
+// own, or a block for a target in the CNAME chain of req's host. It returns nil if req
+// should be forwarded.
+func (p *Proxy) filterRequest(req *http.Request, processInfo process.Info) *http.Response {
+	resp, err := p.filter.HandleRequest(req, processInfo)
+	if err != nil {
+		log.Printf("handling request for %q: %v", redacted.Redacted(req.URL), err)
+	}
+	if resp != nil || p.cnames == nil {
+		return resp
+	}
+	return p.filter.HandleCNAMEs(req, func() []string { return p.cnames(req.Context(), req.URL.Hostname()) }, processInfo)
 }
 
 // isLocalEndpoint reports whether host names the proxy's own local endpoint.

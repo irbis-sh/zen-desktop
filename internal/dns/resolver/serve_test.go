@@ -21,8 +21,8 @@ import (
 // New's OS lookup. Package net keeps its resolv.conf state in a global, with a channel
 // created on first use. If a bubble creates it, the next bubble or test to look up a name
 // dies with "fatal error: send on synctest channel from outside bubble", which no test can
-// recover from. The tests that need a real net.Resolver are in resolver_test.go, outside
-// any bubble.
+// recover from. The tests that need a real net.Resolver are in resolver_test.go and
+// cnames_test.go, outside any bubble.
 
 func TestServeAnswersGoQuery(t *testing.T) {
 	t.Parallel()
@@ -193,7 +193,7 @@ func TestDoHOutcomes(t *testing.T) {
 	}
 }
 
-func TestClientErrorGoesToOSAndIsNotCached(t *testing.T) {
+func TestClientErrorGoesToOSAndNextDialAsksAgain(t *testing.T) {
 	t.Parallel()
 
 	client := &fakeDoH{answer: func(context.Context, dnsmessage.Question) (*dnsmessage.Message, error) {
@@ -558,7 +558,7 @@ func TestCancelClosesPipeAtOnce(t *testing.T) {
 	}
 }
 
-func TestCancelDuringDoHDoesNotAskOS(t *testing.T) {
+func TestCancelDuringDoHSkipsOSAndCache(t *testing.T) {
 	t.Parallel()
 	synctest.Test(t, func(t *testing.T) {
 		os := &fakeOS{}
@@ -573,6 +573,10 @@ func TestCancelDuringDoHDoesNotAskOS(t *testing.T) {
 
 		if os.count() != 0 {
 			t.Errorf("OS got %d lookups, want none: nobody is waiting for the answer", os.count())
+		}
+		// A failure marker would hide the name's chain from CNAMEs until the next dial.
+		if _, ok := r.cache.getStale(cacheKey{name: "news.example", qtype: dnsmessage.TypeA}); ok {
+			t.Error("the cancelled lookup left a cache entry")
 		}
 	})
 }

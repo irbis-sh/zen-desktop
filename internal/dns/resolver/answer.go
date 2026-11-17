@@ -42,13 +42,17 @@ type verdict struct {
 	// failed means the response says the server isn't working: a DNSSEC failure, or an
 	// rcode other than NOERROR and NXDOMAIN. It counts towards fallback mode.
 	failed bool
+	// chain is the question name's CNAME chain: the target of each CNAME record
+	// followed, nearest first, lower-cased and without trailing dots. It is nil unless
+	// the verdict holds addresses or is NODATA.
+	chain []string
 }
 
 // interpret turns the response to q into a verdict. The order of the cases matters: a block,
 // whether an EDE or an unspecified address marks it, outranks any rcode, and other addresses
 // count only in a successful response.
 func interpret(msg *dnsmessage.Message, q dnsmessage.Question) verdict {
-	addrs, addrTTL := findAddrs(msg, q)
+	addrs, chain, addrTTL := findAddrs(msg, q)
 	blocked, dnssecFailed := extendedErrors(msg)
 
 	switch {
@@ -73,9 +77,9 @@ func interpret(msg *dnsmessage.Message, q dnsmessage.Question) verdict {
 		// network, so the OS may well know a better answer.
 		return verdict{useOS: true, ttl: addrTTL}
 	case len(addrs) == 0:
-		return verdict{ttl: negativeTTL(msg)}
+		return verdict{ttl: negativeTTL(msg), chain: chain}
 	}
-	return verdict{addrs: addrs, ttl: addrTTL}
+	return verdict{addrs: addrs, ttl: addrTTL, chain: chain}
 }
 
 // isUnspecified reports whether a is an unspecified address. It unmaps the address first,
@@ -88,13 +92,14 @@ func isLocal(a netip.Addr) bool {
 }
 
 // findAddrs follows the CNAME records from q's name and returns the addresses of q's type
-// that the last name owns, with how long the answer can be cached: the lowest TTL among
-// the records used, at least minTTL. It doesn't rely on the order of the answer section.
-// If the chain is longer than maxChain, it returns no addresses.
-func findAddrs(msg *dnsmessage.Message, q dnsmessage.Question) ([]netip.Addr, time.Duration) {
-	owner, ttl, ok := followChain(msg.Answers, q.Name.String())
+// that the last name owns, the names passed on the way (see verdict.chain), and how long
+// the answer can be cached: the lowest TTL among the records used, at least minTTL. It
+// doesn't rely on the order of the answer section. If the chain is longer than maxChain,
+// it returns no addresses and no names.
+func findAddrs(msg *dnsmessage.Message, q dnsmessage.Question) ([]netip.Addr, []string, time.Duration) {
+	owner, chain, ttl, ok := followChain(msg.Answers, q.Name.String())
 	if !ok {
-		return nil, minTTL
+		return nil, nil, minTTL
 	}
 
 	var addrs []netip.Addr
@@ -113,12 +118,13 @@ func findAddrs(msg *dnsmessage.Message, q dnsmessage.Question) ([]netip.Addr, ti
 		}
 		ttl = min(ttl, rr.Header.TTL)
 	}
-	return addrs, max(time.Duration(ttl)*time.Second, minTTL)
+	return addrs, chain, max(time.Duration(ttl)*time.Second, minTTL)
 }
 
-// followChain returns the name that CNAME records lead to from name, and the lowest TTL
-// among those records. ok is false if there are more than maxChain of them.
-func followChain(answers []dnsmessage.Resource, name string) (end string, ttl uint32, ok bool) {
+// followChain returns the name that CNAME records lead to from name, the names on the way
+// there with end last (see verdict.chain), and the lowest TTL among those records. ok is
+// false if there are more than maxChain of them.
+func followChain(answers []dnsmessage.Resource, name string) (end string, chain []string, ttl uint32, ok bool) {
 	cnames := make(map[string]dnsmessage.Resource)
 	for _, rr := range answers {
 		if _, isCNAME := rr.Body.(*dnsmessage.CNAMEResource); isCNAME {
@@ -130,13 +136,14 @@ func followChain(answers []dnsmessage.Resource, name string) (end string, ttl ui
 	for followed := 0; ; followed++ {
 		rr, found := cnames[strings.ToLower(name)]
 		if !found {
-			return name, ttl, true
+			return name, chain, ttl, true
 		}
 		if followed == maxChain {
-			return "", 0, false
+			return "", nil, 0, false
 		}
 		ttl = min(ttl, rr.Header.TTL)
 		name = rr.Body.(*dnsmessage.CNAMEResource).CNAME.String()
+		chain = append(chain, strings.ToLower(strings.TrimSuffix(name, ".")))
 	}
 }
 

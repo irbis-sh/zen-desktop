@@ -3,6 +3,7 @@ package proxy
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -420,6 +421,78 @@ func TestWriteRespOverHTTP2(t *testing.T) {
 	wg.Wait()
 }
 
+// TestCNAMEBlock runs the check on each path a request can take. tracked.test doesn't
+// resolve, so a request that got past the check would fail with a 502 instead of the
+// filter's 403.
+func TestCNAMEBlock(t *testing.T) {
+	t.Parallel()
+
+	addr := startTestProxy(t, func(p *Proxy) {
+		p.filter = &cnameFilter{}
+		p.certGenerator = selfSignedCertGenerator{}
+		p.cnames = func(_ context.Context, host string) []string {
+			if host == "tracked.test" {
+				return []string{"tracker.example"}
+			}
+			return nil
+		}
+	})
+
+	t.Run("plain HTTP", func(t *testing.T) {
+		t.Parallel()
+
+		resp, err := proxyClient(t, addr).Get("http://tracked.test/")
+		if err != nil {
+			t.Fatalf("get through proxy: %v", err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusForbidden {
+			t.Errorf("status = %d, want %d", resp.StatusCode, http.StatusForbidden)
+		}
+	})
+
+	t.Run("decrypted tunnel", func(t *testing.T) {
+		t.Parallel()
+
+		if status, _ := mitmGet(t, addr, "tracked.test:443", "tracked.test"); status != http.StatusForbidden {
+			t.Errorf("status = %d, want %d", status, http.StatusForbidden)
+		}
+	})
+
+	t.Run("wss handshake", func(t *testing.T) {
+		t.Parallel()
+
+		req, err := http.NewRequest(http.MethodGet, "https://tracked.test/", nil)
+		if err != nil {
+			t.Fatalf("build request: %v", err)
+		}
+		req.Header.Set("Connection", "Upgrade")
+		req.Header.Set("Upgrade", "websocket")
+		if status, _ := mitmDo(t, addr, "tracked.test:443", req); status != http.StatusForbidden {
+			t.Errorf("status = %d, want %d", status, http.StatusForbidden)
+		}
+	})
+}
+
+func TestNoCNAMECheckWithoutCNAMEs(t *testing.T) {
+	t.Parallel()
+
+	upstream := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	t.Cleanup(upstream.Close)
+	f := &cnameFilter{}
+	addr := startTestProxy(t, func(p *Proxy) { p.filter = f })
+
+	resp, err := proxyClient(t, addr).Get(upstream.URL)
+	if err != nil {
+		t.Fatalf("get through proxy: %v", err)
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK || f.calls.Load() != 0 {
+		t.Errorf("status = %d with %d checks, want %d with none", resp.StatusCode, f.calls.Load(), http.StatusOK)
+	}
+}
+
 // backstopTimeout keeps a regression from hanging CI. It sits far above every delay
 // these tests exercise, so it never fires on a healthy path.
 const backstopTimeout = 10 * time.Second
@@ -428,7 +501,7 @@ const backstopTimeout = 10 * time.Second
 func newTestProxy(t *testing.T, resolver *net.Resolver) *Proxy {
 	t.Helper()
 
-	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil, "", nil, resolver)
+	p, err := NewProxy(noopFilter{}, unusedCertGenerator{}, 0, nil, "", nil, resolver, nil)
 	if err != nil {
 		t.Fatalf("create proxy: %v", err)
 	}
@@ -448,7 +521,7 @@ func startLocalEndpointProxy(t *testing.T, f filter, shouldProxy ShouldProxyFunc
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		io.WriteString(w, localEndpointBody)
 	})
-	p, err := NewProxy(f, selfSignedCertGenerator{}, 0, shouldProxy, localTestHost, handler, nil)
+	p, err := NewProxy(f, selfSignedCertGenerator{}, 0, shouldProxy, localTestHost, handler, nil, nil)
 	if err != nil {
 		t.Fatalf("create proxy: %v", err)
 	}
@@ -499,23 +572,32 @@ func localEndpointPlainGet(t *testing.T, proxyAddr string) string {
 func mitmGet(t *testing.T, proxyAddr, target, serverName string) (int, string) {
 	t.Helper()
 
+	req, err := http.NewRequest(http.MethodGet, "https://"+serverName+"/", nil)
+	if err != nil {
+		t.Fatalf("build request: %v", err)
+	}
+	return mitmDo(t, proxyAddr, target, req)
+}
+
+// mitmDo CONNECTs to target through the proxy at proxyAddr, completes the MITM TLS
+// handshake with req's host, and returns the status and body of req's response inside
+// the tunnel.
+func mitmDo(t *testing.T, proxyAddr, target string, req *http.Request) (int, string) {
+	t.Helper()
+
 	conn, _, resp := connectThrough(t, proxyAddr, target)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("CONNECT status = %d, want %d", resp.StatusCode, http.StatusOK)
 	}
 
 	tlsConn := tls.Client(conn, &tls.Config{
-		ServerName:         serverName,
+		ServerName:         req.URL.Hostname(),
 		InsecureSkipVerify: true, // #nosec G402 -- the MITM certificate is self-signed on purpose; trust is not under test.
 	})
 	if err := tlsConn.Handshake(); err != nil {
 		t.Fatalf("TLS handshake: %v", err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://"+serverName+"/", nil)
-	if err != nil {
-		t.Fatalf("build request: %v", err)
-	}
 	if err := req.Write(tlsConn); err != nil {
 		t.Fatalf("write request: %v", err)
 	}
@@ -627,8 +709,27 @@ func (noopFilter) HandleRequest(*http.Request, process.Info) (*http.Response, er
 	return nil, nil
 }
 
+func (noopFilter) HandleCNAMEs(*http.Request, func() []string, process.Info) *http.Response {
+	return nil
+}
+
 func (noopFilter) HandleResponse(*http.Request, *http.Response, process.Info) error {
 	return nil
+}
+
+// cnameFilter passes every request through HandleRequest, and blocks it in HandleCNAMEs
+// if its host has a CNAME chain.
+type cnameFilter struct {
+	noopFilter
+	calls atomic.Int32
+}
+
+func (f *cnameFilter) HandleCNAMEs(_ *http.Request, cnames func() []string, _ process.Info) *http.Response {
+	f.calls.Add(1)
+	if len(cnames()) == 0 {
+		return nil
+	}
+	return &http.Response{StatusCode: http.StatusForbidden, Header: make(http.Header), Body: http.NoBody}
 }
 
 // blockedBody is what blockEverythingFilter answers every request with.
@@ -636,7 +737,9 @@ const blockedBody = "blocked by test filter"
 
 // blockEverythingFilter blocks every request with a canned response, standing in
 // for a filter list rule that happens to match Zen's own assets.
-type blockEverythingFilter struct{}
+type blockEverythingFilter struct {
+	noopFilter
+}
 
 func (blockEverythingFilter) HandleRequest(*http.Request, process.Info) (*http.Response, error) {
 	return &http.Response{
@@ -644,10 +747,6 @@ func (blockEverythingFilter) HandleRequest(*http.Request, process.Info) (*http.R
 		Header:     make(http.Header),
 		Body:       io.NopCloser(strings.NewReader(blockedBody)),
 	}, nil
-}
-
-func (blockEverythingFilter) HandleResponse(*http.Request, *http.Response, process.Info) error {
-	return nil
 }
 
 // unusedCertGenerator satisfies NewProxy's non-nil check. Certificates are only
