@@ -46,6 +46,26 @@
     "addList": "Aggiungi lista di filtri",
     "trustedListsWarning": "Le liste attendibili possono utilizzare potenti capacità di blocco, come scriptlet <code>trusted-</code> e regole JavaScript ma <strong>potrebbero compromettere la privacy e la sicurezza</strong> se compromesse da terzi malevoli. Abilita questa opzione solo per liste provenienti da fonti affidabili."
   },
+  "dnsSettings": {
+    "custom": "Personalizzato",
+    "customURLInvalid": "Inserisci un URL che inizi con https://",
+    "customURLLabel": "URL del server",
+    "description": "Scegli un server per cifrare le ricerche DNS con DNS-over-HTTPS.",
+    "label": "DNS cifrato",
+    "off": "Disattivato",
+    "saveError": "Impossibile salvare le impostazioni DNS: {{error}}",
+    "statusFailing": "Il DNS cifrato non funziona. Nel frattempo Zen usa il DNS di sistema.",
+    "statusNoIPv4": "Questo computer non ha una connessione IPv4, quindi Zen usa il DNS di sistema.",
+    "statusVPN": "Il DNS è gestito da una VPN o da un'altra app, quindi Zen usa il DNS di sistema.",
+    "systemDomainsDescription": "Serve solo se un sito di una rete aziendale, scolastica o locale non si carica. I domini impostati dalla tua rete o VPN usano già il DNS di sistema.",
+    "systemDomainsHelper": "Inserisci un dominio per riga.",
+    "systemDomainsLabel": "Domini che usano il DNS di sistema"
+  },
+  "dnsStatusBar": {
+    "close": "Chiudi",
+    "failing": "Il DNS cifrato non funziona. Zen usa il DNS di sistema.",
+    "open": "Apri le impostazioni DNS"
+  },
   "donate": "Dona",
   "errorBoundary": {
     "errorMessage": "Errore imprevisto: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Avanzate",
-      "app": "App"
+      "app": "App",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Scegli un tema",

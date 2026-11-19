@@ -80,7 +80,13 @@ type App struct {
 	resolver *resolver.Resolver
 	// netMonitor is nil when resolver is.
 	netMonitor *netmon.Monitor
-	restartMu  sync.Mutex
+	// dnsStatus is the running resolver's last status. Its Mode is empty when no resolver
+	// runs. It has its own lock, not proxyMu, for two reasons: the resolver calls back with
+	// its lock held while StopProxy closes the resolver with proxyMu held, and GetDNSStatus
+	// must not wait out a filter build, which StartProxy runs with proxyMu held.
+	dnsStatusMu sync.Mutex
+	dnsStatus   resolver.Status
+	restartMu   sync.Mutex
 	// pendingRestart records an armed restart.
 	pendingRestart      bool
 	pendingRestartStart bool
@@ -271,7 +277,7 @@ func (a *App) StartProxy() (err error) {
 
 	routingPolicy := routing.NewPolicy(a.config.GetRouting())
 
-	a.resolver = newResolver(a.config.GetDNS())
+	a.resolver = a.newResolver(a.config.GetDNS())
 	var netResolver *net.Resolver
 	var cnames func(ctx context.Context, host string) []string
 	if a.resolver != nil {
@@ -324,20 +330,22 @@ func (a *App) StartProxy() (err error) {
 // logs Server only once DoHServer has accepted it, which makes it one of the constants.
 // It never logs CustomURL, which can hold an account ID, as NextDNS's do, nor an unknown
 // Server, which may be a URL pasted into the wrong field.
-func newResolver(dnsConfig config.DNSConfig) *resolver.Resolver {
+func (a *App) newResolver(dnsConfig config.DNSConfig) *resolver.Resolver {
 	url, bootstrap, ok := dnsConfig.DoHServer()
 	switch {
 	case ok:
 		log.Printf("resolving upstream hosts through DoH server %s", dnsConfig.Server)
 		return resolver.New(doh.NewClient(url, bootstrap), dnsConfig.SystemDomains, func(s resolver.Status) {
-			if s.Mode != resolver.StatusFailing {
+			if s.Mode == resolver.StatusFailing {
+				// The error can hold a custom server's URL or host. A certificate error can
+				// also name the network the user is on, since a login page's certificate
+				// lists its domains. The settings page shows it as it is: unlike a log, it
+				// isn't shared.
+				log.Printf("DNS status: %s (%s)", s.Mode, redacted.Redacted(s.Error))
+			} else {
 				log.Printf("DNS status: %s", s.Mode)
-				return
 			}
-			// The error can hold a custom server's URL or host. A certificate error can
-			// also name the network the user is on, since a login page's certificate lists
-			// its domains.
-			log.Printf("DNS status: %s (%s)", s.Mode, redacted.Redacted(s.Error))
+			a.setDNSStatus(s)
 		})
 	case dnsConfig.Server == config.DNSServerCustom:
 		log.Println("custom DNS server has no URL, using the OS resolver")
@@ -371,6 +379,28 @@ func (a *App) closeResolver() {
 	a.netMonitor = nil
 	a.resolver.Close()
 	a.resolver = nil
+	// After Close, which ends the resolver's callbacks, so that the empty status is the
+	// last one.
+	a.setDNSStatus(resolver.Status{})
+}
+
+// setDNSStatus keeps status for GetDNSStatus and sends it to the frontend. The resolver
+// makes its calls one at a time, with its lock held, so the kept status and the last one
+// sent can't disagree.
+func (a *App) setDNSStatus(status resolver.Status) {
+	a.dnsStatusMu.Lock()
+	a.dnsStatus = status
+	a.dnsStatusMu.Unlock()
+	a.frontendEvents.OnDNSStatus(status)
+}
+
+// GetDNSStatus returns the running resolver's last status, which has an empty Mode when
+// no resolver runs. The settings page uses it for its first render, and events after
+// that.
+func (a *App) GetDNSStatus() resolver.Status {
+	a.dnsStatusMu.Lock()
+	defer a.dnsStatusMu.Unlock()
+	return a.dnsStatus
 }
 
 // StopProxy stops the proxy. When a start is in flight, it aborts the filter

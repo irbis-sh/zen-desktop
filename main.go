@@ -85,6 +85,7 @@ func main() {
 			config.UpdatePolicyEnum,
 			config.RoutingModeEnum,
 			config.KeyStorageEnum,
+			config.DNSServerEnum,
 		},
 		Mac: &mac.Options{
 			About: &mac.AboutInfo{

@@ -39,6 +39,17 @@
 - Uninstall CA
 - Uninstall CA while proxy is running
 
+## Encrypted DNS
+
+- Select a server (e.g. Quad9), start proxy, browse
+- Custom server with an invalid URL (error, not saved)
+- Add a domain to "Domains that use system DNS"
+- A site with a CNAME-cloaked tracker (e.g. tidal.com): the request log shows a blocked request with a CNAME row
+- Block the server's addresses in a firewall ("isn't working" status, and a warning bar above every tab: clicking it opens Settings, and a closed bar stays closed until DNS recovers), then unblock (both clear within a minute)
+- Connect a VPN that handles all DNS, e.g. Tailscale with MagicDNS (VPN status)
+- Sleep and wake: the first page load doesn't stall
+- Select "Off" (no status)
+
 ## Self‑update (Windows/macOS/Linux)
 
 - Disable updates

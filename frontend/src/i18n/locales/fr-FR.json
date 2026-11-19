@@ -46,6 +46,26 @@
     "addList": "Ajouter une liste de filtres",
     "trustedListsWarning": "Les listes de confiance peuvent utiliser des capacités de blocage puissantes, telles que les scriptlets <code>trusted-</code> et les règles JavaScript, mais <strong>peuvent perturber la confidentialité et la sécurité</strong> si elles sont détournées par un acteur malveillant. N'activez cette option que pour les listes provenant de sources auxquelles vous faites confiance."
   },
+  "dnsSettings": {
+    "custom": "Personnalisé",
+    "customURLInvalid": "Entrez une URL commençant par https://",
+    "customURLLabel": "URL du serveur",
+    "description": "Choisissez un serveur pour chiffrer les requêtes DNS avec DNS-over-HTTPS.",
+    "label": "DNS chiffré",
+    "off": "Désactivé",
+    "saveError": "Échec de l'enregistrement des paramètres DNS : {{error}}",
+    "statusFailing": "Le DNS chiffré ne fonctionne pas. En attendant, Zen utilise le DNS du système.",
+    "statusNoIPv4": "Cet ordinateur n'a pas de connexion IPv4, Zen utilise donc le DNS du système.",
+    "statusVPN": "Un VPN ou une autre application gère le DNS, Zen utilise donc le DNS du système.",
+    "systemDomainsDescription": "Nécessaire uniquement si un site sur un réseau professionnel, scolaire ou local ne se charge pas. Les domaines définis par votre réseau ou votre VPN utilisent déjà le DNS du système.",
+    "systemDomainsHelper": "Entrez un domaine par ligne.",
+    "systemDomainsLabel": "Domaines qui utilisent le DNS du système"
+  },
+  "dnsStatusBar": {
+    "close": "Fermer",
+    "failing": "DNS chiffré indisponible. Utilisation du DNS système.",
+    "open": "Ouvrir les paramètres DNS"
+  },
   "donate": "Faire un don",
   "errorBoundary": {
     "errorMessage": "Erreur inattendue : {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Avancé",
-      "app": "Application"
+      "app": "Application",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Choisissez un thème",

@@ -46,6 +46,26 @@
     "addList": "Filtre listesi ekle",
     "trustedListsWarning": "Güvenilen listeler, <code>trusted-</code> scriptlet'ler ve JavaScript kuralları gibi güçlü engelleme özellikleri kullanabilir; ancak kötü niyetli bir tarafça ele geçirilirse <strong>gizlilik ve güvenliği tehlikeye atabilir</strong>. Bu seçeneği yalnızca güvendiğiniz kaynaklardan gelen listeler için etkinleştirin."
   },
+  "dnsSettings": {
+    "custom": "Özel",
+    "customURLInvalid": "https:// ile başlayan bir URL girin",
+    "customURLLabel": "Sunucu URL'si",
+    "description": "DNS sorgularını DNS-over-HTTPS ile şifrelemek için bir sunucu seçin.",
+    "label": "Şifreli DNS",
+    "off": "Kapalı",
+    "saveError": "DNS ayarları kaydedilemedi: {{error}}",
+    "statusFailing": "Şifreli DNS çalışmıyor. Zen şimdilik sistem DNS'ini kullanıyor.",
+    "statusNoIPv4": "Bu bilgisayarın IPv4 bağlantısı yok, bu nedenle Zen sistem DNS'ini kullanıyor.",
+    "statusVPN": "DNS'i bir VPN veya başka bir DNS uygulaması yönetiyor, bu nedenle Zen sistem DNS'ini kullanıyor.",
+    "systemDomainsDescription": "Yalnızca şirket, okul veya yerel ağdaki bir site açılmıyorsa gerekir. Ağınızın veya VPN'inizin belirlediği alan adları zaten sistem DNS'ini kullanır.",
+    "systemDomainsHelper": "Her satıra bir alan adı girin.",
+    "systemDomainsLabel": "Sistem DNS'ini kullanan alan adları"
+  },
+  "dnsStatusBar": {
+    "close": "Kapat",
+    "failing": "Şifreli DNS çalışmıyor. Sistem DNS'i kullanılıyor.",
+    "open": "DNS ayarlarını aç"
+  },
   "donate": "Bağış yap",
   "errorBoundary": {
     "errorMessage": "Beklenmeyen hata: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Gelişmiş",
-      "app": "Uygulama"
+      "app": "Uygulama",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Tema seçin",

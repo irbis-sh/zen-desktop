@@ -50,7 +50,8 @@ export function IgnoredHostsInput() {
       >
         <TextArea
           id="ignoredHosts"
-          placeholder="example.com"
+          // Disabled, a placeholder looks the same as an entered host.
+          placeholder={state.loading || isProxyRunning ? undefined : 'example.com'}
           className="settings-manager__ignored-hosts-input"
           value={state.ignoredHosts}
           onChange={(e) => {

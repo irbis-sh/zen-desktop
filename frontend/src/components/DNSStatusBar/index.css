@@ -1,0 +1,51 @@
+/* The colours are those of a Blueprint warning callout, and the hover and active shades those of a minimal warning
+   button. The 12px left padding matches the header's inset. */
+.dns-status-bar {
+  position: relative;
+  background-color: rgba(200, 118, 25, 0.1);
+  color: #935610;
+}
+
+.bp6-dark .dns-status-bar {
+  background-color: rgba(200, 118, 25, 0.2);
+  color: #fbb360;
+}
+
+.dns-status-bar__open {
+  /* Spans the whole bar, with the close button laid on top, so that all of the bar but that button opens the settings
+     and changes colour on hover. The right padding leaves room for the button. */
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 40px 8px 12px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Blueprint's focus ring sits outside the element, where the window edge would cut it off. */
+  outline-offset: -2px !important;
+}
+
+.dns-status-bar__open:hover {
+  background-color: color-mix(in oklch, var(--bp-intent-warning-rest) 15%, transparent);
+}
+
+.dns-status-bar__open:active {
+  background-color: color-mix(in oklch, var(--bp-intent-warning-rest) 30%, transparent);
+}
+
+.dns-status-bar__icon {
+  color: inherit;
+  /* Centres the 16px icon on the first line of text. */
+  margin-top: 1px;
+}
+
+.dns-status-bar__close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  translate: 0 -50%;
+}

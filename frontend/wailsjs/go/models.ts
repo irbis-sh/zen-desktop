@@ -1,5 +1,14 @@
 export namespace config {
 	
+	export enum DNSServer {
+	    CLOUDFLARE = "cloudflare",
+	    CUSTOM = "custom",
+	    GOOGLE = "google",
+	    OPENDNS = "opendns",
+	    QUAD9 = "quad9",
+	    QUAD9_ECS = "quad9ecs",
+	    SYSTEM = "system",
+	}
 	export enum KeyStorageType {
 	    DISK = "disk",
 	    HARDWARE = "hardware",
@@ -14,7 +23,7 @@ export namespace config {
 	    PROMPT = "prompt",
 	}
 	export class DNSConfig {
-	    server: string;
+	    server: DNSServer;
 	    customURL: string;
 	    systemDomains: string[];
 	
@@ -82,6 +91,25 @@ export namespace options {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.Args = source["Args"];
 	        this.WorkingDirectory = source["WorkingDirectory"];
+	    }
+	}
+
+}
+
+export namespace resolver {
+	
+	export class Status {
+	    mode: string;
+	    error: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Status(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.mode = source["mode"];
+	        this.error = source["error"];
 	    }
 	}
 

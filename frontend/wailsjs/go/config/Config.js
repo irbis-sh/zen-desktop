@@ -86,6 +86,18 @@ export function SetCAInstalled(arg1) {
   return window['go']['config']['Config']['SetCAInstalled'](arg1);
 }
 
+export function SetDNSCustomURL(arg1) {
+  return window['go']['config']['Config']['SetDNSCustomURL'](arg1);
+}
+
+export function SetDNSServer(arg1) {
+  return window['go']['config']['Config']['SetDNSServer'](arg1);
+}
+
+export function SetDNSSystemDomains(arg1) {
+  return window['go']['config']['Config']['SetDNSSystemDomains'](arg1);
+}
+
 export function SetIgnoredHosts(arg1) {
   return window['go']['config']['Config']['SetIgnoredHosts'](arg1);
 }
