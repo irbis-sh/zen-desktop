@@ -6,6 +6,10 @@ export function ExportCustomFilterLists() {
   return window['go']['app']['App']['ExportCustomFilterLists']();
 }
 
+export function GetDNSStatus() {
+  return window['go']['app']['App']['GetDNSStatus']();
+}
+
 export function HardwareKeyUnavailableReason() {
   return window['go']['app']['App']['HardwareKeyUnavailableReason']();
 }

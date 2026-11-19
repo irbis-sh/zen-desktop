@@ -46,6 +46,26 @@
     "addList": "Filterliste hinzufügen",
     "trustedListsWarning": "Vertraute Listen können leistungsstarke Blockierfunktionen wie <code>trusted-</code> Scriptlets und JavaScript-Regeln verwenden, <strong>können jedoch den Datenschutz und die Sicherheit beeinträchtigen</strong>, wenn sie von einer böswilligen Partei missbraucht werden. Aktivieren Sie diese Option nur für Listen aus Quellen, denen Sie vertrauen."
   },
+  "dnsSettings": {
+    "custom": "Benutzerdefiniert",
+    "customURLInvalid": "Geben Sie eine URL ein, die mit https:// beginnt",
+    "customURLLabel": "Server-URL",
+    "description": "Wählen Sie einen Server, um DNS-Abfragen mit DNS-over-HTTPS zu verschlüsseln.",
+    "label": "Verschlüsseltes DNS",
+    "off": "Aus",
+    "saveError": "DNS-Einstellungen konnten nicht gespeichert werden: {{error}}",
+    "statusFailing": "Verschlüsseltes DNS funktioniert nicht. Zen verwendet vorerst System-DNS.",
+    "statusNoIPv4": "Dieser Computer hat keine IPv4-Verbindung, daher verwendet Zen System-DNS.",
+    "statusVPN": "Ein VPN oder eine andere DNS-App übernimmt die DNS-Abfragen, daher verwendet Zen System-DNS.",
+    "systemDomainsDescription": "Nur nötig, wenn eine Website im Firmen-, Schul- oder lokalen Netzwerk nicht lädt. Domains, die Ihr Netzwerk oder VPN festlegt, verwenden bereits System-DNS.",
+    "systemDomainsHelper": "Geben Sie eine Domain pro Zeile ein.",
+    "systemDomainsLabel": "Domains, die System-DNS verwenden"
+  },
+  "dnsStatusBar": {
+    "close": "Schließen",
+    "failing": "Verschlüsseltes DNS funktioniert nicht. System-DNS wird verwendet.",
+    "open": "DNS-Einstellungen öffnen"
+  },
   "donate": "Spenden",
   "errorBoundary": {
     "errorMessage": "Unerwarteter Fehler: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Erweitert",
-      "app": "Anwendung"
+      "app": "Anwendung",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Design auswählen",

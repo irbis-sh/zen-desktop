@@ -46,6 +46,26 @@
     "addList": "フィルターリストを追加",
     "trustedListsWarning": "信頼済みリストでは、<code>trusted-</code> スクリプトレットや JavaScript ルールのような強力なブロック機能を使用できますが、悪意のある第三者に改ざんされると<strong>プライバシーとセキュリティを損なう可能性があります</strong>。信頼できる提供元のリストにのみこのオプションを有効にしてください。"
   },
+  "dnsSettings": {
+    "custom": "カスタム",
+    "customURLInvalid": "https:// で始まる URL を入力してください",
+    "customURLLabel": "サーバーの URL",
+    "description": "サーバーを選択すると、DNS の問い合わせを DNS-over-HTTPS で暗号化します。",
+    "label": "暗号化 DNS",
+    "off": "オフ",
+    "saveError": "DNS 設定の保存に失敗しました: {{error}}",
+    "statusFailing": "暗号化 DNS が動作していません。Zen は一時的にシステムの DNS を使用しています。",
+    "statusNoIPv4": "このコンピューターには IPv4 接続がないため、Zen はシステムの DNS を使用しています。",
+    "statusVPN": "VPN または別の DNS アプリが DNS を管理しているため、Zen はシステムの DNS を使用しています。",
+    "systemDomainsDescription": "職場や学校、ローカルのネットワーク上のサイトが開けない場合にのみ必要です。ネットワークや VPN が設定したドメインは、すでにシステムの DNS を使用しています。",
+    "systemDomainsHelper": "1 行に 1 つのドメインを入力してください。",
+    "systemDomainsLabel": "システムの DNS を使うドメイン"
+  },
+  "dnsStatusBar": {
+    "close": "閉じる",
+    "failing": "暗号化 DNS が動作していません。システムの DNS を使用しています。",
+    "open": "DNS 設定を開く"
+  },
   "donate": "寄付",
   "errorBoundary": {
     "errorMessage": "予期しないエラー: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "詳細設定",
-      "app": "アプリ"
+      "app": "アプリ",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "テーマを選択",

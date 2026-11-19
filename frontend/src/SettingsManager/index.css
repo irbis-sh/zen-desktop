@@ -13,6 +13,23 @@
   margin-bottom: 8px;
 }
 
+.settings-manager__section--dns {
+  border: 1px solid var(--bp-palette-cerulean-3);
+  border-radius: var(--bp-surface-border-radius);
+  margin-bottom: 8px;
+}
+
+/* Blueprint tags only take intents, and the other sections use primary and warning. */
+.settings-manager__section--dns .settings-manager__section-header {
+  background-color: var(--bp-palette-cerulean-3);
+  color: var(--bp-palette-white);
+}
+
+/* The status bar focuses the section to move keyboard users there. It isn't a control, so it gets no focus ring. */
+.settings-manager__section--dns:focus {
+  outline: none !important;
+}
+
 .settings-manager__section--links {
   display: flex;
   gap: 8px;
@@ -32,6 +49,19 @@
 
 .settings-manager__ignored-hosts-tooltip {
   width: 100%;
+}
+
+.settings-manager__dns-tooltip {
+  width: 100%;
+}
+
+.settings-manager__dns-system-domains {
+  width: 100% !important;
+  max-height: 40vh;
+}
+
+.settings-manager__dns-status {
+  margin-bottom: 15px;
 }
 
 .settings-manager__app-routing {

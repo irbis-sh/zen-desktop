@@ -1,5 +1,6 @@
-import { Button, ButtonGroup, FocusStyleManager, NonIdealState } from '@blueprintjs/core';
-import { useState, useEffect } from 'react';
+import { Button, ButtonGroup, Classes, FocusStyleManager, NonIdealState } from '@blueprintjs/core';
+import { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import './App.css';
@@ -11,6 +12,7 @@ import { EventsOn } from 'wails/runtime/runtime';
 import { ThemeType, useTheme } from './common/ThemeManager';
 import { AppToaster } from './common/toaster';
 import { AppHeader } from './components/AppHeader';
+import { DNSStatusBar } from './components/DNSStatusBar';
 import { StartStopButton } from './components/StartStopButton';
 import { useProxyState } from './context/ProxyStateContext';
 import { FilterLists } from './FilterLists';
@@ -62,6 +64,7 @@ function App() {
   const { proxyState } = useProxyState();
   const [activeTab, setActiveTab] = useState<'home' | 'filterLists' | 'rules' | 'settings'>('home');
   const [showIntro, setShowIntro] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     GetFirstLaunch().then(setShowIntro);
@@ -71,6 +74,17 @@ function App() {
 
   return (
     <div id="app" className={effectiveTheme === ThemeType.DARK ? 'bp6-dark' : ''}>
+      <DNSStatusBar
+        onOpen={() => {
+          // flushSync renders the settings tab first, so the DNS section exists to scroll to and focus.
+          flushSync(() => setActiveTab('settings'));
+          const section = document.getElementById('settings-dns');
+          section?.scrollIntoView();
+          section?.focus({ preventScroll: true });
+        }}
+        // The close button goes away with the bar, and focus would fall back to the start of the page.
+        onClose={() => tabsRef.current?.querySelector<HTMLElement>(`.${Classes.ACTIVE}`)?.focus()}
+      />
       <AppHeader />
 
       {showIntro ? (
@@ -81,7 +95,7 @@ function App() {
         />
       ) : (
         <>
-          <ButtonGroup fill variant="minimal" className="tabs">
+          <ButtonGroup ref={tabsRef} fill variant="minimal" className="tabs">
             <Button icon="circle" active={activeTab === 'home'} onClick={() => setActiveTab('home')}>
               {t('app.tabs.home')}
             </Button>

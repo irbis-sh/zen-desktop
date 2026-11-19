@@ -46,6 +46,26 @@
     "addList": "添加过滤列表",
     "trustedListsWarning": "受信任列表可以使用强大的拦截功能，例如 <code>trusted-</code> 脚本片段和 JavaScript 规则，但<strong>若被恶意方劫持，可能会破坏隐私和安全</strong>。仅对您信任的来源启用此选项。"
   },
+  "dnsSettings": {
+    "custom": "自定义",
+    "customURLInvalid": "请输入以 https:// 开头的网址",
+    "customURLLabel": "服务器网址",
+    "description": "选择一个服务器，使用 DNS-over-HTTPS 加密 DNS 查询。",
+    "label": "加密 DNS",
+    "off": "关闭",
+    "saveError": "保存 DNS 设置失败：{{error}}",
+    "statusFailing": "加密 DNS 无法正常工作。Zen 暂时改用系统 DNS。",
+    "statusNoIPv4": "这台电脑没有 IPv4 连接，因此 Zen 正在使用系统 DNS。",
+    "statusVPN": "DNS 由 VPN 或其他 DNS 应用处理，因此 Zen 正在使用系统 DNS。",
+    "systemDomainsDescription": "仅在公司、学校或局域网内的网站无法打开时才需要填写。您的网络或 VPN 指定的域名已在使用系统 DNS。",
+    "systemDomainsHelper": "每行一个域名。",
+    "systemDomainsLabel": "使用系统 DNS 的域名"
+  },
+  "dnsStatusBar": {
+    "close": "关闭",
+    "failing": "加密 DNS 无法正常工作，正在使用系统 DNS。",
+    "open": "打开 DNS 设置"
+  },
   "donate": "捐赠",
   "errorBoundary": {
     "errorMessage": "意外错误：{{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "高级",
-      "app": "应用"
+      "app": "应用",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "选择主题",

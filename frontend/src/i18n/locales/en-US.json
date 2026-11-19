@@ -46,6 +46,26 @@
     "addList": "Add filter list",
     "trustedListsWarning": "Trusted lists can use powerful blocking capabilities, such as <code>trusted-</code> scriptlets and JavaScript rules but <strong>may disrupt privacy and security</strong> if hijacked by a malicious party. Only enable this option for lists from sources you trust."
   },
+  "dnsSettings": {
+    "custom": "Custom",
+    "customURLInvalid": "Enter a URL that starts with https://",
+    "customURLLabel": "Server URL",
+    "description": "Choose a server to encrypt DNS lookups with DNS-over-HTTPS.",
+    "label": "Encrypted DNS",
+    "off": "Off",
+    "saveError": "Failed to save DNS settings: {{error}}",
+    "statusFailing": "Encrypted DNS isn't working. Zen is using system DNS for now.",
+    "statusNoIPv4": "This computer has no IPv4 connection, so Zen is using system DNS.",
+    "statusVPN": "A VPN or another DNS app is handling DNS, so Zen is using system DNS.",
+    "systemDomainsDescription": "Only needed if a site on a work, school or local network doesn't load. Domains set by your network or VPN already use system DNS.",
+    "systemDomainsHelper": "Enter one domain per line.",
+    "systemDomainsLabel": "Domains that use system DNS"
+  },
+  "dnsStatusBar": {
+    "close": "Close",
+    "failing": "Encrypted DNS isn't working. Using system DNS.",
+    "open": "Open DNS settings"
+  },
   "donate": "Donate",
   "errorBoundary": {
     "errorMessage": "Unexpected error: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Advanced",
-      "app": "App"
+      "app": "App",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Choose a theme",

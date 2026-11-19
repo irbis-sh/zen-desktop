@@ -46,6 +46,26 @@
     "addList": "Szűrőlista hozzáadása",
     "trustedListsWarning": "A megbízható listák erőteljes blokkolási funkciókat használhatnak, például <code>trusted-</code> scriptleteket és JavaScript-szabályokat, de <strong>veszélyeztethetik az adatvédelmet és a biztonságot</strong>, ha egy rosszindulatú fél átveszi őket. Csak megbízható forrásból származó listáknál kapcsold be ezt az opciót."
   },
+  "dnsSettings": {
+    "custom": "Egyéni",
+    "customURLInvalid": "Adj meg egy https:// kezdetű URL-t",
+    "customURLLabel": "Szerver URL-je",
+    "description": "Válassz szervert a DNS-lekérdezések titkosításához (DNS-over-HTTPS).",
+    "label": "Titkosított DNS",
+    "off": "Ki",
+    "saveError": "Nem sikerült menteni a DNS-beállításokat: {{error}}",
+    "statusFailing": "A titkosított DNS nem működik. A Zen egyelőre a rendszer DNS-ét használja.",
+    "statusNoIPv4": "Ennek a számítógépnek nincs IPv4-kapcsolata, ezért a Zen a rendszer DNS-ét használja.",
+    "statusVPN": "A DNS-t VPN vagy másik DNS-alkalmazás kezeli, ezért a Zen a rendszer DNS-ét használja.",
+    "systemDomainsDescription": "Csak akkor kell, ha egy munkahelyi, iskolai vagy helyi hálózaton lévő oldal nem töltődik be. A hálózatod vagy VPN-ed által beállított domainek eleve a rendszer DNS-ét használják.",
+    "systemDomainsHelper": "Soronként egy domaint adj meg.",
+    "systemDomainsLabel": "A rendszer DNS-ét használó domainek"
+  },
+  "dnsStatusBar": {
+    "close": "Bezárás",
+    "failing": "A titkosított DNS nem működik. A rendszer DNS-e aktív.",
+    "open": "DNS-beállítások megnyitása"
+  },
   "donate": "Támogatás",
   "errorBoundary": {
     "errorMessage": "Váratlan hiba: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Speciális",
-      "app": "Alkalmazás"
+      "app": "Alkalmazás",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Téma kiválasztása",

@@ -14,6 +14,7 @@ import { AppRoutingSettings } from './AppRoutingSettings';
 import { AutostartSwitch } from './AutostartSwitch';
 import { AutoupdateSwitch } from './AutoupdateSwitch';
 import { CAKeyStorageSwitch } from './CAKeyStorageSwitch';
+import { DNSSettings } from './DNSSettings';
 import { ExportDebugDataButton } from './ExportDebugDataButton';
 import { ExportLogsButton } from './ExportLogsButton';
 import { IgnoredHostsInput } from './IgnoredHostsInput';
@@ -64,6 +65,16 @@ export function SettingsManager() {
             <ExportLogsButton />
             <ExportDebugDataButton />
           </div>
+        </div>
+      </div>
+
+      <div id="settings-dns" tabIndex={-1} className="settings-manager__section--dns">
+        <Tag size="large" fill className="settings-manager__section-header">
+          {t('settings.sections.dns')}
+        </Tag>
+
+        <div className="settings-manager__section-body">
+          <DNSSettings />
         </div>
       </div>
 

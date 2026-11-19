@@ -46,6 +46,26 @@
     "addList": "Thêm danh sách bộ lọc",
     "trustedListsWarning": "Các danh sách đáng tin cậy có thể sử dụng khả năng chặn mạnh mẽ như đoạn mã <code>trusted-</code> và quy tắc JavaScript nhưng <strong>có thể gây gián đoạn quyền riêng tư và bảo mật</strong> nếu bị bên độc hại chiếm đoạt. Chỉ bật tùy chọn này cho danh sách từ nguồn bạn tin cậy."
   },
+  "dnsSettings": {
+    "custom": "Tùy chỉnh",
+    "customURLInvalid": "Nhập URL bắt đầu bằng https://",
+    "customURLLabel": "URL máy chủ",
+    "description": "Chọn một máy chủ để mã hóa truy vấn DNS bằng DNS-over-HTTPS.",
+    "label": "DNS mã hóa",
+    "off": "Tắt",
+    "saveError": "Không thể lưu cài đặt DNS: {{error}}",
+    "statusFailing": "DNS mã hóa không hoạt động. Zen đang tạm dùng DNS hệ thống.",
+    "statusNoIPv4": "Máy tính này không có kết nối IPv4, nên Zen đang dùng DNS hệ thống.",
+    "statusVPN": "VPN hoặc ứng dụng DNS khác đang xử lý DNS, nên Zen đang dùng DNS hệ thống.",
+    "systemDomainsDescription": "Chỉ cần thiết khi trang web trên mạng của nơi làm việc, trường học hoặc mạng cục bộ không tải được. Tên miền do mạng hoặc VPN của bạn thiết lập vốn đã dùng DNS hệ thống.",
+    "systemDomainsHelper": "Nhập một tên miền trên mỗi dòng.",
+    "systemDomainsLabel": "Tên miền dùng DNS hệ thống"
+  },
+  "dnsStatusBar": {
+    "close": "Đóng",
+    "failing": "DNS mã hóa không hoạt động. Đang dùng DNS hệ thống.",
+    "open": "Mở cài đặt DNS"
+  },
   "donate": "Ủng hộ",
   "errorBoundary": {
     "errorMessage": "Lỗi không mong muốn: {{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "Nâng cao",
-      "app": "Ứng dụng"
+      "app": "Ứng dụng",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "Chọn giao diện",

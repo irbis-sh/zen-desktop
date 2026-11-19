@@ -149,6 +149,10 @@ type DebugData struct {
 	Architecture          string         `json:"architecture"`
 	Version               string         `json:"version"`
 	KeyStorage            KeyStorageType `json:"keyStorage"`
+	// DNSServer is "unknown" for a value that isn't in DNSServerEnum. Debug data goes into
+	// public issues, and a hand-edited config can hold a URL with an account ID there.
+	// For the same reason, the custom URL and the system domains are left out.
+	DNSServer string `json:"dnsServer"`
 }
 
 func (c *Config) ExportDebugData() (string, error) {
@@ -167,12 +171,24 @@ func (c *Config) ExportDebugData() (string, error) {
 		Architecture:          runtime.GOARCH,
 		Version:               Version,
 		KeyStorage:            c.Certmanager.KeyStorage,
+		DNSServer:             debugDNSServer(c.DNS.Server),
 	}
 	jsonData, err := json.MarshalIndent(debugData, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal debug data: %w", err)
 	}
 	return string(jsonData), nil
+}
+
+func debugDNSServer(server DNSServer) string {
+	switch {
+	case server == "":
+		return string(DNSServerSystem)
+	case isKnownDNSServer(server):
+		return string(server)
+	default:
+		return "unknown"
+	}
 }
 
 func init() {

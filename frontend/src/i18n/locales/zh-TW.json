@@ -46,6 +46,26 @@
     "addList": "新增過濾清單",
     "trustedListsWarning": "信任清單可以使用強大的攔截功能，例如 <code>trusted-</code> 腳本片段和 JavaScript 規則，但<strong>若被惡意方劫持，可能會破壞隱私和安全</strong>。僅對您信任的來源啟用此選項。"
   },
+  "dnsSettings": {
+    "custom": "自訂",
+    "customURLInvalid": "請輸入以 https:// 開頭的網址",
+    "customURLLabel": "伺服器網址",
+    "description": "選擇伺服器，以 DNS-over-HTTPS 加密 DNS 查詢。",
+    "label": "加密 DNS",
+    "off": "關閉",
+    "saveError": "儲存 DNS 設定失敗：{{error}}",
+    "statusFailing": "加密 DNS 無法運作。Zen 暫時改用系統 DNS。",
+    "statusNoIPv4": "這台電腦沒有 IPv4 連線，因此 Zen 正在使用系統 DNS。",
+    "statusVPN": "DNS 目前由 VPN 或其他 DNS 應用程式處理，因此 Zen 正在使用系統 DNS。",
+    "systemDomainsDescription": "僅在公司、學校或區域網路內的網站無法開啟時才需要填寫。您的網路或 VPN 所設定的網域本來就會使用系統 DNS。",
+    "systemDomainsHelper": "每行一個網域。",
+    "systemDomainsLabel": "使用系統 DNS 的網域"
+  },
+  "dnsStatusBar": {
+    "close": "關閉",
+    "failing": "加密 DNS 無法運作，已改用系統 DNS。",
+    "open": "開啟 DNS 設定"
+  },
   "donate": "贊助",
   "errorBoundary": {
     "errorMessage": "未預期的錯誤：{{error}}"
@@ -193,7 +213,8 @@
     },
     "sections": {
       "advanced": "進階",
-      "app": "應用程式"
+      "app": "應用程式",
+      "dns": "DNS"
     },
     "theme": {
       "chooseTheme": "選擇佈景主題",

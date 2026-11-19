@@ -76,12 +76,12 @@ const (
 
 // Status is what the resolver reports to the onStatus callback given to [New].
 type Status struct {
-	Mode StatusMode
+	Mode StatusMode `json:"mode"`
 	// Error says what went wrong with the last probe, in English. It is set only with
 	// StatusFailing. It can hold a custom server's URL or host. A certificate error lists
 	// the domains of the certificate the server presented, which can identify the network
 	// the user is on, such as a login page's.
-	Error string
+	Error string `json:"error"`
 }
 
 // countFailure counts a DoH query that says the server isn't working, and starts the
