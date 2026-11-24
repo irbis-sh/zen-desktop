@@ -112,3 +112,51 @@ func TestFirstLaunchConfigSkipsMigrations(t *testing.T) {
 		t.Errorf("next launch ran %v, want none", ran)
 	}
 }
+
+func TestRemoveLegacyFoldersRemovesThem(t *testing.T) {
+	t.Parallel()
+
+	logsDir := filepath.Join(t.TempDir(), "Zen")
+	writeFile(t, filepath.Join(logsDir, "logs", "application.log"), "log")
+
+	if err := removeLegacyFolders([]string{logsDir}, []string{t.TempDir()}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(logsDir); !os.IsNotExist(err) {
+		t.Errorf("stat legacy folder: %v, want not exist", err)
+	}
+}
+
+func TestRemoveLegacyFoldersKeepsDataDir(t *testing.T) {
+	t.Parallel()
+
+	home := t.TempDir()
+	dataDir := filepath.Join(home, "zen")
+	writeFile(t, filepath.Join(dataDir, "certs", "rootCA.pem"), "cert")
+	// Stands in for a case-insensitive filesystem, where Zen and zen are one
+	// folder. The parent is the link because RemoveAll on a link removes only
+	// the link.
+	alias := filepath.Join(t.TempDir(), "home")
+	if err := os.Symlink(home, alias); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := removeLegacyFolders([]string{filepath.Join(alias, "zen")}, []string{dataDir}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(filepath.Join(dataDir, "certs", "rootCA.pem")); err != nil {
+		t.Errorf("stat data dir file: %v, want nil", err)
+	}
+}
+
+func writeFile(t *testing.T, path, contents string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(contents), 0644); err != nil {
+		t.Fatal(err)
+	}
+}

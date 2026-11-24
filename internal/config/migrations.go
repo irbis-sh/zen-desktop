@@ -1,9 +1,12 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -25,7 +28,38 @@ type migration struct {
 //     run it already, so ship a fix as a new migration.
 //   - Make the same change to default-config.json. A fresh install records
 //     every migration as applied without running any.
-var migrations = []migration{}
+var migrations = []migration{
+	{"remove legacy Linux folders", func(*Config) error {
+		if runtime.GOOS != "linux" {
+			return nil
+		}
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("get user home dir: %w", err)
+		}
+		dataHome := filepath.Dir(DataDir)
+		dirs := []string{
+			// The logs folder, which ignored $XDG_DATA_HOME.
+			filepath.Join(homeDir, ".local", "share", "Zen"),
+			// Until prgname_linux.go fixed GLib's program name, the webview named its
+			// folders after the binary: Zen in the release archive, zen-adblocker in
+			// the AUR package.
+			filepath.Join(dataHome, "Zen"),
+			filepath.Join(dataHome, "zen-adblocker"),
+		}
+		// On a case-insensitive filesystem, a Zen folder is the zen folder next to
+		// it. These hold Zen's config, certificates and cache, and Zen Browser uses
+		// ~/.cache/zen as well.
+		keep := []string{ConfigDir, DataDir}
+		if cacheHome, err := os.UserCacheDir(); err == nil {
+			dirs = append(dirs, filepath.Join(cacheHome, "Zen"), filepath.Join(cacheHome, "zen-adblocker"))
+			keep = append(keep, filepath.Join(cacheHome, "zen"))
+		}
+
+		return removeLegacyFolders(dirs, keep)
+	}},
+}
 
 // RunMigrations brings the config, and any other state migrations touch, up to
 // date with this build.
@@ -91,4 +125,34 @@ func (c *Config) runMigrations() {
 
 func writeAppliedMigrations(count int) error {
 	return os.WriteFile(filepath.Join(ConfigDir, appliedMigrationsFile), []byte(strconv.Itoa(count)), 0644)
+}
+
+// removeLegacyFolders deletes dirs, skipping any that is the same folder as one
+// in keep.
+func removeLegacyFolders(dirs, keep []string) error {
+	var errs []error
+outer:
+	for _, dir := range dirs {
+		for _, k := range keep {
+			if sameDir(dir, k) {
+				continue outer
+			}
+		}
+		if err := os.RemoveAll(dir); err != nil {
+			errs = append(errs, fmt.Errorf("remove %s: %w", dir, err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func sameDir(a, b string) bool {
+	aInfo, err := os.Stat(a)
+	if err != nil {
+		return false
+	}
+	bInfo, err := os.Stat(b)
+	if err != nil {
+		return false
+	}
+	return os.SameFile(aInfo, bInfo)
 }
