@@ -139,7 +139,8 @@ func TestRemoveLegacyFoldersKeepsDataDir(t *testing.T) {
 	// the link.
 	alias := filepath.Join(t.TempDir(), "home")
 	if err := os.Symlink(home, alias); err != nil {
-		t.Fatal(err)
+		// Windows only allows symlinks for administrators and in Developer Mode.
+		t.Skipf("create symlink: %v", err)
 	}
 
 	if err := removeLegacyFolders([]string{filepath.Join(alias, "zen")}, []string{dataDir}); err != nil {
