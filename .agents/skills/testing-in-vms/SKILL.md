@@ -72,7 +72,7 @@ Check outcomes over SSH instead of reading them off the screen:
 | | Zen's log | System proxy | Trusted CA |
 | --- | --- | --- | --- |
 | macOS | `~/Library/Logs/Zen/application.log` | `scutil --proxy` | `security dump-trust-settings -d` |
-| Linux | `~/.local/share/Zen/logs/application.log` | `gsettings get org.gnome.system.proxy mode` | `ls /usr/local/share/ca-certificates` |
+| Linux | `~/.local/share/zen/logs/application.log` | `gsettings get org.gnome.system.proxy mode` | `ls /usr/local/share/ca-certificates` |
 | Windows | `$LOCALAPPDATA/Zen/Logs/application.log` | `reg query 'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings' //v AutoConfigURL` | `certutil -user -store Root "Zen Personal CA"` |
 
 For a request through the proxy: `curl -x http://127.0.0.1:<port> -sI https://<host>`, with the port from the log line `proxy listening on port`. A blocked request returns 403. On Windows use `/c/Windows/System32/curl.exe --ssl-no-revoke` in place of `curl`, see below.
