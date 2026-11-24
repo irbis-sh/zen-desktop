@@ -431,13 +431,21 @@ func (f *Filter) HandleRequest(req *http.Request, processInfo process.Info) (*ht
 }
 
 // HandleCNAMEs checks the CNAME chain of req's host, which cnames returns, against the
-// blocking rules. It skips navigations and requests from the host's own pages without
+// blocking rules. It skips page loads and requests from the host's own pages without
 // calling cnames, which can wait for a DNS lookup. If a rule matches, it reports the
 // block to the observer and returns the response to send. Otherwise it returns nil.
 func (f *Filter) HandleCNAMEs(req *http.Request, cnames func() []string, processInfo process.Info) *http.Response {
 	// A site's own host can have a CNAME record, such as a blog on a hosting platform,
 	// and a block would replace the page with a bare 403.
-	if req.Header.Get("Sec-Fetch-Dest") == "document" {
+	dest := req.Header.Get("Sec-Fetch-Dest")
+	if dest == "document" {
+		return nil
+	}
+	// Over plain HTTP, browsers send Fetch Metadata only to loopback addresses. Without it,
+	// a request for HTML is taken for a page load. Frames and prefetches pass too: a tracker
+	// that gets through costs less than a page that doesn't. fetchmeta.IsLikelyUserNavigation
+	// would also let frames with Fetch Metadata through, which must stay checked.
+	if dest == "" && req.URL.Scheme == "http" && strings.Contains(req.Header.Get("Accept"), "text/html") {
 		return nil
 	}
 	// A tracker can't hide behind the host that serves the page.

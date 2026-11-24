@@ -464,18 +464,20 @@ func TestHandleCNAMEsSkipsWithoutLookup(t *testing.T) {
 
 	tests := []struct {
 		name    string
+		url     string
 		headers http.Header
 	}{
-		{name: "navigation", headers: http.Header{"Sec-Fetch-Dest": {"document"}, "Sec-Fetch-Mode": {"navigate"}}},
-		{name: "same-origin", headers: http.Header{"Sec-Fetch-Dest": {"image"}, "Sec-Fetch-Site": {"same-origin"}}},
-		{name: "Referer on the request's host", headers: http.Header{"Referer": {"https://SSTATS.adobe.com:443/page"}}},
+		{name: "page load", url: "https://sstats.adobe.com/b/ss/x", headers: http.Header{"Sec-Fetch-Dest": {"document"}, "Sec-Fetch-Mode": {"navigate"}}},
+		{name: "page load over plain HTTP", url: "http://sstats.adobe.com/b/ss/x", headers: http.Header{"Accept": {pageAccept}}},
+		{name: "same-origin", url: "https://sstats.adobe.com/b/ss/x", headers: http.Header{"Sec-Fetch-Dest": {"image"}, "Sec-Fetch-Site": {"same-origin"}}},
+		{name: "Referer on the request's host", url: "https://sstats.adobe.com/b/ss/x", headers: http.Header{"Referer": {"https://SSTATS.adobe.com:443/page"}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			f, obs := newCNAMETestFilter(t)
-			req := newCNAMETestRequest("https://sstats.adobe.com/b/ss/x", tt.headers)
+			req := newCNAMETestRequest(tt.url, tt.headers)
 			var calls int
 			cnames := func() []string {
 				calls++
@@ -487,6 +489,40 @@ func TestHandleCNAMEsSkipsWithoutLookup(t *testing.T) {
 			}
 			if calls != 0 || len(obs.got()) != 0 {
 				t.Errorf("cnames called %d times and observer %d, want 0 each", calls, len(obs.got()))
+			}
+		})
+	}
+}
+
+func TestHandleCNAMEsChecksOtherRequests(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		url     string
+		headers http.Header
+	}{
+		{name: "any type over plain HTTP", url: "http://sstats.adobe.com/", headers: http.Header{"Accept": {"*/*"}}},
+		{name: "image over plain HTTP", url: "http://sstats.adobe.com/", headers: http.Header{"Accept": {"image/avif,image/webp,*/*;q=0.8"}}},
+		{name: "no Accept over plain HTTP", url: "http://sstats.adobe.com/", headers: http.Header{}},
+		// Browsers send Fetch Metadata to a loopback site over plain HTTP. Without
+		// Sec-Fetch-Mode, fetchmeta.IsLikelyUserNavigation wouldn't accept the frames, and
+		// these cases wouldn't catch its use in HandleCNAMEs.
+		{name: "frame over plain HTTP", url: "http://sstats.adobe.com/", headers: http.Header{"Accept": {pageAccept}, "Sec-Fetch-Dest": {"iframe"}, "Sec-Fetch-Mode": {"navigate"}}},
+		{name: "frame", url: "https://sstats.adobe.com/", headers: http.Header{"Accept": {pageAccept}, "Sec-Fetch-Dest": {"iframe"}, "Sec-Fetch-Mode": {"navigate"}}},
+		{name: "HTML without Fetch Metadata", url: "https://sstats.adobe.com/", headers: http.Header{"Accept": {pageAccept}}},
+		{name: "fetch of HTML", url: "https://sstats.adobe.com/", headers: http.Header{"Accept": {"text/html"}, "Sec-Fetch-Dest": {"empty"}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			f, _ := newCNAMETestFilter(t, `||omtrdc.net^`)
+			req := newCNAMETestRequest(tt.url, tt.headers)
+
+			res := f.HandleCNAMEs(req, func() []string { return []string{"adobe.com.ssl.d1.sc.omtrdc.net"} }, process.Info{})
+			if res == nil || res.StatusCode != http.StatusForbidden {
+				t.Errorf("HandleCNAMEs = %+v, want a 403", res)
 			}
 		})
 	}
@@ -741,6 +777,9 @@ func (fakeObserver) OnFilterBlockCNAME(string, string, string, string, []rule.Ru
 type fakeWhitelist struct{}
 
 func (fakeWhitelist) GetPort() int { return 0 }
+
+// pageAccept is the Accept header a browser sends with a page load.
+const pageAccept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 
 // newCNAMETestFilter returns a filter with real network rules holding rules, and the
 // observer it reports CNAME blocks to.
