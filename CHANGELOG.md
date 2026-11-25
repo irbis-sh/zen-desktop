@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.30.0
+
+### What's New
+
+* **Encrypted DNS**
+  Zen can now encrypt its DNS queries with DNS over HTTPS. Choose Quad9, Cloudflare, Google, OpenDNS or your own server under Settings > DNS.
+  The setting is experimental and off by default, so please try it out and tell us how it went. See [our blog post](https://irbis.sh/blog/introducing-support-for-doh/) for more details.
+* **Protection against CNAME cloaking**
+  Some sites use DNS (CNAME) records to make a third-party tracking server look like part of the site, so filter rules for that server's domain don't match. With encrypted DNS on, Zen checks these records and blocks matching requests.
+* **More filter rules work**
+  * Added the `set-cookie`, `set-cookie-reload`, `trusted-set-cookie` and `trusted-set-cookie-reload` scriptlets. Cookie notice lists use them to dismiss banners by saving an answer in advance.
+  * Fixed the `set-constant` scriptlet, which set numbers as text and set the wrong value for promises. Its alias, `set`, now works too.
+  * `$jsonprune` rules that write `$` as `\$` now load. This adds rules that remove ads from data sent by Prime Video, Pluto TV and MSN. Thanks to @LucasM4r!
+  * The `$domain`, `$third-party` and `$method` modifiers now also work in rules that change responses. Thanks to @prascli!
+* **Faster filtering**
+  Zen now checks requests against the filter lists about three times faster.
+* **Connection fixes**
+  Zen could lose the first message on a WebSocket connection, which live chats and similar features use. On plain HTTP sites, blocked requests returned a page of raw text, and redirects made by Zen didn't work. All three are fixed.
+* **Tidier folders on Linux**
+  Zen's files were unnecessarily spread over multiple folders. They now stay in one `zen` folder. Zen deletes the old folders when it updates. Thanks to @samzorn for reporting this, and @ohdonny and @BUTTER-BEAR for the details!
+* **Readable config file**
+  `config.json` is now indented, so it's easier to read and edit by hand. Thanks to @viesloxy!
+* Other minor bugfixes and improvements.
+
+### New Contributors
+* @prascli made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/881
+* @viesloxy made their first contribution in https://github.com/irbis-sh/zen-desktop/pull/906
+
+Thank you for using Zen!
+
+**Full Changelog**: https://github.com/irbis-sh/zen-desktop/compare/v0.29.0...v0.30.0
+
 ## v0.29.0
 
 ### What's New
