@@ -59,6 +59,17 @@ var migrations = []migration{
 
 		return removeLegacyFolders(dirs, keep)
 	}},
+	{"v0.28.0", func(c *Config) error {
+		if err := c.AddFilterList(FilterList{
+			Name:    "Fanboy's Annoyance List",
+			Type:    "annoyances",
+			URL:     "https://secure.fanboy.co.nz/fanboy-annoyance.txt",
+			Enabled: false,
+		}); err != nil {
+			return err
+		}
+		return nil
+	}},
 }
 
 // RunMigrations brings the config, and any other state migrations touch, up to
